@@ -1,0 +1,94 @@
+require("lattice.jl");
+
+#! Bounceback boundary condition for north boundary
+function north_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
+  for i=i_begin:i_end
+    lat.f[i,j,5] = lat.f[i,j,3];
+    lat.f[i,j,8] = lat.f[i,j,6];
+    lat.f[i,j,9] = lat.f[i,j,7];
+  end
+end
+
+#! Bounceback boundary condition for north boundary of domain
+function north_bounce_back!(lat::Lattice)
+  ni, nj = size(lat.f)
+  north_bounce_back!(lat, 1, ni, nj);
+end
+
+#! Bounceback boundary condition for south boundary
+function south_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
+  for i=i_begin:i_end
+    lat.f[i,j,3] = lat.f[i,j,5];
+    lat.f[i,j,6] = lat.f[i,j,8];
+    lat.f[i,j,7] = lat.f[i,j,9];
+  end
+end
+
+#! Bounceback boundary condition for south boundary of domain
+function south_bounce_back!(lat::Lattice)
+  south_bounce_back!(lat, 1, size(lat.f)[1], 1);
+end
+
+#! Bounceback boundary condition for west boundary
+function east_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+  for j=j_begin:j_end
+    lat.f[i,j,4] = lat.f[i,j,2];
+    lat.f[i,j,8] = lat.f[i,j,6];
+    lat.f[i,j,7] = lat.f[i,j,9];
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function east_bounce_back!(lat::Lattice)
+  ni, nj = size(lat.f);
+  west_bounce_back!(lat, ni, 1, nj);
+end
+
+#! Bounceback boundary condition for west boundary
+function west_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+  for j=j_begin:j_end
+    lat.f[i,j,2] = lat.f[i,j,4];
+    lat.f[i,j,6] = lat.f[i,j,8];
+    lat.f[i,j,9] = lat.f[i,j,7];
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function west_bounce_back!(lat::Lattice)
+  nj = size(lat.f)[2];
+  west_bounce_back!(lat, 1, 1, nj);
+end
+
+#! West inlet boundary condition
+function west_inlet!(lat::Lattice, u::FloatingPoint, i::Int, j_begin::Int, 
+  j_end::Int)
+
+  for j=j_begin:j_end
+    rhow = (lat.f[i,j,1] + lat.f[i,j,3] + lat.f[i,j,5] +
+            2.0 * (lat.f[i,j,4] + lat.f[i,j,7] + lat.f[i,j,8])) / (1.0 - u);
+    lat.f[i,j,2] = lat.f[i,j,4] + 2.0 * rhow * u / 3.0;
+    lat.f[i,j,6] = lat.f[i,j,8] + rhow * u / 6.0;
+    lat.f[i,j,9] = lat.f[i,j,7] + rhow * u / 6.0;
+  end
+end
+
+#! West inlet boundary condition
+function west_inlet!(lat::Lattice, u::FloatingPoint)
+  west_inlet!(lat, u, 1, 1, size(lat.f)[2]);
+end
+
+#! East open boundary
+function east_open!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+
+  for j=j_begin:j_end
+    lat.f[i,j,2] = 2.0 * lat.f[i-1,j,2] - lat.f[i-2,j,2];
+    lat.f[i,j,6] = 2.0 * lat.f[i-1,j,6] - lat.f[i-2,j,6];
+    lat.f[i,j,9] = 2.0 * lat.f[i-1,j,9] - lat.f[i-2,j,9];
+  end
+end
+
+#! East open boundary
+function east_open!(lat::Lattice)
+  ni, nj = size(lat.f)
+  east_open!(lat, ni, 1, nj);
+end
