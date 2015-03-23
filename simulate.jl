@@ -33,7 +33,7 @@ function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
   for i = 1:n_steps
     sim_step!(lat, temp_f, msm, collision_f!, bcs!);
 
-    for (j,c!) in enumerate(callbacks!)
+    for c! in callbacks!
       c!(msm, i);
     end
   end
