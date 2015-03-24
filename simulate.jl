@@ -58,8 +58,8 @@ function sim_step!(lat::Lattice, temp_f::Array{Float64,3}, msm::MultiscaleMap,
   collision_f!(lat, msm);
   stream!(lat, temp_f);
 
-  for i=1:length(bcs!)
-    bcs![i](lat);
+  for bc! in bcs!
+    bc!(lat);
   end
 
   map_to_macro!(lat, msm);

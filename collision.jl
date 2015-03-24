@@ -9,7 +9,7 @@ function srt_col_f! (lat::Lattice, msm::MultiscaleMap)
   for i=1:ni, j=1:nj, k=1:9
     f_eq = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
       vec(msm.u[i,j,:]));
-    lat.f[i,j,k] -= 1.0/msm.tau * (lat.f[i,j,k] - f_eq);
+    lat.f[i,j,k] = msm.omega * f_eq + (1.0 - msm.omega) * lat.f[i,j,k];
   end
 
 end
