@@ -14,8 +14,8 @@ function lbx_defaults()
     "ni" => 1000,
     "nj" => 40,
     "nu" => 0.02,
-    "nsteps" => 50000,
-    "stepout" => 5000,
+    "nsteps" => 10000,
+    "stepout" => 1000,
     "col_f" => srt_col_f!,
     "bcs" => [
       north_bounce_back!,

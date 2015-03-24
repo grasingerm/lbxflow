@@ -63,9 +63,17 @@ callbacks! = [
   end
 ]
 
+Profile.clear();
 @profile simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
   callbacks!);
 
 s = open("prof/main.prof","w")
 Profile.print(s,cols = 500)
 close(s)
+
+bt, lidict = Profile.retrieve()
+using HDF5, JLD
+@save "prof/profdata.jld" bt lidict
+
+using ProfileView;
+ProfileView.view();

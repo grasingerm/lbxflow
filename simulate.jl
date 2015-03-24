@@ -7,19 +7,15 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3})
   ni, nj = size(temp_f);
 
   #! Stream
-  for i = 1:ni
-    for j = 1:nj
-      for k = 1:9
-        i_new = i + lat.c[k,1];
-        j_new = j + lat.c[k,2];
+  for i = 1:ni, j = 1:nj, k = 1:9
+    i_new = i + lat.c[k,1];
+    j_new = j + lat.c[k,2];
 
-        if i_new > ni || j_new > nj || i_new < 1 || j_new < 1
-          continue;
-        end
-
-        temp_f[i_new,j_new,k] = lat.f[i,j,k];
-      end
+    if i_new > ni || j_new > nj || i_new < 1 || j_new < 1
+      continue;
     end
+
+    temp_f[i_new,j_new,k] = lat.f[i,j,k];
   end
 
   lat.f = copy(temp_f);
