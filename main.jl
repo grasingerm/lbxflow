@@ -27,6 +27,16 @@ zero_v_at_outlet!(msm::MultiscaleMap, k::Int) = begin
   end
 end
 
+#! Correct density at inlet
+#=correct_rho_inlet!(msm::MultiscaleMap, k::Int) = begin
+  ni, nj = size(msm.u);
+  for j=1:nj
+    msm.u[ni,j,2] = 0.0;
+  end
+end
+=#
+
+#! Extract velocity profile cut parallel to y-axis
 extract_prof_f(i::Int) = begin
 
   return (msm::MultiscaleMap) -> begin

@@ -9,7 +9,7 @@ type MultiscaleMap
 
   MultiscaleMap(nu::FloatingPoint, dx::FloatingPoint, dt::FloatingPoint,
     ni::Unsigned, nj::Unsigned) =
-    new(dx, dt, (3 * nu * dt / (dx*dx) + 0.5),
+    new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint)
@@ -17,7 +17,7 @@ type MultiscaleMap
     dt = lat.dt;
     ni, nj = size(lat.f);
 
-    new(dx, dt, (3 * nu * dt / (dx*dx) + 0.5),
+    new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
       zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
   end
 
@@ -26,7 +26,7 @@ type MultiscaleMap
     dt = lat.dt;
     ni, nj = size(lat.f);
 
-    new(dx, dt, (3 * nu * dt / (dx*dx) + 0.5),
+    new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
   end
 
