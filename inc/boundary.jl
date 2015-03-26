@@ -1,4 +1,5 @@
-require("lattice.jl");
+__boundary_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__boundary_root__, "lattice.jl")));
 
 #! Bounceback boundary condition for north boundary
 function north_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)

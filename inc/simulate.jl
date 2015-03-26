@@ -1,6 +1,7 @@
-require("collision.jl");
-require("lattice.jl");
-require("multiscale.jl");
+__simulate_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__simulate_root__, "collision.jl")));
+require(abspath(joinpath(__simulate_root__, "lattice.jl")));
+require(abspath(joinpath(__simulate_root__, "multiscale.jl")));
 
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3})

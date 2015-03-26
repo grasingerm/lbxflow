@@ -1,5 +1,6 @@
-require("lattice.jl");
-require("multiscale.jl");
+__collision_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__collision_root__, "lattice.jl")));
+require(abspath(joinpath(__collision_root__, "multiscale.jl")));
 
 function srt_col_f! (lat::Lattice, msm::MultiscaleMap)
 

@@ -1,5 +1,6 @@
-require("boundary.jl");
-require("collision.jl");
+__defaults_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__defaults_root__, "boundary.jl")));
+require(abspath(joinpath(__defaults_root__, "collision.jl")));
 
 # Defaults for lbx simulation
 function lbx_defaults()
