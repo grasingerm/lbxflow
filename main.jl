@@ -11,7 +11,7 @@ require("simulate.jl");
 # get default values from defaults.jl
 def = lbx_defaults();
 
-lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"]);
+lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"], def["rhoo"]);
 msm = MultiscaleMap(def["nu"], lat, def["rhoo"]);
 
 #! Initialize velocity at inlet
@@ -77,13 +77,13 @@ Profile.clear();
 @profile simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
   callbacks!);
 
-s = open("prof/main.prof","w")
-Profile.print(s,cols = 500)
-close(s)
+s = open("prof/main.prof","w");
+Profile.print(s,cols = 500);
+close(s);
 
-bt, lidict = Profile.retrieve()
-using HDF5, JLD
-@save "prof/profdata.jld" bt lidict
+bt, lidict = Profile.retrieve();
+using HDF5, JLD;
+@save "prof/profdata.jld" bt lidict;
 
 using ProfileView;
 ProfileView.view();
