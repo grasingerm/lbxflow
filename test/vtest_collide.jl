@@ -11,7 +11,7 @@ msm = MultiscaleMap(0.1, lat);
 
 # initialize lattice
 for k=1:length(lat.w)
-  lat.f[5,5,k] = 10.0;
+  lat.f[5,5,k] = 10.0 * lat.w[k];
 end
 map_to_macro!(lat, msm);
 
