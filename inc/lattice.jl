@@ -32,3 +32,8 @@ type Lattice
   end
 
 end
+
+#! Lattice speed of sound squared
+macro c_ssq(lat::Lattice)
+  return :($lat.dx * $lat.dx) / (3 * $lat.dt * $lat.dt);
+end
