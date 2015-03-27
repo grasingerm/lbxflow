@@ -1,11 +1,11 @@
-__simulate_root__ = dirname(@__FILE__);
+const __simulate_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__simulate_root__, "collision.jl")));
 require(abspath(joinpath(__simulate_root__, "lattice.jl")));
 require(abspath(joinpath(__simulate_root__, "multiscale.jl")));
 
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3})
-  ni, nj = size(temp_f);
+  const ni, nj = size(temp_f);
 
   #! Stream
   for i = 1:ni, j = 1:nj, k = 1:9

@@ -1,5 +1,6 @@
-__multiscale_root__ = dirname(@__FILE__);
+const __multiscale_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__multiscale_root__, "lattice.jl")));
+#require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
 
 type MultiscaleMap
   dx::FloatingPoint;
@@ -14,18 +15,18 @@ type MultiscaleMap
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint)
-    dx = lat.dx;
-    dt = lat.dt;
-    ni, nj = size(lat.f);
+    const dx = lat.dx;
+    const dt = lat.dt;
+    const ni, nj = size(lat.f);
 
     new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
       zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
   end
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice)
-    dx = lat.dx;
-    dt = lat.dt;
-    ni, nj = size(lat.f);
+    const dx = lat.dx;
+    const dt = lat.dt;
+    const ni, nj = size(lat.f);
 
     new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
@@ -35,8 +36,8 @@ end
 
 #! Map particle distribution frequencies to macroscopic variables
 function map_to_macro!(lat::Lattice, msm::MultiscaleMap)
-  ni, nj = size(lat.f);
-  nk = length(lat.w);
+  const ni, nj = size(lat.f);
+  const nk = length(lat.w);
 
   for i=1:ni, j=1:nj
     msm.rho[i,j] = 0;
@@ -75,7 +76,7 @@ end
 #! \param msm Multiscale map
 #! \return Velocity magnitudes
 function u_mag(msm::MultiscaleMap)
-  ni, nj = size(msm.u);
+  const ni, nj = size(msm.u);
   u_mag_res = Array(Float64, (ni, nj));
 
   for i = 1:ni, j = 1:nj
@@ -85,4 +86,52 @@ function u_mag(msm::MultiscaleMap)
   end
 
   return u_mag_res;
+end
+
+#! Calculate local strain rate tensor
+#!
+#! \param rho Local density
+#! \param f_neq Non-equilibrium distribution (f_neq1, f_neq2, ..., f_neq9)
+#! \param c Lattice vectors
+#! \param c_sq Lattice speed of sound squared
+#! \param dt Change in time
+#! \param M Transmation matrix to map f from velocity space to momentum space
+#! \param S (Sparse) diagonal relaxation matrix
+function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1}, 
+  c::Array{Float64, 2}, c_sq::Float64, dt::Float64, M::Array{Float64,2},
+  S::SparseMatrixCSC)
+
+  D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
+  const ni = length(f_neq);
+
+  const MiSM = inv(M) * S * M;
+
+  for alpha=1:2, beta=1:2
+    sum = 0;
+    for i=1:ni
+      MiSMsum = 0;
+      for j=1:ni
+        MiSMsum += MiSM[i, j];
+      end
+      sum += c[i, alpha] * c[i, beta] * MiSMsum * f_neq[i];
+    end
+    D[alpha, beta] = -1.0 / (2 * rho * c_sq * dt) * sum;
+  end
+
+  return D;
+end
+
+#! Calculate strain rate from strain rate tensor
+macro strain_rate(D::Array{Float64, 2})
+  return :(sqrt(2) * norm(D));
+end
+
+#! Calculate apparent viscosity of a Bingham plastic using Papanstasiou's model
+macro papanstasiou_mu(mu_p::Number, tau_o::Number, m::Number, gamma::Number)
+  return :(mu_p + tau_o / gamma * (1 - exp(-m * abs(gamma))));
+end
+
+#! Calculate relaxation time
+macro relax_t(mu::Number, rho::Number, dx::Number, dt::Number)
+  return :(3 * mu / rho * ((dt * dt) / (dx * dx)) + 0.5 * dt);
 end

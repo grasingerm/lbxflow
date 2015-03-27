@@ -1,4 +1,4 @@
-__collision_root__ = dirname(@__FILE__);
+const __collision_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__collision_root__, "lattice.jl")));
 require(abspath(joinpath(__collision_root__, "multiscale.jl")));
 
@@ -8,8 +8,8 @@ require(abspath(joinpath(__collision_root__, "multiscale.jl")));
 #! \param msm Multiscale map
 function srt_col_f! (lat::Lattice, msm::MultiscaleMap)
 
-  c_ssq = @c_ssq(lat);
-  ni, nj = size(lat.f);
+  const c_ssq = @c_ssq(lat);
+  const ni, nj = size(lat.f);
 
   for i=1:ni, j=1:nj, k=1:9
     f_eq = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
@@ -30,7 +30,7 @@ end
 function incomp_f_eq(rho::Float64, w::Float64, c_ssq::Float64,
   c_k::Array{Float64, 1}, u::Array{Float64, 1})
 
-  ckdotu = dot(c_k, u);
+  const ckdotu = dot(c_k, u);
 
   return rho * w * (1.0 + ckdotu/(c_ssq) + 0.5*(ckdotu*ckdotu)/(c_ssq*c_ssq)
     - 0.5 * dot(u, u) / (c_ssq));
@@ -74,6 +74,34 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::Function)
 
   c_ssq = @c_ssq(lat);
+  ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    for k=1:9
+      f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
+        vec(msm.u[i,j,:]));
+    end
+
+    f = lat.f[i,j,:];
+    m = M * f;
+    m_eq = M * f_eq;
+
+    lat.f[i,j,:] = f - inv(M) * S(lat, msm) * (m - m_eq); # perform collision
+  end
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S (Sparse) diagonal relaxation matrix
+function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
+  const M = [1.0   1.0   1.0   1.0   1.0   1.0   1.0   1.0   1.0;
+             -4.0 -]
+
+  const c_ssq = @c_ssq(lat);
   ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))

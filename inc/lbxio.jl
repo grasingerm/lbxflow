@@ -1,4 +1,4 @@
-__lbxio_root__ = dirname(@__FILE__);
+const __lbxio_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));
 
 #! Create a callback function for writing to a delimited file

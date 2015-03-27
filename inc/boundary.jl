@@ -1,4 +1,4 @@
-__boundary_root__ = dirname(@__FILE__);
+const __boundary_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__boundary_root__, "lattice.jl")));
 
 #! Bounceback boundary condition for north boundary
@@ -12,7 +12,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_bounce_back!(lat::Lattice)
-  ni, nj = size(lat.f)
+  const ni, nj = size(lat.f)
   north_bounce_back!(lat, 1, ni, nj);
 end
 
@@ -41,7 +41,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function east_bounce_back!(lat::Lattice)
-  ni, nj = size(lat.f);
+  const ni, nj = size(lat.f);
   west_bounce_back!(lat, ni, 1, nj);
 end
 
@@ -56,7 +56,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_bounce_back!(lat::Lattice)
-  nj = size(lat.f)[2];
+  const nj = size(lat.f)[2];
   west_bounce_back!(lat, 1, 1, nj);
 end
 
@@ -90,6 +90,6 @@ end
 
 #! East open boundary
 function east_open!(lat::Lattice)
-  ni, nj = size(lat.f)
+  const ni, nj = size(lat.f)
   east_open!(lat, ni, 1, nj);
 end

@@ -1,4 +1,4 @@
-__defaults_root__ = dirname(@__FILE__);
+const __defaults_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__defaults_root__, "boundary.jl")));
 require(abspath(joinpath(__defaults_root__, "collision.jl")));
 

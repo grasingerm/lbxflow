@@ -1,4 +1,4 @@
-root = dirname(@__FILE__);
+const root = dirname(@__FILE__);
 
 println(readall(abspath(joinpath(root, "banner.txt"))));
 
@@ -11,7 +11,7 @@ require(abspath(joinpath(root, "inc", "multiscale.jl")));
 require(abspath(joinpath(root, "inc", "simulate.jl")));
 
 function main(inputfile)
-  def = load_sim_definitions(inputfile);
+  const def = load_sim_definitions(inputfile);
 
   lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"], def["rhoo"]);
   msm = MultiscaleMap(def["nu"], lat, def["rhoo"]);
@@ -42,7 +42,7 @@ function main(inputfile)
   extract_prof_f(i::Int) = begin
 
     return (msm::MultiscaleMap) -> begin
-      nj = size(msm.u)[2];
+      const nj = size(msm.u)[2];
       x = Array(Float64, (nj, 3));
 
       for j=1:nj
