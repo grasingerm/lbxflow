@@ -45,8 +45,8 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::SparseMatrixCSC)
 
-  c_ssq = @c_ssq(lat.dx, lat.dt);
-  ni, nj = size(lat.f);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
@@ -73,8 +73,8 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::Function)
 
-  c_ssq = @c_ssq(lat.dx, lat.dt);
-  ni, nj = size(lat.f);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
@@ -114,7 +114,7 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
   const M = @DEFAULT_MRT_M();
   const c_ssq = @c_ssq(lat.dx, lat.dt);
-  ni, nj = size(lat.f);
+  const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
@@ -129,5 +129,35 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
     m_eq = M * f_eq;
 
     lat.f[i,j,:] = f - inv(M) * S * (m - m_eq); # perform collision
+  end
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S Function that returns (sparse) diagonal relaxation matrix
+function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function)
+  const M = @DEFAULT_MRT_M();
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    for k=1:9
+      f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
+        vec(msm.u[i,j,:]));
+    end
+
+    f = lat.f[i,j,:];
+    m = M * f;
+    m_eq = M * f_eq;
+
+    strain_rate_tensor = (rho::Float64, f_neq::Array{Float64, 1}, 
+  c::Array{Float64, 2}, c_sq::Float64, dt::Float64, M::Array{Float64,2},
+  S::SparseMatrixCSC)
+
+    lat.f[i,j,:] = f - inv(M) * S() * (m - m_eq); # perform collision
   end
 end
