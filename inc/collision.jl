@@ -8,7 +8,7 @@ require(abspath(joinpath(__collision_root__, "multiscale.jl")));
 #! \param msm Multiscale map
 function srt_col_f! (lat::Lattice, msm::MultiscaleMap)
 
-  const c_ssq = @c_ssq(lat);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
   const ni, nj = size(lat.f);
 
   for i=1:ni, j=1:nj, k=1:9
@@ -45,7 +45,7 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::SparseMatrixCSC)
 
-  c_ssq = @c_ssq(lat);
+  c_ssq = @c_ssq(lat.dx, lat.dt);
   ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
@@ -73,7 +73,7 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::Function)
 
-  c_ssq = @c_ssq(lat);
+  c_ssq = @c_ssq(lat.dx, lat.dt);
   ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
@@ -92,16 +92,28 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   end
 end
 
+#! Initializes the default multiple relaxation time transformation matrix
+macro DEFAULT_MRT_M()
+  return :( [1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0;
+            -4.0   -1.0   -1.0   -1.0   -1.0    2.0    2.0    2.0    2.0;
+             4.0   -2.0   -2.0   -2.0   -2.0    1.0    1.0    1.0    1.0;
+             0.0    1.0    0.0   -1.0    0.0    1.0   -1.0   -1.0    1.0;
+             0.0   -2.0    0.0    2.0    0.0    1.0   -1.0   -1.0    1.0;
+             0.0    0.0    1.0    0.0   -1.0    1.0    1.0   -1.0   -1.0;
+             0.0    0.0   -2.0    0.0    2.0    1.0    1.0   -1.0   -1.0;
+             0.0    1.0   -1.0    1.0   -1.0    0.0    0.0    0.0    0.0;
+             0.0    0.0    0.0    0.0    0.0    1.0   -1.0    1.0   -1.0]
+          );
+end
+
 #! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param lat Lattice
 #! \param msm Multiscale map
 #! \param S (Sparse) diagonal relaxation matrix
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
-  const M = [1.0   1.0   1.0   1.0   1.0   1.0   1.0   1.0   1.0;
-             -4.0 -]
-
-  const c_ssq = @c_ssq(lat);
+  const M = @DEFAULT_MRT_M();
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
   ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
