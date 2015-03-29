@@ -98,7 +98,7 @@ end
 #! \param M Transmation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
 function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1},
-  c::Array{Float64, 2}, c_sq::Float64, dt::Float64, M::Array{Float64,2},
+  c::Array{Float64, 2}, c_ssq::Float64, dt::Float64, M::Array{Float64,2},
   S::SparseMatrixCSC)
 
   D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
@@ -111,38 +111,38 @@ function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1},
     for i=1:ni
       MiSMsum = 0;
       for j=1:ni
-        MiSMsum += MiSM[i, j];
+        MiSMsum += MiSM[i, j] * f_neq[j];
       end
-      sum += c[i, alpha] * c[i, beta] * MiSMsum * f_neq[i];
+      sum += c[i, alpha] * c[i, beta] * MiSMsum;
     end
-    D[alpha, beta] = -1.0 / (2 * rho * c_sq * dt) * sum;
+    D[alpha, beta] = -1.0 / (2.0 * rho * c_ssq * dt) * sum;
   end
 
   return D;
 end
 
 #! Calculate strain rate from strain rate tensor
-macro strain_rate(D::Array{Float64, 2})
-  return :(sqrt(2) * norm(D));
+macro strain_rate(D)
+  return :(sqrt(ddot($D,$D)));
 end
 
 #! Calculate apparent viscosity of a Bingham plastic using Papanstasiou's model
-macro papanstasiou_mu(mu_p::Number, tau_o::Number, m::Number, gamma::Number)
-  return :(mu_p + tau_o / gamma * (1 - exp(-m * abs(gamma))));
+macro papanstasiou_mu(mu_p, tau_o, m, gamma)
+  return :($mu_p + $tau_o / $gamma * (1 - exp(-$m * abs($gamma))));
 end
 
 #! Calculate relaxation time
-macro relax_t(mu::Number, rho::Number, dx::Number, dt::Number)
-  return :(3 * mu / rho * ((dt * dt) / (dx * dx)) + 0.5 * dt);
+macro relax_t(mu, rho, dx, dt)
+  return :(3 * $mu / $rho * (($dt * $dt) / ($dx * $dx)) + 0.5 * $dt);
 end
 
 #! Calculate collision frequency
-macro omega(mu::Number, rho::Number, dx::Number, dt::Number)
-	return :(1.0 / (3.0 * mu / rho * (dt)/(dx * dx) + 0.5));
+macro omega(mu, rho, dx, dt)
+	return :(1.0 / (3.0 * $mu / $rho * ($dt)/($dx * $dx) + 0.5));
 end
 
 #! Viscosity from collision frequency
-macro mu(omega::Number, rho::Number, c_ssq::Number)
-  return :((1.0/omega - 0.5) * rho * c_ssq);
+macro mu(omega, rho, c_ssq)
+  return :((1.0/$omega - 0.5) * $rho * $c_ssq);
 end
 

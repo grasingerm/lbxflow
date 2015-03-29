@@ -1,6 +1,7 @@
 const __collision_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__collision_root__, "lattice.jl")));
 require(abspath(joinpath(__collision_root__, "multiscale.jl")));
+require(abspath(joinpath(__collision_root__, "numerics.jl")));
 
 #! Single relaxation time collision function for incompressible Newtonian flow
 #!
@@ -12,8 +13,9 @@ function srt_col_f! (lat::Lattice, msm::MultiscaleMap)
   const ni, nj = size(lat.f);
 
   for i=1:ni, j=1:nj, k=1:9
-    f_eq = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
-      vec(msm.u[i,j,:]));
+    rhoij = msm.rho[i,j];
+    uij = vec(msm.u[i,j,:]);
+    f_eq = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     lat.f[i,j,k] = msm.omega[i,j] * f_eq + (1.0 - msm.omega[i,j]) * lat.f[i,j,k];
   end
 
@@ -132,36 +134,6 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
   end
 end
 
-#! Multiple relaxation time collision function for incompressible flow
-#!
-#! \param lat Lattice
-#! \param msm Multiscale map
-#! \param S Function that returns (sparse) diagonal relaxation matrix
-function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function)
-  const M = @DEFAULT_MRT_M();
-  const c_ssq = @c_ssq(lat.dx, lat.dt);
-  const ni, nj = size(lat.f);
-
-  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  f_eq = Array(Float64, 9);
-  for i=1:ni, j=1:nj
-    for k=1:9
-      f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
-        vec(msm.u[i,j,:]));
-    end
-
-    f = lat.f[i,j,:];
-    m = M * f;
-    m_eq = M * f_eq;
-
-    strain_rate_tensor = strain_rate_tensor(msm.rho[i,j], f_neq::Array{Float64, 1},
-  c::Array{Float64, 2}, c_sq::Float64, dt::Float64, M::Array{Float64,2},
-  S::SparseMatrixCSC)
-
-    lat.f[i,j,:] = f - inv(M) * S() * (m - m_eq); # perform collision
-  end
-end
-
 #! Vikhansky relaxation coefficient for s77, s88
 #!
 #! \param mu Dynamic viscosity
@@ -169,8 +141,71 @@ end
 #! \param c_ssq Lattice speed of sound squared
 #! \param dt Change in time
 #! \return Vikhansky relaxation coefficient for s77 and s88
-macro viks_8(mu::Number, rho::Number, c_ssq::Number, dt::Number)
-	return :(1.0/(mu / (rho * c_ssq * dt) + 0.5));
+macro viks_8(mu, rho, c_ssq, dt)
+  return :(1.0/($mu / ($rho * $c_ssq * $dt) + 0.5));
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S Function that returns (sparse) diagonal relaxation matrix
+#! \param mu_p Plastic viscosity
+#! \param tau_y Yield stress
+#! \param m Stress growth exponent
+#! \param max_iters Maximum iterations for determining apparent viscosity
+#! \param tol Tolerance for apparent viscosity convergence
+function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
+  mu_p::Number, tau_y::Number, m::Number, max_iters::Int, tol::FloatingPoint)
+  const M = @DEFAULT_MRT_M();
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i,j];
+    uij = vec(msm.u[i,j,:]);
+
+    for k=1:9
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
+    end
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+		muij = @mu(msm.omega[i,j], rhoij, c_ssq);
+    Sij = S(muij, rhoij, c_ssq, lat.dt);
+
+    f = vec(lat.f[i,j,:]);
+    mij = M * f;
+    mij_eq = M * f_eq;
+    f_neq = f - f_eq;
+    muo = muij;
+
+    # iteratively determine mu
+    iters = 0;
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(msm.rho[i,j], f_neq, lat.c, c_ssq, lat.dt, M, Sij);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+      s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
+      Sij[8,8] = s_8;
+      Sij[9,9] = s_8;
+
+      # check for convergence
+      if abs(muo - muij) / muo <= tol || iters > max_iters
+        break;
+      end
+
+      println("$iters, ", abs(muo - muij) / muo);
+    end
+    
+    lat.f[i,j,:] = f - inv(M) * Sij * (mij - mij_eq); # perform collision
+    msm.omega[i,j] = omega(muij, rhoij, lat.dx, lat.dt)
+  end
 end
 
 #! Vikhansky relaxation matrix
