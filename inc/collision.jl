@@ -14,7 +14,7 @@ function srt_col_f! (lat::Lattice, msm::MultiscaleMap)
   for i=1:ni, j=1:nj, k=1:9
     f_eq = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
       vec(msm.u[i,j,:]));
-    lat.f[i,j,k] = msm.omega * f_eq + (1.0 - msm.omega) * lat.f[i,j,k];
+    lat.f[i,j,k] = msm.omega[i,j] * f_eq + (1.0 - msm.omega[i,j]) * lat.f[i,j,k];
   end
 
 end
@@ -154,10 +154,37 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function)
     m = M * f;
     m_eq = M * f_eq;
 
-    strain_rate_tensor = (rho::Float64, f_neq::Array{Float64, 1}, 
+    strain_rate_tensor = strain_rate_tensor(msm.rho[i,j], f_neq::Array{Float64, 1},
   c::Array{Float64, 2}, c_sq::Float64, dt::Float64, M::Array{Float64,2},
   S::SparseMatrixCSC)
 
     lat.f[i,j,:] = f - inv(M) * S() * (m - m_eq); # perform collision
   end
 end
+
+#! Vikhansky relaxation coefficient for s77, s88
+#!
+#! \param mu Dynamic viscosity
+#! \param rho Local density
+#! \param c_ssq Lattice speed of sound squared
+#! \param dt Change in time
+#! \return Vikhansky relaxation coefficient for s77 and s88
+macro viks_8(mu::Number, rho::Number, c_ssq::Number, dt::Number)
+	return :(1.0/(mu / (rho * c_ssq * dt) + 0.5));
+end
+
+#! Vikhansky relaxation matrix
+#!
+#! \param mu Dynamic viscosity
+#! \param rho Local density
+#! \param c_ssq Lattice speed of sound squared
+#! \param dt Change in time
+#! \return Vikhansky relaxation matix
+function vikhansky_relax_matrix(mu::Number, rho::Number, c_ssq::Number,
+	dt::Number)
+
+	const s_8 = @viks_8(mu, rho, c_ssq, dt);
+	return spdiagm([0.0; 1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8]);
+
+end
+

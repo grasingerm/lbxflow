@@ -5,13 +5,13 @@ require(abspath(joinpath(__multiscale_root__, "lattice.jl")));
 type MultiscaleMap
   dx::FloatingPoint;
   dt::FloatingPoint;
-  omega::FloatingPoint;
+  omega::Array{Float64,2};
   u::Array{Float64,3};
   rho::Array{Float64,2};
 
   MultiscaleMap(nu::FloatingPoint, dx::FloatingPoint, dt::FloatingPoint,
     ni::Unsigned, nj::Unsigned) =
-    new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
+    new(dx, dt, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint)
@@ -19,7 +19,7 @@ type MultiscaleMap
     const dt = lat.dt;
     const ni, nj = size(lat.f);
 
-    new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
+    new(dx, dt, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
       zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
   end
 
@@ -28,7 +28,7 @@ type MultiscaleMap
     const dt = lat.dt;
     const ni, nj = size(lat.f);
 
-    new(dx, dt, 1.0/(3 * nu * dt / (dx*dx) + 0.5),
+    new(dx, dt, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
   end
 
@@ -97,7 +97,7 @@ end
 #! \param dt Change in time
 #! \param M Transmation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
-function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1}, 
+function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1},
   c::Array{Float64, 2}, c_sq::Float64, dt::Float64, M::Array{Float64,2},
   S::SparseMatrixCSC)
 
@@ -135,3 +135,14 @@ end
 macro relax_t(mu::Number, rho::Number, dx::Number, dt::Number)
   return :(3 * mu / rho * ((dt * dt) / (dx * dx)) + 0.5 * dt);
 end
+
+#! Calculate collision frequency
+macro omega(mu::Number, rho::Number, dx::Number, dt::Number)
+	return :(1.0 / (3.0 * mu / rho * (dt)/(dx * dx) + 0.5));
+end
+
+#! Viscosity from collision frequency
+macro mu(omega::Number, rho::Number, c_ssq::Number)
+  return :((1.0/omega - 0.5) * rho * c_ssq);
+end
+
