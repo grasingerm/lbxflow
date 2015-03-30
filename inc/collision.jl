@@ -60,7 +60,7 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
       f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     end
 
-    f = lat.f[i,j,:];
+    f = vec(lat.f[i,j,:]);
     m = M * f;
     m_eq = M * f_eq;
 
@@ -90,7 +90,7 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
       f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     end
 
-    f = lat.f[i,j,:];
+    f = vec(lat.f[i,j,:]);
     m = M * f;
     m_eq = M * f_eq;
 
@@ -132,7 +132,7 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
       f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     end
 
-    f = lat.f[i,j,:];
+    f = vec(lat.f[i,j,:]);
     m = M * f;
     m_eq = M * f_eq;
 

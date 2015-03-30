@@ -2,13 +2,13 @@ macro NDEBUG()
   return false;
 end
 
-macro warn(condition, message)
+macro checkdebug(condition, message)
   if @NDEBUG()
     return;
   else
     return quote
-      if condition
-        println(message);
+      if !$condition
+        warn($message);
       end
     end;
   end
