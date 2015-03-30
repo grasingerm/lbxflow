@@ -121,6 +121,9 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
   for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+
     for k=1:9
       f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
         vec(msm.u[i,j,:]));

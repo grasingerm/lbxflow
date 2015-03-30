@@ -4,9 +4,9 @@
   "ni": 500,
   "nj": 20,
   "rhoo": 1.0,
-  "nu": 0.02,
-  "mu_p": 0.02,
-  "tau_y": 0.04,
+  "nu": 0.015,
+  "mu_p": 0.015,
+  "tau_y": 0.03,
   "m": 1000000,
   "max_iters": 20,
   "tol": 0.005,
@@ -14,7 +14,7 @@
   "stepout": 500,
   "col_f": "begin;
               curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm, 
-                vikhansky_relax_matrix, 0.02, 0.04, 1.0e6, 20, 5.0e-3)
+                vikhansky_relax_matrix, 0.015, 0.03, 1.0e6, 20, 5.0e-3)
               return curry_mrt_bingham_col_f!;
             end",
   "bcs": [
