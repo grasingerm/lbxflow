@@ -181,8 +181,22 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
     f_neq = f - f_eq;
     muo = muij;
 
+    #=
+    println("rhoij = ", rhoij);
+    println("uij = ", uij);
+    println("muij = ", muij);
+    println("Sij = ", Sij);
+    println("f = ", f);
+    println("mij = ", mij);
+    println("mij_eq = ", mij_eq);
+    println("f_neq = ", f_neq);
+    println("muo = ", muo);
+    =#
+
     # iteratively determine mu
     iters = 0;
+    mu_prev = muo;
+
     while true
       iters += 1;
 
@@ -196,15 +210,31 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       Sij[9,9] = s_8;
 
       # check for convergence
-      if abs(muo - muij) / muo <= tol || iters > max_iters
+      if abs(mu_prev - muij) / muo <= tol || iters > max_iters
         break;
       end
 
-      println("$iters, ", abs(muo - muij) / muo);
+      #=println("$iters, ", abs(mu_prev - muij) / muo);
+      println("D = ", D);
+      println("gamma = ", gamma);
+      println("muij = ", muij);
+      println("tau = ", @relax_t(muij, rhoij, lat.dx, lat.dt));
+      println("Sij = ", Sij);
+      println("Enter to continue...");
+      readline(STDIN);=#
+
+      mu_prev = muij;
     end
+
+    #=@mdebug(
+      @relax_t(muij, rhoij, lat.dx, lat.dt) > 0.5 && 
+      @relax_t(muij, rhoij, lat.dx, lat.dt) <= 8.0,
+      "Warning: relaxation time should be between 0.5 and 8.0"
+    );=#
     
     lat.f[i,j,:] = f - inv(M) * Sij * (mij - mij_eq); # perform collision
-    msm.omega[i,j] = omega(muij, rhoij, lat.dx, lat.dt)
+    # update collision frequency matrix
+    msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
   end
 end
 

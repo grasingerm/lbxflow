@@ -123,7 +123,7 @@ end
 
 #! Calculate strain rate from strain rate tensor
 macro strain_rate(D)
-  return :(sqrt(ddot($D,$D)));
+  return :(sqrt(2.0 * ddot($D, $D)));
 end
 
 #! Calculate apparent viscosity of a Bingham plastic using Papanstasiou's model
