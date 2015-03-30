@@ -11,7 +11,11 @@ require(abspath(joinpath(root, "inc", "multiscale.jl")));
 require(abspath(joinpath(root, "inc", "simulate.jl")));
 
 function main(inputfile)
+  println("Load simulation defintions from inputfile $inputfile");
   const def = load_sim_definitions(inputfile);
+
+  println("Definitions: ", def);
+  println();
 
   lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"], def["rhoo"]);
   msm = MultiscaleMap(def["nu"], lat, def["rhoo"]);
@@ -69,7 +73,7 @@ function main(inputfile)
     write_datafile_callback("prof-at-500", def["stepout"],
       extract_prof_f(500), "data"),
     (msm::MultiscaleMap, k::Int) -> begin
-      if k % 10 == 0
+      if k % 5 == 0
         println("step $k");
       end
     end
