@@ -15,7 +15,6 @@ function main(inputfile)
   const def = load_sim_definitions(inputfile);
 
   println("Definitions: ", def);
-  println();
 
   lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"], def["rhoo"]);
   msm = MultiscaleMap(def["nu"], lat, def["rhoo"]);
@@ -85,6 +84,14 @@ function main(inputfile)
     end
   ]
 
+  # if data directory does not exist, create it
+  if !isdir(def["datadir"])
+    println(def["datadir"], " does not exist. Creating now...");
+    mkdir(def["datadir"]);
+  end
+
+  println("Starting simulation...");
+  println();
   simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"], callbacks!);
 
   #=
