@@ -9,6 +9,6 @@ set ylabel 'u (lat unit / sec)'
 set xlabel 'y (lat unit)'
 set output 'inlet-effect.png'
 plot \
-    'data/prof-at-100_step-5000.dsv' using 1:2 title 'x=100', \
-    'data/prof-at-250_step-5000.dsv' using 1:2 title 'x=250', \
-    'data/prof-at-500_step-5000.dsv' using 1:2 title 'x=500'
+    'data/prof-at-100_step-10000.dsv' using 1:2 title 'x=100', \
+    'data/prof-at-250_step-10000.dsv' using 1:2 title 'x=250', \
+    'data/prof-at-500_step-10000.dsv' using 1:2 title 'x=500'

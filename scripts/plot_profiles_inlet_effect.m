@@ -1,6 +1,6 @@
-prof100 = csvread('../data/prof-at-100_step-5000.dsv');
-prof250 = csvread('../data/prof-at-250_step-5000.dsv');
-prof500 = csvread('../data/prof-at-500_step-5000.dsv');
+prof100 = csvread('../data/prof-at-100_step-10000.dsv');
+prof250 = csvread('../data/prof-at-250_step-10000.dsv');
+prof500 = csvread('../data/prof-at-500_step-10000.dsv');
 
 % analytical solution
 
