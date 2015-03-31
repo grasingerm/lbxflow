@@ -311,11 +311,14 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
         break;
       end
 
+      println("mu = $muij, mu_p = $mu_prev, relerr = ", abs(mu_prev - muij) / muo);
+
       mu_prev = muij;
     end
 
     # correct relaxation time based on stability limits
     tau = @relax_t(muij, rhoij, lat.dx, lat.dt);
+    info("tau = $tau, tau_max = $tau_max, tau_min = $tau_min");
     if tau > tau_max || tau < tau_min
       if tau > tau_max
         @mdebug("Relaxation time, $tau > $tau_max, maximum allowed. Setting

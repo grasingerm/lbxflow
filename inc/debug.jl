@@ -1,14 +1,12 @@
 macro NDEBUG()
-  return false;
+  return true;
 end
 
 macro mdebug(message)
   if @NDEBUG()
     return;
   else
-    return quote
-      warn($message);
-    end;
+    return :(warn($message));
   end
 end
 
