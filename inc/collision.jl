@@ -1,4 +1,5 @@
 const __collision_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__collision_root__, "debug.jl")));
 require(abspath(joinpath(__collision_root__, "lattice.jl")));
 require(abspath(joinpath(__collision_root__, "multiscale.jl")));
 require(abspath(joinpath(__collision_root__, "numerics.jl")));
@@ -47,22 +48,25 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::SparseMatrixCSC)
 
+  const iM = inv(M);
   const c_ssq = @c_ssq(lat.dx, lat.dt);
   const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
   for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+
     for k=1:9
-      f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
-        vec(msm.u[i,j,:]));
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     end
 
-    f = lat.f[i,j,:];
+    f = vec(lat.f[i,j,:]);
     m = M * f;
     m_eq = M * f_eq;
 
-    lat.f[i,j,:] = f - inv(M) * S * (m - m_eq); # perform collision
+    lat.f[i,j,:] = f - iM * S * (m - m_eq); # perform collision
   end
 end
 
@@ -75,22 +79,25 @@ end
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   S::Function)
 
+  const iM = inv(M);
   const c_ssq = @c_ssq(lat.dx, lat.dt);
   const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
   for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+
     for k=1:9
-      f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
-        vec(msm.u[i,j,:]));
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     end
 
-    f = lat.f[i,j,:];
+    f = vec(lat.f[i,j,:]);
     m = M * f;
     m_eq = M * f_eq;
 
-    lat.f[i,j,:] = f - inv(M) * S(lat, msm) * (m - m_eq); # perform collision
+    lat.f[i,j,:] = f - iM * S(lat, msm) * (m - m_eq); # perform collision
   end
 end
 
@@ -115,22 +122,25 @@ end
 #! \param S (Sparse) diagonal relaxation matrix
 function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
   const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
   const c_ssq = @c_ssq(lat.dx, lat.dt);
   const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
   for i=1:ni, j=1:nj
+		rhoij = msm.rho[i, j];
+		uij = vec(msm.u[i, j, :]);
+
     for k=1:9
-      f_eq[k] = incomp_f_eq(msm.rho[i,j], lat.w[k], c_ssq, vec(lat.c[k,:]),
-        vec(msm.u[i,j,:]));
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
     end
 
-    f = lat.f[i,j,:];
+    f = vec(lat.f[i,j,:]);
     m = M * f;
     m_eq = M * f_eq;
 
-    lat.f[i,j,:] = f - inv(M) * S * (m - m_eq); # perform collision
+    lat.f[i,j,:] = f - iM * S * (m - m_eq); # perform collision
   end
 end
 
@@ -158,14 +168,15 @@ end
 function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
   mu_p::Number, tau_y::Number, m::Number, max_iters::Int, tol::FloatingPoint)
   const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
   const c_ssq = @c_ssq(lat.dx, lat.dt);
   const ni, nj = size(lat.f);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
   for i=1:ni, j=1:nj
-    rhoij = msm.rho[i,j];
-    uij = vec(msm.u[i,j,:]);
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
 
     for k=1:9
       f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
@@ -227,12 +238,105 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
     end
 
     #=@mdebug(
-      @relax_t(muij, rhoij, lat.dx, lat.dt) > 0.5 && 
+      @relax_t(muij, rhoij, lat.dx, lat.dt) > 0.5 &&
       @relax_t(muij, rhoij, lat.dx, lat.dt) <= 8.0,
       "Warning: relaxation time should be between 0.5 and 8.0"
     );=#
-    
-    lat.f[i,j,:] = f - inv(M) * Sij * (mij - mij_eq); # perform collision
+
+    lat.f[i,j,:] = f - iM * Sij * (mij - mij_eq); # perform collision
+    # update collision frequency matrix
+    msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
+  end
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S Function that returns (sparse) diagonal relaxation matrix
+#! \param mu_p Plastic viscosity
+#! \param tau_y Yield stress
+#! \param m Stress growth exponent
+#! \param max_iters Maximum iterations for determining apparent viscosity
+#! \param tol Tolerance for apparent viscosity convergence
+#! \param tau_min Minimum relaxation time
+#! \param tau_max Maximum relaxation time
+function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
+  mu_p::Number, tau_y::Number, m::Number, max_iters::Int, tol::FloatingPoint,
+  tau_min::Number, tau_max::Number)
+
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+
+    for k=1:9
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
+    end
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    muij = @mu(msm.omega[i,j], rhoij, c_ssq);
+    Sij = S(muij, rhoij, c_ssq, lat.dt);
+
+    f = vec(lat.f[i,j,:]);
+    mij = M * f;
+    mij_eq = M * f_eq;
+    f_neq = f - f_eq;
+    muo = muij;
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(msm.rho[i,j], f_neq, lat.c, c_ssq, lat.dt, M, Sij);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+      s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
+      Sij[8,8] = s_8;
+      Sij[9,9] = s_8;
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol || iters > max_iters
+        break;
+      end
+
+      mu_prev = muij;
+    end
+
+    # correct relaxation time based on stability limits
+    tau = @relax_t(muij, rhoij, lat.dx, lat.dt);
+    if tau > tau_max || tau < tau_min
+      if tau > tau_max
+        @mdebug("Relaxation time, $tau > $tau_max, maximum allowed. Setting
+          relaxation time to $tau_max for numerical stability.")
+        tau = tau_max;
+      elseif tau < tau_min
+        @mdebug("Relaxation time, $tau < $tau_min, minimum allowed. Setting
+          relaxation time to $tau_min for numerical stability.")
+        tau = tau_min;
+      end
+
+      muij = @mu((lat.dx / tau), rhoij, c_ssq);
+
+      # update relaxation matrix
+      s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
+      Sij[8,8] = s_8;
+      Sij[9,9] = s_8;
+    end
+
+    lat.f[i,j,:] = f - iM * Sij * (mij - mij_eq); # perform collision
+
     # update collision frequency matrix
     msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
   end

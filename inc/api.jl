@@ -4,6 +4,11 @@ import JSON
 function load_sim_definitions(inputfile::String)
   j = JSON.parse(readall(inputfile));
 
+  # parse and evaluate setup code
+  if in("preval_setup", keys(j))
+    eval(parse(j["preval_setup"]));
+  end
+
   # parse and evaluate collision function to function pointer
   j["col_f"] = eval(parse(j["col_f"]));
 

@@ -15,7 +15,6 @@ function main(inputfile)
   const def = load_sim_definitions(inputfile);
 
   println("Definitions: ", def);
-  println();
 
   lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"], def["rhoo"]);
   msm = MultiscaleMap(def["nu"], lat, def["rhoo"]);
@@ -58,20 +57,26 @@ function main(inputfile)
 
   end
 
+  const nito5 = convert(Int, round(def["ni"]/5.));
+  const nito4 = convert(Int, round(def["ni"]/4.));
+  const nito2 = convert(Int, round(def["ni"]/2.));
+
+  # TODO: make this less problem specific
+  # TODO: move this to inputfile
   #! Collect callback functions for end of each iteration
   callbacks! = [
     zero_v_at_outlet!,
     write_datafile_callback("u", def["stepout"],
-      ((msm::MultiscaleMap) -> return msm.u[:,:,1]), "data"),
+      ((msm::MultiscaleMap) -> return msm.u[:,:,1]), def["datadir"]),
     write_datafile_callback("v", def["stepout"],
-      ((msm::MultiscaleMap) -> return msm.u[:,:,2]), "data"),
-    write_datafile_callback("u_mag", def["stepout"], u_mag, "data"),
-    write_datafile_callback("prof-at-100", def["stepout"],
-      extract_prof_f(100), "data"),
-    write_datafile_callback("prof-at-250", def["stepout"],
-      extract_prof_f(250), "data"),
-    write_datafile_callback("prof-at-500", def["stepout"],
-      extract_prof_f(500), "data"),
+      ((msm::MultiscaleMap) -> return msm.u[:,:,2]), def["datadir"]),
+    write_datafile_callback("u_mag", def["stepout"], u_mag, def["datadir"]),
+    write_datafile_callback("prof-at-$nito5", def["stepout"],
+      extract_prof_f(nito5), def["datadir"]),
+    write_datafile_callback("prof-at-$nito4", def["stepout"],
+      extract_prof_f(nito4), def["datadir"]),
+    write_datafile_callback("prof-at-$nito2", def["stepout"],
+      extract_prof_f(nito2), def["datadir"]),
     (msm::MultiscaleMap, k::Int) -> begin
       if k % 5 == 0
         println("step $k");
@@ -79,6 +84,14 @@ function main(inputfile)
     end
   ]
 
+  # if data directory does not exist, create it
+  if !isdir(def["datadir"])
+    println(def["datadir"], " does not exist. Creating now...");
+    mkdir(def["datadir"]);
+  end
+
+  println("Starting simulation...");
+  println();
   simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"], callbacks!);
 
   #=
