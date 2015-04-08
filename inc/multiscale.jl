@@ -1,6 +1,6 @@
 const __multiscale_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__multiscale_root__, "lattice.jl")));
-#require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
+require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
 
 type MultiscaleMap
   dx::FloatingPoint;
