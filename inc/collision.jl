@@ -259,11 +259,12 @@ end
 #! \param m Stress growth exponent
 #! \param max_iters Maximum iterations for determining apparent viscosity
 #! \param tol Tolerance for apparent viscosity convergence
+#! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
 #! \param tau_min Minimum relaxation time
 #! \param tau_max Maximum relaxation time
 function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
   mu_p::Number, tau_y::Number, m::Number, max_iters::Int, tol::FloatingPoint,
-  tau_min::Number, tau_max::Number)
+  gamma_min::FloatingPoint, tau_min::Number, tau_max::Number)
 
   const M = @DEFAULT_MRT_M();
   const iM = inv(M);
@@ -301,32 +302,54 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       gamma = @strain_rate(D);
 
       # update relaxation matrix
+      if abs(gamma) < gamma_min
+        if gamma >= 0
+          gamma = gamma_min;
+        else
+          gamma = -gamma_min;
+        end
+        @mdebug(string("Strain rate, $gamma, is less than minimum allowed ",
+          "strain rate $gamma_min. Setting strain rate to $gamma for ",
+          "numerical stability. At node: ($i, $j) and iteration: $iters."));
+      end
+
       muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+
       s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
       Sij[8,8] = s_8;
       Sij[9,9] = s_8;
+
+      #=
+      println("mu = $muij, mu_p = $mu_prev, relerr = ", abs(mu_prev - muij) / muo);
+      println("node $i, $j");
+      println("iters = $iters, ", abs(mu_prev - muij) / muo);
+      println("D = ", D);
+      println("gamma = ", gamma);
+      println("muij = ", muij);
+      println("tau = ", @relax_t(muij, rhoij, lat.dx, lat.dt));
+      println("Sij = ", Sij);
+      println("Enter to continue...");
+      readline(STDIN);
+      =#
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol || iters > max_iters
         break;
       end
 
-      println("mu = $muij, mu_p = $mu_prev, relerr = ", abs(mu_prev - muij) / muo);
-
       mu_prev = muij;
     end
 
     # correct relaxation time based on stability limits
     tau = @relax_t(muij, rhoij, lat.dx, lat.dt);
-    info("tau = $tau, tau_max = $tau_max, tau_min = $tau_min");
     if tau > tau_max || tau < tau_min
       if tau > tau_max
-        @mdebug("Relaxation time, $tau > $tau_max, maximum allowed. Setting
-          relaxation time to $tau_max for numerical stability.")
+        @mdebug(string("Relaxation time, $tau > $tau_max, maximum allowed. ",
+          "Setting relaxation time to $tau_max for numerical stability."));
         tau = tau_max;
       elseif tau < tau_min
-        @mdebug("Relaxation time, $tau < $tau_min, minimum allowed. Setting
-          relaxation time to $tau_min for numerical stability.")
+        @mdebug(string("Relaxation time, $tau < $tau_min, minimum allowed. ",
+          "Setting relaxation time to $tau_min for numerical stability."));
         tau = tau_min;
       end
 

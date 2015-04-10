@@ -8,15 +8,15 @@
   "nu": 0.06,
   "mu_p": 0.06,
   "tau_y": 8.0e-6,
-  "m": 1000000,
+  "m": 100000,
   "max_iters": 20,
   "tol": 0.005,
   "nsteps": 5000,
   "stepout": 500,
   "col_f": "begin;
               curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
-                vikhansky_relax_matrix, 0.06, 8.0e-6, 1.0e6, 20, 5.0e-3, 0.501,
-                8.0);
+                vikhansky_relax_matrix, 0.06, 8.0e-6, 1.0e5, 20, 5.0e-3, 1.0e-9,
+                0.501, 8.0);
               return curry_mrt_bingham_col_f!;
             end",
   "bcs": [
