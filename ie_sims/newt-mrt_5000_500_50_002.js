@@ -10,7 +10,7 @@
   "stepout": 500,
   "col_f": "begin;
               const itau = 1.0 / @relax_t(0.02*5.0, 5.0, 1.0, 1.0);
-              const S = spdiagm([0.0, itau, itau, 0.0, itau, 0.0, itau, 
+              const S = spdiagm([0.0, itau, itau, 0.0, itau, 0.0, itau,
                 itau, itau]);
               curry_mrt_newton_col_f!(lat, msm) = mrt_col_f!(lat, msm, S);
               return curry_mrt_newton_col_f!;
@@ -18,7 +18,7 @@
   "bcs": [
       "north_bounce_back!",
       "south_bounce_back!",
-      "begin; 
+      "begin;
         curry_west_bc!(lat) = west_inlet!(lat, 0.04);
         curry_west_bc!;
       end",

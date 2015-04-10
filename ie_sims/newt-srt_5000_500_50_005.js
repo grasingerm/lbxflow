@@ -12,7 +12,7 @@
   "bcs": [
       "north_bounce_back!",
       "south_bounce_back!",
-      "begin; 
+      "begin;
         curry_west_bc!(lat) = west_inlet!(lat, 0.04);
         curry_west_bc!;
       end",
