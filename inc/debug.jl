@@ -1,5 +1,5 @@
 macro NDEBUG()
-  return true;
+  return false;
 end
 
 macro mdebug(message)

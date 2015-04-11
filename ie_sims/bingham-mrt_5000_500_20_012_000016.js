@@ -15,8 +15,8 @@
   "stepout": 500,
   "col_f": "begin;
               curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
-                vikhansky_relax_matrix, 0.12, 16.0e-6, 1.0e6, 20, 5.0e-3, 1.0e-9,
-                0.501, 8.0);
+                vikhansky_relax_matrix, 0.12, 16.0e-6, 1.0e6, 20, 5.0e-3, 1.0e-11
+                );
               return curry_mrt_bingham_col_f!;
             end",
   "bcs": [
