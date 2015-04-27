@@ -90,6 +90,76 @@ end
 
 #! East open boundary
 function east_open!(lat::Lattice)
-  const ni, nj = size(lat.f)
+  const ni, nj = size(lat.f);
   east_open!(lat, ni, 1, nj);
+end
+
+#! Periodic boundary condition
+function periodic!(lat::Lattice, is::Array{Int, 1}, ks::Array{Int, 1}, 
+  j_from::Int, j_to::Int)
+
+  const ni, nj = size(lat.f);
+  
+  for i in is, k in ks
+    c = lat.c[k,:];
+
+    # where to map frequency distribution to
+    i_tok = i + c[1];
+    j_tok = j_to + c[2];
+
+    # correct for boundary edges
+    if i_tok > ni; i_tok = ni; end;
+    if i_tok < 1; i_tok = 1; end;
+    if j_tok > nj; j_tok = nj; end;
+    if j_tok < 1; j_tok = 1; end;
+
+    # stream
+    lat.f[i_tok,j_tok,k] = lat.f[i,j_from,k];
+  end
+end
+
+#! Periodic boundary condition
+function periodic!(lat::Lattice, i_from::Int, i_to::Int, js::Array{Int, 1}, 
+  ks::Array{Int, 1})
+
+  const ni, nj = size(lat.f);
+  
+  for j in js, k in ks
+    c = lat.c[k,:];
+
+    # where to map frequency distribution to
+    i_tok = i_to + c[1];
+    j_tok = j + c[2];
+
+    # correct for boundary edges
+    if i_tok > ni; i_tok = ni; end;
+    if i_tok < 1; i_tok = 1; end;
+    if j_tok > nj; j_tok = nj; end;
+    if j_tok < 1; j_tok = 1; end;
+
+    # stream
+    lat.f[i_tok,j_tok,k] = lat.f[i_from,j,k];
+  end
+end
+
+#! Periodic east to west
+function periodic_east_to_west!(lat::Lattice)
+  const ni, nj = size(lat.f);
+
+  for j=2:nj-1, (ck,k) in zip((0,1,-1),(1,5,8))
+    lat.f[1,j+ck,k] = lat.f[ni,j,k];
+  end
+end
+
+#! Lid driven flow
+function lid_driven!(lat::Lattice, u::FloatingPoint)
+  const ni, nj = size(lat.f)
+
+  for i=1:ni
+    rho = lat.f[i,nj,1] + lat.f[i,nj,2] + lat.f[i,nj,4] + 2.0 * (lat.f[i,nj,3] 
+      + lat.f[i,nj,7] + lat.f[i,nj,6]);
+    lat.f[i,nj,5] = lat.f[i,nj,3];
+    lat.f[i,nj,9] = lat.f[i,nj,7] + rho * u / 6.0;
+    lat.f[i,nj,8] = lat.f[i,nj,6] - rho * u / 6.0;
+  end
 end
