@@ -1,20 +1,20 @@
 {
-  "datadir": "data/lid-tang/bn001",
+  "datadir": "data/lid-tang/bn100",
   "dx": 1.0,
   "dt": 1.0,
   "ni": 50,
   "nj": 50,
   "rhoo": 1.0,
   "nu": 0.5,
-  "tau_y": 1.0e-4,
-  "m": 1.0e6,
+  "tau_y": 1.0e-2,
+  "m": 1.0e8,
   "max_iters": 25,
   "tol": 0.005,
   "nsteps": 40000,
   "stepout": 500,
   "col_f": "begin;
               curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
-                vikhansky_relax_matrix, 0.5, 1.0e-4, 1.0e6, 20, 5.0e-3, 1.0e-11
+                vikhansky_relax_matrix, 0.5, 1.0e-2, 1.0e8, 20, 5.0e-3, 1.0e-11
                 );
               return curry_mrt_bingham_col_f!;
             end",
