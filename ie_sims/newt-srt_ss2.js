@@ -1,6 +1,6 @@
 {
-  "preamble": "const rho_in = 0.9; const rho_out = 0.885; const datadir = \"data/newt-srt_ss\"; const stepout = 500;",
-  "datadir": "data/newt-srt_ss",
+  "preamble": "const rho_in = 0.9; const rho_out = 0.885; const datadir = \"data/newt-srt_ss2\"; const stepout = 500;",
+  "datadir": "data/newt-srt_ss2",
   "rhoo": 1.0,
   "dx": 1.0,
   "dt": 1.0,
@@ -8,7 +8,7 @@
   "nj": 25,
   "nu": 0.02,
   "col_f": "srt_col_f!",
-  "nsteps": 5000,
+  "nsteps": 50000,
   "bcs": [
       "north_bounce_back!",
       "south_bounce_back!",
@@ -26,10 +26,13 @@
       ((msm::MultiscaleMap) -> return msm.u[:,:,1]), datadir)",
     "write_datafile_callback(\"v\", stepout,
       ((msm::MultiscaleMap) -> return msm.u[:,:,2]), datadir)",
+    "write_datafile_callback(\"rho\", stepout,
+      ((msm::MultiscaleMap) -> return msm.rho), datadir)",
     "write_datafile_callback(\"u_mag\", stepout, u_mag, 
       datadir)",
     "write_datafile_callback(\"prof-midchan\", stepout,
       extract_prof_callback(125), datadir)",
-    "print_step_callback(5)"
-  ]
+    "print_step_callback(10)"
+  ],
+  "test_for_term": "is_steadystate_x"
 }

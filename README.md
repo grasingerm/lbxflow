@@ -11,6 +11,8 @@ to approximate hydrodynamics.
 * [ ] implement free surface flow
 * [ ] clean up api
 * [ ] clean up existing BCs / more general BCs
+* [ ] develop post processing and animations
+* [ ] consider "DSL" for mapping particle to macroscale and vice versa
 * [ ] implement Jonas Latt BCs
 * [ ] parallelize streaming and collision steps, multiscale mapping, and BCs
 * [ ] profile simulation steps to identify bottlenecks
