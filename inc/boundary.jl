@@ -61,7 +61,7 @@ function west_bounce_back!(lat::Lattice)
 end
 
 #! West inlet boundary condition
-function west_inlet!(lat::Lattice, u::FloatingPoint, i::Int, j_begin::Int, 
+function west_inlet!(lat::Lattice, u::FloatingPoint, i::Int, j_begin::Int,
   j_end::Int)
 
   for j=j_begin:j_end
@@ -95,11 +95,11 @@ function east_open!(lat::Lattice)
 end
 
 #! Periodic boundary condition
-function periodic!(lat::Lattice, is::Array{Int, 1}, ks::Array{Int, 1}, 
+function periodic!(lat::Lattice, is::Array{Int, 1}, ks::Array{Int, 1},
   j_from::Int, j_to::Int)
 
   const ni, nj = size(lat.f);
-  
+
   for i in is, k in ks
     c = lat.c[k,:];
 
@@ -119,11 +119,11 @@ function periodic!(lat::Lattice, is::Array{Int, 1}, ks::Array{Int, 1},
 end
 
 #! Periodic boundary condition
-function periodic!(lat::Lattice, i_from::Int, i_to::Int, js::Array{Int, 1}, 
+function periodic!(lat::Lattice, i_from::Int, i_to::Int, js::Array{Int, 1},
   ks::Array{Int, 1})
 
   const ni, nj = size(lat.f);
-  
+
   for j in js, k in ks
     c = lat.c[k,:];
 
@@ -156,10 +156,97 @@ function lid_driven!(lat::Lattice, u::FloatingPoint)
   const ni, nj = size(lat.f)
 
   for i=1:ni
-    rho = lat.f[i,nj,1] + lat.f[i,nj,2] + lat.f[i,nj,4] + 2.0 * (lat.f[i,nj,3] 
+    rho = lat.f[i,nj,1] + lat.f[i,nj,2] + lat.f[i,nj,4] + 2.0 * (lat.f[i,nj,3]
       + lat.f[i,nj,7] + lat.f[i,nj,6]);
     lat.f[i,nj,5] = lat.f[i,nj,3];
     lat.f[i,nj,9] = lat.f[i,nj,7] + rho * u / 6.0;
     lat.f[i,nj,8] = lat.f[i,nj,6] - rho * u / 6.0;
   end
 end
+
+#! Pressure inlet from west direction
+function west_pressure_inlet!(lat::Lattice, rho_in::FloatingPoint, i::Int,
+  j_begin::Int, j_end::Int)
+
+  for j=j_begin:j_end
+    u_x = 1 - (lat.f[i,j,1] + lat.f[i,j,3] + lat.f[i,j,5] +
+                2 * (lat.f[i,j,4] + lat.f[i,j,7] + lat.f[i,j,8])) / rho_in;
+    lat.f[i,j,2] = lat.f[i,j,4] + 2/3 * rho_in * u_x;
+
+    second_term = 0.5 * (lat.f[i,j,3] - lat.f[i,j,5]);
+    third_term = 1/6 * rho_in * u_x;
+
+    lat.f[i,j,6] = lat.f[i,j,8] - second_term + third_term;
+    lat.f[i,j,9] = lat.f[i,j,7] + second_term + third_term;
+  end
+end
+
+#! Pressure inlet from west direction
+function west_pressure_inlet!(lat::Lattice, rho_in::FloatingPoint)
+  const ni, nj = size(lat.f);
+
+  # middle of inlet
+  west_pressure_inlet!(lat, rho_in, 1, 2, nj-1);
+
+  # bottom corner
+  lat.f[1,1,2] = lat.f[1,1,4];
+  lat.f[1,1,3] = lat.f[1,1,5];
+  lat.f[1,1,6] = lat.f[1,1,8];
+  f68 = 0.5 * (rho_in - (lat.f[1,1,1] + lat.f[1,1,2] + lat.f[1,1,3]
+          + lat.f[1,1,4] + lat.f[1,1,5] + lat.f[1,1,6] + lat.f[1,1,8]));
+  lat.f[1,1,7] = f68;
+  lat.f[1,1,9] = f68;
+
+  # top corner
+  lat.f[1,nj,2] = lat.f[1,nj,5];
+  lat.f[1,nj,5] = lat.f[1,nj,3];
+  lat.f[1,nj,7] = lat.f[1,nj,9];
+  f57 = 0.5 * (rho_in - (lat.f[1,nj,1] + lat.f[1,nj,2] + lat.f[1,nj,3]
+          + lat.f[1,nj,4] + lat.f[1,nj,5] + lat.f[1,nj,7] + lat.f[1,nj,9]));
+  lat.f[1,nj,6] = f57;
+  lat.f[1,nj,8] = f57;
+end
+
+#! Pressure outlet to east direction
+function east_pressure_outlet!(lat::Lattice, rho_out::FloatingPoint, i::Int,
+  j_begin::Int, j_end::Int)
+
+  for j=j_begin:j_end
+    u_x = (lat.f[i,j,1] + lat.f[i,j,3] + lat.f[i,j,5] +
+                2 * (lat.f[i,j,2] + lat.f[i,j,6] + lat.f[i,j,9])) / rho_out - 1;
+    lat.f[i,j,4] = lat.f[i,j,2] - 2/3 * rho_out * u_x;
+
+    second_term = 0.5 * (lat.f[i,j,3] - lat.f[i,j,5]);
+    third_term = 1/6 * rho_out * u_x;
+
+    lat.f[i,j,8] = lat.f[i,j,6] + second_term - third_term;
+    lat.f[i,j,7] = lat.f[i,j,9] - second_term - third_term;
+  end
+end
+
+#! Pressure outlet to east direction
+function east_pressure_outlet!(lat::Lattice, rho_out::FloatingPoint)
+  const ni, nj = size(lat.f);
+
+  # middle of inlet
+  east_pressure_outlet!(lat, rho_out, ni, 2, nj-1);
+
+  # bottom corner
+  lat.f[ni,1,4] = lat.f[ni,1,2];
+  lat.f[ni,1,3] = lat.f[ni,1,5];
+  lat.f[ni,1,8] = lat.f[ni,1,6];
+  f68 = 0.5 * (rho_out - (lat.f[ni,1,1] + lat.f[ni,1,2] + lat.f[ni,1,3]
+          + lat.f[ni,1,4] + lat.f[ni,1,5] + lat.f[ni,1,6] + lat.f[ni,1,8]));
+  lat.f[ni,1,7] = f68;
+  lat.f[ni,1,9] = f68;
+
+  # top corner
+  lat.f[ni,nj,4] = lat.f[ni,nj,2];
+  lat.f[ni,nj,5] = lat.f[ni,nj,3];
+  lat.f[ni,nj,7] = lat.f[ni,nj,9];
+  f57 = 0.5 * (rho_out - (lat.f[ni,nj,1] + lat.f[ni,nj,2] + lat.f[ni,nj,3]
+          + lat.f[ni,nj,4] + lat.f[ni,nj,5] + lat.f[ni,nj,7] + lat.f[ni,nj,9]));
+  lat.f[ni,nj,6] = f57;
+  lat.f[ni,nj,8] = f57;
+end
+

@@ -89,24 +89,17 @@ function main(inputfile)
 
   println("Starting simulation...");
   println();
-  simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"], callbacks!);
 
-  #=
-  Profile.clear();
-  @profile simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-    callbacks!);
+  if in("test_for_term", keys(def))
+    const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
+      def["test_for_term"], callbacks!);
+  else
+    const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
+      callbacks!);
+  end
 
-  s = open("prof/main.prof","w");
-  Profile.print(s,cols = 500);
-  close(s);
+  println("Steps simulated: $n");
 
-  bt, lidict = Profile.retrieve();
-  using HDF5, JLD;
-  @save "prof/profdata.jld" bt lidict;
-
-  using ProfileView;
-  ProfileView.view();
-  =#
 end
 
 # parsing arguments and user interface

@@ -26,5 +26,9 @@ function load_sim_definitions(inputfile::String)
     end
   end
 
+  if in("test_for_term", keys(j))
+    j["test_for_term"] = eval(parse(j["test_for_term"]));
+  end
+
   return j;
 end

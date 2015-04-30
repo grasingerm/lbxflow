@@ -32,6 +32,9 @@ type MultiscaleMap
       zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
   end
 
+  MultiscaleMap(msm::MultiscaleMap) =
+    new(msm.dx, msm.dt, copy(msm.omega), copy(msm.u), copy(msm.rho));
+
 end
 
 #! Map particle distribution frequencies to macroscopic variables
@@ -121,6 +124,31 @@ function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1},
   return D;
 end
 
+#! Test if flow is steady state
+#!
+#! \param msm Current multiscale map
+#! \param prev_msm Previous multiscale map
+#! \param tol Threshold for determining steady state
+#! \return Flag for sim termination
+function is_steadystate(msm::MultiscaleMap, prev_msm::MultiscaleMap,
+  tol::FloatingPoint = 5.0e-9)
+
+  sum_diff = 0;
+  sum_u = 0;
+
+  for (u, u_prev) in zip(msm.u, prev_msm.u)
+    sum_diff += abs(u - u_prev);
+    sum_u += u;
+  end
+
+  if sum_diff / sum_u <= tol
+    return true;
+  end
+
+  return false;
+
+end
+
 #! Calculate strain rate from strain rate tensor
 macro strain_rate(D)
   return :(sqrt(2.0 * ddot($D, $D)));
@@ -146,3 +174,12 @@ macro mu(omega, rho, c_ssq)
   return :((1.0/$omega - 0.5) * $rho * $c_ssq);
 end
 
+#! Macroscopic pressure from rho
+macro p(rho, c_ssq)
+  return :($rho * $c_ssq);
+end
+
+#! Macroscopic rho from pressure
+macro rho(p, c_ssq)
+  return :($p / $c_ssq);
+end

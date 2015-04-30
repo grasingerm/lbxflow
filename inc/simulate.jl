@@ -24,6 +24,43 @@ end
 
 #! Run simulation
 function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
+  bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
+  callbacks!::Array{Function})
+
+  temp_f = copy(lat.f);
+
+  sim_step!(lat, temp_f, msm, collision_f!, bcs!);
+
+  for c! in callbacks!
+    c!(msm, 1);
+  end
+
+  prev_msm = MultiscaleMap(msm);
+
+  for i = 2:n_steps
+    sim_step!(lat, temp_f, msm, collision_f!, bcs!);
+
+    for c! in callbacks!
+      c!(msm, i);
+    end
+
+    # if returns true, terminate simulation
+    if test_for_term(msm, prev_msm)
+      return i;
+    end
+
+    prev_msm.omega = copy(msm.omega);
+    prev_msm.rho = copy(msm.rho);
+    prev_msm.u = copy(msm.u);
+
+  end
+
+  return n_steps;
+
+end
+
+#! Run simulation
+function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
   bcs!::Array{Function}, n_steps::Int, callbacks!::Array{Function})
 
   temp_f = copy(lat.f);
