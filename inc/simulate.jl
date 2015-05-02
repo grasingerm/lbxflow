@@ -52,7 +52,6 @@ function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
     prev_msm.omega = copy(msm.omega);
     prev_msm.rho = copy(msm.rho);
     prev_msm.u = copy(msm.u);
-
   end
 
   return n_steps;
