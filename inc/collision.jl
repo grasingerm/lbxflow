@@ -55,9 +55,13 @@ function srt_col_f! (lat::Lattice, msm::MultiscaleMap, f::Array{Float64,1})
       end=#
 
       # body force is incorporated with w*dt/c_ssq * dot(f,c)
+      #=lat.f[i,j,k] = (omegaij * f_eq
+                      + (1.0 - omegaij) * lat.f[i,j,k]
+                      + wk * lat.dt / c_ssq * dot(f, ck));=#
+
       lat.f[i,j,k] = (omegaij * f_eq
                       + (1.0 - omegaij) * lat.f[i,j,k]
-                      + wk * lat.dt / c_ssq * dot(f, ck));
+                      + 1/6 * dot(f, ck));
 
       #=if i+j <= 3
         println((omegaij * f_eq + (1.0 - omegaij) * lat.f[i,j,k] + wk * lat.dt / c_ssq * dot(f, ck)));
