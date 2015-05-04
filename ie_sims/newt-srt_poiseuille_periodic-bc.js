@@ -1,5 +1,5 @@
 {
-  "preamble": "using PyPlot; const rho_in = 0.9; const rho_out = 0.885; const pgrad = -0.0125; const f = [-pgrad; 0.0]; const datadir = \"data/newt-srt_poiseuille_pbc\"; const stepout = 1000;",
+  "preamble": "using PyPlot; const rho_in = 0.9; const rho_out = 0.885; const pgrad = -0.000125; const f = [-pgrad; 0.0]; const datadir = \"data/newt-srt_poiseuille_pbc\";",
   "datadir": "data/newt-srt_poiseuille_pbc",
   "rhoo": 1.0,
   "dx": 1.0,
@@ -19,8 +19,12 @@
     "periodic_east_to_west!"
   ],
   "callbacks": [
-    "plot_umag_contour_callback(1, 0.1)",
+    "plot_ubar_profile_callback(10, 25, 0.1)",
     "print_step_callback(25)"
   ],
+  "postsim": "(msm::MultiscaleMap) -> begin
+                writedlm(joinpath(datadir, \"ux_profile.dsv\"), 
+                  extract_prof_callback(10)(msm), \",\");
+              end",
   "test_for_term": "is_steadystate_x"
 }

@@ -26,6 +26,10 @@ function main(inputfile)
     mkdir(def["datadir"]);
   end
 
+  if in("presim", keys(def))
+    def["presim"](msm);
+  end
+
   println("Starting simulation...");
   println();
 
@@ -37,7 +41,11 @@ function main(inputfile)
       def["callbacks"]);
   end
 
-  println("Steps simulated: $n");
+  if in("postsim", keys(def))
+    def["postsim"](msm);
+  end
+
+  println("\nSteps simulated: $n");
 
 end
 

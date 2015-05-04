@@ -43,32 +43,14 @@ function srt_col_f! (lat::Lattice, msm::MultiscaleMap, f::Array{Float64,1})
 
       f_eq = incomp_f_eq(rhoij, wk, c_ssq, ck, uij);
 
-      #=if i+j <= 3
-        println("i,j = ($i,$j)");
-        println("f $k = ", lat.f[i,j,k]);
-        println("c $k = $ck");
-        println("w $k = $wk");
-        println("omega $i $j = $omegaij");
-        println("omega * f_eq = ", omegaij * f_eq);
-        println("(1.0 - omegaij) * lat.f[i,j,k] = ", (1.0 - omegaij) * lat.f[i,j,k]);
-        println("wk * lat.dt / c_ssq * dot(f, ck) = ", wk * lat.dt / c_ssq * dot(f, ck));
-      end=#
-
       # body force is incorporated with w*dt/c_ssq * dot(f,c)
-      #=lat.f[i,j,k] = (omegaij * f_eq
-                      + (1.0 - omegaij) * lat.f[i,j,k]
-                      + wk * lat.dt / c_ssq * dot(f, ck));=#
-
       lat.f[i,j,k] = (omegaij * f_eq
                       + (1.0 - omegaij) * lat.f[i,j,k]
-                      + 1/6 * dot(f, ck));
+                      + wk * lat.dt / c_ssq * dot(f, ck));
 
-      #=if i+j <= 3
-        println((omegaij * f_eq + (1.0 - omegaij) * lat.f[i,j,k] + wk * lat.dt / c_ssq * dot(f, ck)));
-        println("f $k = ", lat.f[i,j,k]);
-        println("ENTER to continue...");
-        readline(STDIN);
-      end=#
+      #=lat.f[i,j,k] = (omegaij * f_eq
+                      + (1.0 - omegaij) * lat.f[i,j,k]
+                      + 1/6 * dot(f, ck));=#
     end
   end
 

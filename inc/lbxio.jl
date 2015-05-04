@@ -34,6 +34,36 @@ function extract_prof_callback(i::Int)
 
 end
 
+#! Extract ux profile cut parallel to y-axis
+function extract_ux_prof_callback(i::Int)
+
+  return (msm::MultiscaleMap) -> begin
+    const ni, nj = size(msm.u);
+    const u = vec(msm.u[i,:,1]);
+
+    x = linspace(-0.5, 0.5, nj);
+    y = u;
+
+    return [x y];
+  end;
+
+end
+
+#! Extract u_bar profile cut parallel to y-axis
+function extract_ubar_prof_callback(i::Int)
+
+  return (msm::MultiscaleMap) -> begin
+    const ni, nj = size(msm.u);
+    const u = vec(msm.u[i,:,1]);
+
+    x = linspace(-0.5, 0.5, nj);
+    y = u / maximum(u);
+
+    return [x y];
+  end;
+
+end
+
 #! Create callback for reporting step
 function print_step_callback(step::Int)
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -43,8 +73,126 @@ function print_step_callback(step::Int)
   end
 end
 
-#! Animate x-component of velocity profile cut parallel to y-axis
+#! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int, 
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const nj = size(msm.u)[2];
+
+      x = linspace(-0.5, 0.5, nj);
+      y = vec(msm.u[i,:,1]);
+
+      clf();
+      plot(x,y);
+      xlabel("x / width");
+      ylabel("ux (lat / sec)");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot nondimensional x-component of velocity profile cut parallel to y-axis
+function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, 
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const nj = size(msm.u)[2];
+      const u = vec(msm.u[i,:,1]);
+
+      x = linspace(-0.5, 0.5, nj);
+      y = u / maximum(u);
+
+      clf();
+      plot(x,y);
+      xlabel("x / width");
+      ylabel("ux / u_max");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, 
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      contour(u_mag(msm));
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String, 
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const nj = size(msm.u)[2];
+
+      x = linspace(-0.5, 0.5, nj);
+      y = vec(msm.u[i,:,1]);
+
+      clf();
+      plot(x,y);
+      xlabel("x / width");
+      ylabel("ux (lat / sec)");
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot nondimensional x-component of velocity profile cut parallel to y-axis
+function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, fname::String,
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const nj = size(msm.u)[2];
+      const u = vec(msm.u[i,:,1]);
+
+      x = linspace(-0.5, 0.5, nj);
+      y = u / maximum(u);
+
+      clf();
+      plot(x,y);
+      xlabel("x / width");
+      ylabel("ux / u_max");
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      contour(u_mag(msm));
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#=
+#! Animate x-component of velocity profile cut parallel to y-axis
+function animate_ux_profile_callback(i::Int, iters_per_frame::Int, 
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -64,7 +212,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Animate nondimensional x-component of velocity profile cut parallel to y-axis
-function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, 
+function animate_ubar_profile_callback(i::Int, iters_per_frame::Int, 
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -84,7 +232,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Animate x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, 
+function animate_umag_contour_callback(iters_per_frame::Int, 
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -95,3 +243,4 @@ function plot_umag_contour_callback(iters_per_frame::Int,
   end
 
 end
+=#

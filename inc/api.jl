@@ -32,6 +32,20 @@ function load_sim_definitions(inputfile::String)
     self["callbacks"] = new_callbacks;
   end
 
+  # if a presim callback exists, parse and evaluate them
+  if in("presim", keys(self))
+    ps = self["presim"];
+    println("evalling: $ps");
+    self["presim"] = eval(parse(ps));
+  end
+
+  # if a postsim callback exists, parse and evaluate them
+  if in("postsim", keys(self))
+    ps = self["postsim"];
+    println("evalling: $ps");
+    self["postsim"] = eval(parse(ps));
+  end
+
   if in("test_for_term", keys(self))
     self["test_for_term"] = eval(parse(self["test_for_term"]));
   end
