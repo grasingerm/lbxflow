@@ -1,5 +1,5 @@
 {
-  "preamble": "const datadir = \"data/newt-srt_lid\"; const stepout = 1000;",
+  "preamble": "using PyPlot; const datadir = \"data/newt-srt_lid\";",
   "datadir": "data/newt-srt_lid",
   "rhoo": 5.0,
   "dx": 1.0,
@@ -19,15 +19,12 @@
     "west_bounce_back!"
   ],
   "callbacks": [
-    "write_datafile_callback(\"u\", stepout,
-      ((msm::MultiscaleMap) -> return msm.u[:,:,1]), datadir)",
-    "write_datafile_callback(\"v\", stepout,
-      ((msm::MultiscaleMap) -> return msm.u[:,:,2]), datadir)",
-    "write_datafile_callback(\"u_mag\", stepout, u_mag,
-      datadir)",
-    "write_datafile_callback(\"rho\", stepout,
-      ((msm::MultiscaleMap) -> return msm.rho), datadir)",
-    "print_step_callback(50)"
+    "plot_uvecs_callback(25, 0.1)",
+    "print_step_callback(25)"
   ],
+  "postsim": "(msm::MultiscaleMap) -> begin
+                writedlm(joinpath(datadir, \"ux.dsv\"), msm.u[:,:,1], \",\");
+                writedlm(joinpath(datadir, \"uy.dsv\"), msm.u[:,:,2], \",\");
+              end",
   "test_for_term": "is_steadystate"
 }

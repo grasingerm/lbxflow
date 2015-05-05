@@ -130,6 +130,20 @@ function plot_umag_contour_callback(iters_per_frame::Int,
 
 end
 
+#! Plot velocity vectors for the domain
+function plot_uvecs_callback(iters_per_frame::Int, 
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      quiver(msm.u[:,:,1], msm.u[:,:,2]);
+      sleep(pause);
+    end
+  end
+
+end
+
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String, 
   pause::FloatingPoint = 0.1)
@@ -183,6 +197,21 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
     if k % iters_per_frame == 0
       clf();
       contour(u_mag(msm));
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot velocity vectors for the domain
+function plot_uvecs_callback(iters_per_frame::Int, fname::String, 
+  pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      quiver(msm.u[:,:,1], msm.u[:,:,2]);
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
