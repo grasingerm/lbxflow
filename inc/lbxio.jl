@@ -279,7 +279,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
-function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, 
+function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
   xy::(Number,Number), pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -344,6 +344,105 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
       clf();
       streamplot(x, y,transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
       text(xy[1], xy[2], "step: $k");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
+  xy::(Number,Number), fname::String, pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const nj = size(msm.u)[2];
+
+      x = linspace(-0.5, 0.5, nj);
+      y = vec(msm.u[i,:,1]);
+
+      clf();
+      plot(x,y);
+      xlabel("x / width");
+      ylabel("ux (lat / sec)");
+      text(xy[1], xy[2], "step: $k");
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot nondimensional x-component of velocity profile cut parallel to y-axis
+function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
+  xy::(Number,Number), fname::String, pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const nj = size(msm.u)[2];
+      const u = vec(msm.u[i,:,1]);
+
+      x = linspace(-0.5, 0.5, nj);
+      y = u / maximum(u);
+
+      clf();
+      plot(x,y);
+      xlabel("x / width");
+      ylabel("ux / u_max");
+      text(xy[1], xy[2], "step: $k");
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
+  fname::String, pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      contour(transpose(u_mag(msm)));
+      text(xy[1], xy[2], "step: $k");
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot velocity vectors for the domain
+function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
+  fname::String, pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      quiver(transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
+      text(xy[1], xy[2], "step: $k");
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot streamlines for the domain
+function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
+  fname::String, pause::FloatingPoint = 0.1)
+
+  return (msm::MultiscaleMap, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const ni, nj = size(msm.rho);
+      x = linspace(0.0, 1.0, ni);
+      y = linspace(0.0, 1.0, nj);
+
+      clf();
+      streamplot(x, y,transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
+      text(xy[1], xy[2], "step: $k");
+      savefig(fname*"_step-$k.png");
       sleep(pause);
     end
   end
