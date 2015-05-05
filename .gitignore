@@ -1,3 +1,8 @@
+# ignore data files and plot images
 data/
 data/*
 *.png
+
+# ignore swap files from vim
+*.swp
+
