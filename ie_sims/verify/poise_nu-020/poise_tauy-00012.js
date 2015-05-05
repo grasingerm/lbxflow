@@ -1,10 +1,10 @@
 {
-  "preamble": "const pgrad = -5.2e-6; const f = [-pgrad; 0.0]; const datadir = \"data/poise_tauy-000004\"; const mu_p = 0.2; const tau_y = 0.00004; const m = 1.0e8; const max_iters = 150; const tol = 1e-6;",
-  "datadir": "data/poise_tauy-000004",
+  "preamble": "const pgrad = -5.2e-6; const f = [-pgrad; 0.0]; const datadir = \"data/poise_tauy-000012\"; const mu_p = 0.2; const tau_y = 0.00012; const m = 1.0e8; const max_iters = 150; const tol = 1e-6;",
+  "datadir": "data/poise_tauy-000012",
   "dx": 1.0,
   "dt": 1.0,
-  "ni": 20,
-  "nj": 20,
+  "ni": 50,
+  "nj": 21,
   "rhoo": 1.0,
   "nu": 0.2,
   "nsteps": 10000,
@@ -24,6 +24,6 @@
   ],
   "postsim": "(msm::MultiscaleMap) -> begin
                 writedlm(joinpath(datadir, \"ubar_profile.dsv\"),
-                  extract_ubar_prof_callback(10)(msm), \",\");
+                  extract_ubar_prof_callback(25)(msm), \",\");
               end"
 }

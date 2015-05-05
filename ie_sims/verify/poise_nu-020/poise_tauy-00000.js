@@ -3,8 +3,8 @@
   "datadir": "data/poise_tauy-000000",
   "dx": 1.0,
   "dt": 1.0,
-  "ni": 20,
-  "nj": 20,
+  "ni": 50,
+  "nj": 21,
   "rhoo": 1.0,
   "nu": 0.2,
   "nsteps": 10000,
@@ -24,6 +24,6 @@
   ],
   "postsim": "(msm::MultiscaleMap) -> begin
                 writedlm(joinpath(datadir, \"ubar_profile.dsv\"),
-                  extract_ubar_prof_callback(10)(msm), \",\");
+                  extract_ubar_prof_callback(25)(msm), \",\");
               end"
 }
