@@ -389,13 +389,24 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
-  for i=1:ni, j=1:nj
-    rhoij = msm.rho[i, j];
-    uij = vec(msm.u[i, j, :]);
+
+  # calc body force vector
+  f_force = Array(Float64, 9);
+  for k=1:9
     wk = lat.w[k];
     ck = vec(lat.c[k,:]);
 
+    f_force[k] = wk * lat.dt / c_ssq * dot(f, ck);
+  end
+
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+
     for k=1:9
+      wk = lat.w[k];
+      ck = vec(lat.c[k,:]);
+
       f_eq[k] = incomp_f_eq(rhoij, wk, c_ssq, ck, uij);
     end
 
@@ -404,7 +415,7 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
     Sij = S(muij, rhoij, c_ssq, lat.dt);
 
     fij = vec(lat.f[i,j,:]);
-    mij = M * f;
+    mij = M * fij;
     mij_eq = M * f_eq;
     f_neq = fij - f_eq;
     muo = muij;
@@ -445,8 +456,7 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       mu_prev = muij;
     end
 
-    lat.f[i,j,:] = fij - iM * Sij * (mij - mij_eq)
-      + wk * lat.dt / c_ssq * dot(f, ck); # perform collision
+    lat.f[i,j,:] = fij - iM * Sij * (mij - mij_eq) + f_force; # perform collision
 
     # update collision frequency matrix
     msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);

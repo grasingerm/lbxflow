@@ -7,7 +7,7 @@ require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));
 #! \param stepout Number of steps in between writing
 #! \param A Function for extracting a 2D array from the multiscale map
 #! \param delim Delimiter to separate values with
-function write_datafile_callback (pre::String, stepout::Int, A::Function, 
+function write_datafile_callback (pre::String, stepout::Int, A::Function,
   dir=".", delim=',')
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -74,7 +74,7 @@ function print_step_callback(step::Int)
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_ux_profile_callback(i::Int, iters_per_frame::Int, 
+function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -95,7 +95,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
-function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, 
+function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -117,13 +117,13 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, 
+function plot_umag_contour_callback(iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(u_mag(msm));
+      contour(transpose(u_mag(msm)));
       sleep(pause);
     end
   end
@@ -145,7 +145,7 @@ function plot_uvecs_callback(iters_per_frame::Int,
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String, 
+function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -196,7 +196,7 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
   return (msm::MultiscaleMap, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(u_mag(msm));
+      contour(transpose(u_mag(msm)));
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -221,7 +221,7 @@ end
 
 #=
 #! Animate x-component of velocity profile cut parallel to y-axis
-function animate_ux_profile_callback(i::Int, iters_per_frame::Int, 
+function animate_ux_profile_callback(i::Int, iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -241,7 +241,7 @@ function animate_ux_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Animate nondimensional x-component of velocity profile cut parallel to y-axis
-function animate_ubar_profile_callback(i::Int, iters_per_frame::Int, 
+function animate_ubar_profile_callback(i::Int, iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
@@ -261,7 +261,7 @@ function animate_ubar_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Animate x-component of velocity profile cut parallel to y-axis
-function animate_umag_contour_callback(iters_per_frame::Int, 
+function animate_umag_contour_callback(iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
   return (msm::MultiscaleMap, k::Int) -> begin
