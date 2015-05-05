@@ -1,12 +1,12 @@
 {
-  "preamble": "using PyPlot; const datadir = \"data/lid-tang/bn001\"; const mu_p = 0.75; const tau_y = 0.001; const m = 1.0e8; const max_iters = 50; const tol = 0.001;",
+  "preamble": "const datadir = \"data/lid-tang/bn001\"; const U = 0.01; const mu_p = 0.0075; const tau_y = 0.00000001; const m = 1.0e8; const max_iters = 50; const tol = 0.001; const Re = U * 75 / mu_p; const Bn = tau_y * 75 / (mu_p * U); info(\"Re = $Re, Bn = $Bn\"); using PyPlot;",
   "datadir": "data/lid-tang/bn001",
   "dx": 1.0,
   "dt": 1.0,
   "ni": 75,
   "nj": 75,
   "rhoo": 1.0,
-  "nu": 0.75,
+  "nu": 0.0075,
   "nsteps": 50000,
   "col_f": "begin;
               curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
@@ -16,7 +16,7 @@
             end",
   "bcs": [
     "begin;
-      curry_lid_driven!(lat) = lid_driven!(lat, 1.0);
+      curry_lid_driven!(lat) = lid_driven!(lat, U);
       return curry_lid_driven!;
     end;",
     "south_bounce_back!",
