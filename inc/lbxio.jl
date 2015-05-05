@@ -156,6 +156,8 @@ function plot_streamlines_callback(iters_per_frame::Int,
 
       clf();
       streamplot(x, y, transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
+      ylim(0.0, 1.0);
+      xlim(0.0, 1.0);
       sleep(pause);
     end
   end
@@ -249,6 +251,8 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::String,
 
       clf();
       streamplot(x, y, transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
+      ylim(0.0, 1.0);
+      xlim(0.0, 1.0);
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -343,6 +347,8 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
 
       clf();
       streamplot(x, y,transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
+      ylim(0.0, 1.0);
+      xlim(0.0, 1.0);
       text(xy[1], xy[2], "step: $k");
       sleep(pause);
     end
@@ -441,6 +447,8 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
 
       clf();
       streamplot(x, y,transpose(msm.u[:,:,1]), transpose(msm.u[:,:,2]));
+      ylim(0.0, 1.0);
+      xlim(0.0, 1.0);
       text(xy[1], xy[2], "step: $k");
       savefig(fname*"_step-$k.png");
       sleep(pause);
