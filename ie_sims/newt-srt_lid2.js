@@ -19,7 +19,8 @@
     "west_bounce_back!"
   ],
   "callbacks": [
-    "plot_streamlines_callback(10, (0.45, -0.075), 0.1)",
+    "plot_streamlines_callback(10, (0.45, -0.075),
+      joinpath(datadir, \"lid-driven_sl\"), 0.025)",
     "print_step_callback(25)"
   ],
   "postsim": "(msm::MultiscaleMap) -> begin
