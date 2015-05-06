@@ -24,8 +24,18 @@
     "west_bounce_back!"
   ],
   "callbacks": [
-  "plot_streamlines_callback(10, (0.45, -0.075),
-      joinpath(datadir, \"lid-tang_sl\"), 0.025)",
+    "(msm::MultiscaleMap, k::Int) -> begin
+        if k % 5000 == 0
+          const ni, nj = size(msm.u);
+          const xs = linspace(0, 1.0, ni);
+          const ys = linspace(0, 1.0, nj);
+
+          writedlm(joinpath(datadir, \"u_step-$k.dsv\"), transpose(msm.u[:,:,1]), \",\");
+          writedlm(joinpath(datadir, \"v_step-$k.dsv\"), transpose(msm.u[:,:,2]), \",\");
+          writedlm(joinpath(datadir, \"u_midcav_step-$k.dsv\"), [vec(msm.u[round(ni/2),:,1]) ys], \",\");
+          writedlm(joinpath(datadir, \"v_midcav_step-$k.dsv\"), [xs vec(msm.u[:,round(nj/2),2])], \",\");
+        end
+      end",
     "print_step_callback(25)"
   ],
   "postsim": "(msm::MultiscaleMap) -> begin
@@ -35,7 +45,7 @@
 
                 writedlm(joinpath(datadir, \"u.dsv\"), transpose(msm.u[:,:,1]), \",\");
                 writedlm(joinpath(datadir, \"v.dsv\"), transpose(msm.u[:,:,2]), \",\");
-                writedlm(joinpath(datadir, \"u_midcav.dsv\"), [vec(msm.u[round(ni/2),:,1]) y], \",\");
-                writedlm(joinpath(datadir, \"v_midcav.dsv\"), [x vec(msm.u[:,round(nj/2),2])], \",\");
+                writedlm(joinpath(datadir, \"u_midcav.dsv\"), [vec(msm.u[round(ni/2),:,1]) ys], \",\");
+                writedlm(joinpath(datadir, \"v_midcav.dsv\"), [xs vec(msm.u[:,round(nj/2),2])], \",\");
               end"
 }
