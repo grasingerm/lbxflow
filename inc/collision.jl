@@ -104,37 +104,6 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
   end
 end
 
-#! Multiple relaxation time collision function for incompressible flow
-#!
-#! \param lat Lattice
-#! \param msm Multiscale map
-#! \param M Transmation matrix to map f from velocity space to momentum space
-#! \param S Function for creating a sparse diagonal relaxation matrix
-function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
-  S::Function)
-
-  const iM = inv(M);
-  const c_ssq = @c_ssq(lat.dx, lat.dt);
-  const ni, nj = size(lat.f);
-
-  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  f_eq = Array(Float64, 9);
-  for i=1:ni, j=1:nj
-    rhoij = msm.rho[i, j];
-    uij = vec(msm.u[i, j, :]);
-
-    for k=1:9
-      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
-    end
-
-    f = vec(lat.f[i,j,:]);
-    m = M * f;
-    m_eq = M * f_eq;
-
-    lat.f[i,j,:] = f - iM * S(lat, msm) * (m - m_eq); # perform collision
-  end
-end
-
 #! Initializes the default multiple relaxation time transformation matrix
 macro DEFAULT_MRT_M()
   return :( [1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0;
@@ -147,6 +116,118 @@ macro DEFAULT_MRT_M()
              0.0    1.0   -1.0    1.0   -1.0    0.0    0.0    0.0    0.0;
              0.0    0.0    0.0    0.0    0.0    1.0   -1.0    1.0   -1.0]
           );
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
+  S::Function, mu_p::Number, tau_y::Number, m::FloatingPoint, gamma_min::FloatingPoint)
+
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+    omegaij = msm.omega[i, j];
+
+    for k=1:9
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
+    end
+
+    f = vec(lat.f[i,j,:]);
+    m = M * f;
+    m_eq = M * f_eq;
+
+    Sij = S(omegaij);
+
+    D = strain_rate_tensor(rhoij, f - f_eq, lat.c, c_ssq, lat.dt, M, Sij);
+    gamma = @strain_rate(D);
+
+    if abs(gamma) < gamma_min
+      if gamma >= 0
+        gamma = gamma_min;
+      else
+        gamma = -gamma_min;
+      end
+      @checkdebug(true, string("Strain rate, $gamma, is less than minimum ",
+        "allowed strain rate $gamma_min. Setting strain rate to $gamma for ",
+        "numerical stability. At node: ($i, $j) and iteration: $iters."));
+    end
+
+    muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+
+    omegaij_new = @omega(muij);
+    msm.omega[i, j] = omegaij_new;
+    S[7,7] = omegaij_new;
+    S[8,8] = omegaij_new;
+
+    lat.f[i,j,:] = f - iM * Sij * (m - m_eq); # perform collision
+  end
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap,
+  S::Function, mu_p::Number, tau_y::Number, m::FloatingPoint,
+  gamma_min::FloatingPoint, f::Array{Float64,1})
+
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc body force vector
+  f_force = Array(Float64, 9);
+  for k=1:9
+    wk = lat.w[k];
+    ck = vec(lat.c[k,:]);
+
+    f_force[k] = wk * lat.dt / c_ssq * dot(f, ck);
+  end
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+    omegaij = msm.omega[i, j];
+
+    for k=1:9
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
+    end
+
+    fij = vec(lat.f[i,j,:]) + f_force;
+    m = M * fij;
+    m_eq = M * f_eq;
+
+    Sij = S(omegaij);
+
+    D = strain_rate_tensor(rhoij, fij - f_eq, lat.c, c_ssq, lat.dt, M, Sij);
+    gamma = @strain_rate(D);
+
+    if abs(gamma) < gamma_min
+      if gamma >= 0
+        gamma = gamma_min;
+      else
+        gamma = -gamma_min;
+      end
+      @checkdebug(true, string("Strain rate, $gamma, is less than minimum ",
+        "allowed strain rate $gamma_min. Setting strain rate to $gamma for ",
+        "numerical stability. At node: ($i, $j) and iteration: $iters."));
+    end
+
+    muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+
+    omegaij_new = @omega(muij);
+    msm.omega[i, j] = omegaij_new;
+    S[7,7] = omegaij_new;
+    S[8,8] = omegaij_new;
+
+    lat.f[i,j,:] = fij - iM * Sij * (m - m_eq); # perform collision
+  end
 end
 
 #! Multiple relaxation time collision function for incompressible flow
@@ -601,14 +682,9 @@ end
 
 #! Chen relaxation matrix
 #!
-#! \param mu Dynamic viscosity
-#! \param rho Local density
-#! \param c_ssq Lattice speed of sound squared
-#! \param dt Change in time
+#! \param omega Collision frequency
 #! \return Chen relaxation matix
-function chen_relax_matrix(nu::Number)
-
-  const s_8 = @omega(nu);
-  return spdiagm([0.0; 1.1; 1.0; 0.0; 1.2; 0.0; 1.2; s_8; s_8]);
+function chen_relax_matrix(omega::Number)
+  return spdiagm([0.0; 1.1; 1.0; 0.0; 1.2; 0.0; 1.2; omega; omega]);
 
 end

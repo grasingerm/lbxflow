@@ -9,9 +9,8 @@
   "nu": 0.2,
   "nsteps": 10000,
   "col_f": "begin;
-              curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
-                vikhansky_relax_matrix, mu_p, tau_y, m, max_iters, tol,
-                1.0e-11, f);
+              curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_fa!(lat, msm,
+                chen_relax_matrix, mu_p, tau_y, m, 1.0e-11, f);
               return curry_mrt_bingham_col_f!;
             end",
   "bcs": [
