@@ -144,6 +144,11 @@ macro omega(mu, rho, dx, dt)
 	return :(1.0 / (3.0 * $mu / $rho * ($dt)/($dx * $dx) + 0.5));
 end
 
+#! Calculate collision frequency
+macro omega(nu)
+  return :(1.0 / (3.0 * $nu + 0.5));
+end
+
 #! Viscosity from collision frequency
 macro mu(omega, rho, c_ssq)
   return :((1.0/$omega - 0.5) * $rho * $c_ssq);

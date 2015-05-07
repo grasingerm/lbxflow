@@ -178,6 +178,8 @@ function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC)
   end
 end
 
+# TODO: this actually comes from Fallah 2012
+
 #! Vikhansky relaxation coefficient for s77, s88
 #!
 #! \param mu Dynamic viscosity
@@ -597,3 +599,16 @@ function vikhansky_relax_matrix(mu::Number, rho::Number, c_ssq::Number,
 
 end
 
+#! Chen relaxation matrix
+#!
+#! \param mu Dynamic viscosity
+#! \param rho Local density
+#! \param c_ssq Lattice speed of sound squared
+#! \param dt Change in time
+#! \return Chen relaxation matix
+function chen_relax_matrix(nu::Number)
+
+  const s_8 = @omega(nu);
+  return spdiagm([0.0; 1.1; 1.0; 0.0; 1.2; 0.0; 1.2; s_8; s_8]);
+
+end
