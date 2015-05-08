@@ -7,7 +7,7 @@
   "nj": 21,
   "rhoo": 1.0,
   "nu": 0.2,
-  "nsteps": 10000,
+  "nsteps": 5000,
   "col_f": "begin;
               curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_fa!(lat, msm,
                 chen_relax_matrix, mu_p, tau_y, m, 1.0e-11, f);

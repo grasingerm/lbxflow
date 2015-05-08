@@ -119,7 +119,7 @@ macro DEFAULT_MRT_M()
 end
 
 #! Multiple relaxation time collision function for incompressible flow
-function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap, M::Array{Float64,2},
+function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap,
   S::Function, mu_p::Number, tau_y::Number, m::FloatingPoint, gamma_min::FloatingPoint)
 
   const M = @DEFAULT_MRT_M();
@@ -171,7 +171,7 @@ end
 
 #! Multiple relaxation time collision function for incompressible flow
 function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap,
-  S::Function, mu_p::Number, tau_y::Number, m::FloatingPoint,
+  S::Function, mu_p::Number, tau_y::Number, mc::FloatingPoint,
   gamma_min::FloatingPoint, f::Array{Float64,1})
 
   const M = @DEFAULT_MRT_M();
@@ -219,12 +219,12 @@ function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap,
         "numerical stability. At node: ($i, $j) and iteration: $iters."));
     end
 
-    muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+    muij = mu_p + tau_y / gamma * (1 - exp(-mc * abs(gamma)));
 
     omegaij_new = @omega(muij);
     msm.omega[i, j] = omegaij_new;
-    S[7,7] = omegaij_new;
-    S[8,8] = omegaij_new;
+    Sij[7,7] = omegaij_new;
+    Sij[8,8] = omegaij_new;
 
     lat.f[i,j,:] = fij - iM * Sij * (m - m_eq); # perform collision
   end
@@ -272,6 +272,7 @@ macro viks_8(mu, rho, c_ssq, dt)
   return :(1.0/($mu / ($rho * $c_ssq * $dt) + 0.5));
 end
 
+#=
 #! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param lat Lattice
@@ -679,6 +680,7 @@ function vikhansky_relax_matrix(mu::Number, rho::Number, c_ssq::Number,
 	return spdiagm([0.0; 1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8]);
 
 end
+=#
 
 #! Chen relaxation matrix
 #!
