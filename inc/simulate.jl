@@ -19,7 +19,7 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3})
     temp_f[i_new,j_new,k] = lat.f[i,j,k];
   end
 
-  lat.f = copy(temp_f);
+  copy!(lat.f, temp_f);
 end
 
 #! Run simulation
@@ -49,9 +49,10 @@ function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
       return i;
     end
 
-    prev_msm.omega = copy(msm.omega);
-    prev_msm.rho = copy(msm.rho);
-    prev_msm.u = copy(msm.u);
+    copy!(prev_msm.omega, msm.omega);
+    copy!(prev_msm.rho, msm.rho);
+    copy!(prev_msm.u, msm.u);
+    copy!(prev_msm.F, msm.F);
   end
 
   return n_steps;

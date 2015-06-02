@@ -1,4 +1,4 @@
-type Lattice
+immutable Lattice
   dx::FloatingPoint
   dt::FloatingPoint
   f::Array{Float64, 3}

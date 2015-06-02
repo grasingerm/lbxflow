@@ -1,5 +1,5 @@
 {
-  "preamble": "using PyPlot; const rho_in = 0.9; const rho_out = 0.885; const pgrad = -0.000125; const f = [-pgrad; 0.0]; const datadir = \"data/newt-srt_poiseuille_pbc\";",
+  "preamble": "using PyPlot; const pgrad = -0.000125; const f = [-pgrad; 0.0]; const datadir = \"data/newt-srt_poiseuille_pbc\";",
   "datadir": "data/newt-srt_poiseuille_pbc",
   "rhoo": 1.0,
   "dx": 1.0,

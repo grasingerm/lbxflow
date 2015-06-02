@@ -2,25 +2,29 @@ const __multiscale_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__multiscale_root__, "lattice.jl")));
 require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
 
-type MultiscaleMap
+immutable MultiscaleMap
   dx::FloatingPoint;
   dt::FloatingPoint;
+  rho_0::FloatingPoint;
   omega::Array{Float64,2};
   u::Array{Float64,3};
   rho::Array{Float64,2};
+  F::Array{Float64,3};
 
   MultiscaleMap(nu::FloatingPoint, dx::FloatingPoint, dt::FloatingPoint,
     ni::Unsigned, nj::Unsigned) =
-    new(dx, dt, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
+    new(dx, dt, 1.0, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
+      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)),
+      zeros(Float64, (ni, nj, 2)));
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint)
     const dx = lat.dx;
     const dt = lat.dt;
     const ni, nj = size(lat.f);
 
-    new(dx, dt, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
+    new(dx, dt, rho, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
+      zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)),
+      zeros(Float64, (ni, nj, 2)));
   end
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice)
@@ -28,13 +32,15 @@ type MultiscaleMap
     const dt = lat.dt;
     const ni, nj = size(lat.f);
 
-    new(dx, dt, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
+    new(dx, dt, 1.0, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
+      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)),
+      zeros(Float64, (ni, nj, 2)));
   end
 
-  MultiscaleMap(msm::MultiscaleMap) =
-    new(msm.dx, msm.dt, copy(msm.omega), copy(msm.u), copy(msm.rho));
-
+  function MultiscaleMap(msm::MultiscaleMap)
+    new(msm.dx, msm.dt, msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho),
+      copy(msm.F));
+  end
 end
 
 #! Map particle distribution frequencies to macroscopic variables
@@ -67,11 +73,11 @@ end
 #! Reynold's number
 #!
 #! \param u Magnitude of macroscopic flow
-#! \param l Characteristic length of flow
+#! \param L Characteristic length of flow
 #! \param nu Kinematic viscosity
 #! \return Reyond's number
-function reynolds(u::Number, l::Number, nu::Number)
-  return u * l / nu;
+function reynolds(u::Number, L::Number, nu::Number)
+  return u * L / nu;
 end
 
 #! Calculate the magnitude of velocity at each lattice node
@@ -98,8 +104,9 @@ end
 #! \param c Lattice vectors
 #! \param c_sq Lattice speed of sound squared
 #! \param dt Change in time
-#! \param M Transmation matrix to map f from velocity space to momentum space
+#! \param M Transformation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
+#! \return D Strain rate matrix
 function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1},
   c::Array{Float64, 2}, c_ssq::Float64, dt::Float64, M::Array{Float64,2},
   S::SparseMatrixCSC)
@@ -124,6 +131,54 @@ function strain_rate_tensor(rho::Float64, f_neq::Array{Float64, 1},
   return D;
 end
 
+#! Calculate local strain rate tensor
+#!
+#! \param rho Local density
+#! \param f_neq Non-equilibrium distribution (f_neq1, f_neq2, ..., f_neq9)
+#! \param c Lattice vectors
+#! \param c_sq Lattice speed of sound squared
+#! \param dt Change in time
+#! \param M Transformation matrix to map f from velocity space to momentum space
+#! \param S (Sparse) diagonal relaxation matrix
+#! \return D Strain rate tensor
+function strain_rate_tensora(rho::Float64, f_neq::Array{Float64, 1},
+  c::Array{Float64, 2}, c_ssq::Float64, dt::Float64, M::Array{Float64,2},
+  S::SparseMatrixCSC)
+
+  D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
+  const ni = length(f_neq);
+  const MiSM = inv(M) * S * M;
+  const mult = -1.0 / (2.0 * rho * c_ssq * dt);
+
+  for a = 1:2, b = 1:2
+    outsum = 0;
+    for i = 1:ni
+      insum = 0;
+      for j = 1:ni
+        insum += MiSM[i,j] * f_neq[j];
+      end
+      outsum += c[i,a] * c[i,b] * insum;
+    end
+    D[a,b] = mult * outsum;
+  end
+
+  return D;
+end
+
+#! Calculate divergence of the strain rate tensor
+function div_strain_rate(D::Array{Float64, 2}, c::Array{Float64, 2})
+  const ni, = size(c);
+  divD = zeros(ni);
+
+  for beta = 1:2
+    for i = 1:ni, alpha = 1:2
+      divD[alpha, beta] += c[i, alpha] * D[alpha, beta];
+    end
+  end
+
+  return divD / 6.0;
+end
+
 #! Calculate strain rate from strain rate tensor
 macro strain_rate(D)
   return :(sqrt(2.0 * ddot($D, $D)));
@@ -142,11 +197,6 @@ end
 #! Calculate collision frequency
 macro omega(mu, rho, dx, dt)
 	return :(1.0 / (3.0 * $mu / $rho * ($dt)/($dx * $dx) + 0.5));
-end
-
-#! Calculate collision frequency
-macro omega(nu)
-  return :(1.0 / (3.0 * $nu + 0.5));
 end
 
 #! Viscosity from collision frequency

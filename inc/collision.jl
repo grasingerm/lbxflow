@@ -47,10 +47,38 @@ function srt_col_f! (lat::Lattice, msm::MultiscaleMap, f::Array{Float64,1})
       lat.f[i,j,k] = (omegaij * f_eq
                       + (1.0 - omegaij) * lat.f[i,j,k]
                       + wk * lat.dt / c_ssq * dot(f, ck));
+    end
+  end
 
-      #=lat.f[i,j,k] = (omegaij * f_eq
-                      + (1.0 - omegaij) * lat.f[i,j,k]
-                      + 1/6 * dot(f, ck));=#
+end
+
+#! Single relaxation time collision function for incompressible Newtonian flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param f Body force vector
+function srt_guo_col_f! (lat::Lattice, msm::MultiscaleMap, f::Array{Float64,1})
+
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i,j];
+
+    uij = vec(msm.u[i,j,:]) + lat.dt / 2.0 * f;
+    omegaij = msm.omega[i,j];
+
+    for k=1:9
+      ck = vec(lat.c[k,:]);
+      wk = lat.w[k];
+
+      f_eq = incomp_f_eq(rhoij, wk, c_ssq, ck, uij);
+
+      fdlk = (1 - 0.5 * omegaij) * wk * dot(((ck - uij) / c_ssq +
+                dot(ck, uij) / (c_ssq * c_ssq) * ck), f);
+
+      lat.f[i,j,k] = (omegaij * f_eq
+                      + (1.0 - omegaij) * lat.f[i,j,k] + fdlk);
     end
   end
 
@@ -71,6 +99,24 @@ function incomp_f_eq(rho::Float64, w::Float64, c_ssq::Float64,
 
   return rho * w * (1.0 + ckdotu/(c_ssq) + 0.5*(ckdotu*ckdotu)/(c_ssq*c_ssq)
     - 0.5 * dot(u, u) / (c_ssq));
+end
+
+#! Equilibrium frequency distribution for incompressible Newtonian flow
+#!
+#! \param rho Density at lattice site
+#! \param w Weight for lattice direction
+#! \param c_ssq Lattice speed of sound squared
+#! \param c_k Vector for lattice direction
+#! \param u Macroscopic flow at lattice site
+#! \return Equilibrium frequency
+function incomp_f_eq_HL(rho::FloatingPoint, rho_0::FloatingPoint,
+  w::FloatingPoint, c_ssq::FloatingPoint, c_k::Array{Float64, 1},
+  u::Array{Float64, 1})
+
+  const ckdotu = dot(c_k, u);
+
+  return w * (rho + rho_0 * (ckdotu/(c_ssq) + 0.5*(ckdotu*ckdotu)/(c_ssq*c_ssq)
+    - 0.5 * dot(u, u) / (c_ssq)));
 end
 
 #! Multiple relaxation time collision function for incompressible flow
@@ -119,118 +165,6 @@ macro DEFAULT_MRT_M()
 end
 
 #! Multiple relaxation time collision function for incompressible flow
-function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap,
-  S::Function, mu_p::Number, tau_y::Number, m::FloatingPoint, gamma_min::FloatingPoint)
-
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const c_ssq = @c_ssq(lat.dx, lat.dt);
-  const ni, nj = size(lat.f);
-
-  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  f_eq = Array(Float64, 9);
-  for i=1:ni, j=1:nj
-    rhoij = msm.rho[i, j];
-    uij = vec(msm.u[i, j, :]);
-    omegaij = msm.omega[i, j];
-
-    for k=1:9
-      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
-    end
-
-    f = vec(lat.f[i,j,:]);
-    m = M * f;
-    m_eq = M * f_eq;
-
-    Sij = S(omegaij);
-
-    D = strain_rate_tensor(rhoij, f - f_eq, lat.c, c_ssq, lat.dt, M, Sij);
-    gamma = @strain_rate(D);
-
-    if abs(gamma) < gamma_min
-      if gamma >= 0
-        gamma = gamma_min;
-      else
-        gamma = -gamma_min;
-      end
-      @checkdebug(true, string("Strain rate, $gamma, is less than minimum ",
-        "allowed strain rate $gamma_min. Setting strain rate to $gamma for ",
-        "numerical stability. At node: ($i, $j) and iteration: $iters."));
-    end
-
-    muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
-
-    omegaij_new = @omega(muij);
-    msm.omega[i, j] = omegaij_new;
-    S[7,7] = omegaij_new;
-    S[8,8] = omegaij_new;
-
-    lat.f[i,j,:] = f - iM * Sij * (m - m_eq); # perform collision
-  end
-end
-
-#! Multiple relaxation time collision function for incompressible flow
-function mrt_bingham_col_fa! (lat::Lattice, msm::MultiscaleMap,
-  S::Function, mu_p::Number, tau_y::Number, mc::FloatingPoint,
-  gamma_min::FloatingPoint, f::Array{Float64,1})
-
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const c_ssq = @c_ssq(lat.dx, lat.dt);
-  const ni, nj = size(lat.f);
-
-  # calc body force vector
-  f_force = Array(Float64, 9);
-  for k=1:9
-    wk = lat.w[k];
-    ck = vec(lat.c[k,:]);
-
-    f_force[k] = wk * lat.dt / c_ssq * dot(f, ck);
-  end
-
-  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  f_eq = Array(Float64, 9);
-  for i=1:ni, j=1:nj
-    rhoij = msm.rho[i, j];
-    uij = vec(msm.u[i, j, :]);
-    omegaij = msm.omega[i, j];
-
-    for k=1:9
-      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
-    end
-
-    fij = vec(lat.f[i,j,:]) + f_force;
-    m = M * fij;
-    m_eq = M * f_eq;
-
-    Sij = S(omegaij);
-
-    D = strain_rate_tensor(rhoij, fij - f_eq, lat.c, c_ssq, lat.dt, M, Sij);
-    gamma = @strain_rate(D);
-
-    if abs(gamma) < gamma_min
-      if gamma >= 0
-        gamma = gamma_min;
-      else
-        gamma = -gamma_min;
-      end
-      @checkdebug(true, string("Strain rate, $gamma, is less than minimum ",
-        "allowed strain rate $gamma_min. Setting strain rate to $gamma for ",
-        "numerical stability. At node: ($i, $j) and iteration: $iters."));
-    end
-
-    muij = mu_p + tau_y / gamma * (1 - exp(-mc * abs(gamma)));
-
-    omegaij_new = @omega(muij);
-    msm.omega[i, j] = omegaij_new;
-    Sij[7,7] = omegaij_new;
-    Sij[8,8] = omegaij_new;
-
-    lat.f[i,j,:] = fij - iM * Sij * (m - m_eq); # perform collision
-  end
-end
-
-#! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param lat Lattice
 #! \param msm Multiscale map
@@ -272,7 +206,7 @@ macro viks_8(mu, rho, c_ssq, dt)
   return :(1.0/($mu / ($rho * $c_ssq * $dt) + 0.5));
 end
 
-#=
+
 #! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param lat Lattice
@@ -310,18 +244,6 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
     f_neq = f - f_eq;
     muo = muij;
 
-    #=
-    println("rhoij = ", rhoij);
-    println("uij = ", uij);
-    println("muij = ", muij);
-    println("Sij = ", Sij);
-    println("f = ", f);
-    println("mij = ", mij);
-    println("mij_eq = ", mij_eq);
-    println("f_neq = ", f_neq);
-    println("muo = ", muo);
-    =#
-
     # iteratively determine mu
     iters = 0;
     mu_prev = muo;
@@ -343,23 +265,8 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
         break;
       end
 
-      #=println("$iters, ", abs(mu_prev - muij) / muo);
-      println("D = ", D);
-      println("gamma = ", gamma);
-      println("muij = ", muij);
-      println("tau = ", @relax_t(muij, rhoij, lat.dx, lat.dt));
-      println("Sij = ", Sij);
-      println("Enter to continue...");
-      readline(STDIN);=#
-
       mu_prev = muij;
     end
-
-    #=@mdebug(
-      @relax_t(muij, rhoij, lat.dx, lat.dt) > 0.5 &&
-      @relax_t(muij, rhoij, lat.dx, lat.dt) <= 8.0,
-      "Warning: relaxation time should be between 0.5 and 8.0"
-    );=#
 
     lat.f[i,j,:] = f - iM * Sij * (mij - mij_eq); # perform collision
     # update collision frequency matrix
@@ -418,18 +325,9 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       gamma = @strain_rate(D);
 
       # update relaxation matrix
-      if abs(gamma) < gamma_min
-        if gamma >= 0
-          gamma = gamma_min;
-        else
-          gamma = -gamma_min;
-        end
-        @checkdebug(true, string("Strain rate, $gamma, is less than minimum ",
-          "allowed strain rate $gamma_min. Setting strain rate to $gamma for ",
-          "numerical stability. At node: ($i, $j) and iteration: $iters."));
-      end
+      gamma = (gamma < gamma_min) ? gamma_min : gamma;
 
-      muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+      muij = mu_p + tau_y / gamma * (1 - exp(-m * gamma));
 
       s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
       Sij[8,8] = s_8;
@@ -462,7 +360,7 @@ end
 #! \param tol Tolerance for apparent viscosity convergence
 #! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
 #! \param f Body force vector
-function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
+function mrt_bingham_farnf_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
   mu_p::Number, tau_y::Number, m::Number, max_iters::Int, tol::FloatingPoint,
   gamma_min::FloatingPoint, f::Array{Float64,1})
 
@@ -473,30 +371,24 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   f_eq = Array(Float64, 9);
-
-  # calc body force vector
-  f_force = Array(Float64, 9);
-  for k=1:9
-    wk = lat.w[k];
-    ck = vec(lat.c[k,:]);
-
-    f_force[k] = wk * lat.dt / c_ssq * dot(f, ck);
-  end
+  Gij = Array(Float64, 9);
 
   for i=1:ni, j=1:nj
     rhoij = msm.rho[i, j];
     uij = vec(msm.u[i, j, :]);
+    Fij = msm.F[i,j];
 
     for k=1:9
       wk = lat.w[k];
       ck = vec(lat.c[k,:]);
 
-      f_eq[k] = incomp_f_eq(rhoij, wk, c_ssq, ck, uij);
+      f_eq[k] = incomp_f_eq_HL(rhoij, msm.rho_0, wk, c_ssq, ck, uij);
     end
 
     # initialize density, viscosity, and relaxation matrix at node i,j
     muij = @mu(msm.omega[i,j], rhoij, c_ssq);
     Sij = S(muij, rhoij, c_ssq, lat.dt);
+    D_ext = zeros(2, 2);
 
     fij = vec(lat.f[i,j,:]);
     mij = M * fij;
@@ -511,26 +403,21 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
     while true
       iters += 1;
 
-      D = strain_rate_tensor(msm.rho[i,j], f_neq, lat.c, c_ssq, lat.dt, M, Sij);
+      D = (strain_rate_tensor(msm.rho_0, f_neq, lat.c, c_ssq, lat.dt, M, Sij)
+            + D_ext);
+      divD = div_strain_rate(D, lat.c);
       gamma = @strain_rate(D);
 
       # update relaxation matrix
-      if abs(gamma) < gamma_min
-        if gamma >= 0
-          gamma = gamma_min;
-        else
-          gamma = -gamma_min;
-        end
-        @checkdebug(true, string("Strain rate, $gamma, is less than minimum ",
-          "allowed strain rate $gamma_min. Setting strain rate to $gamma for ",
-          "numerical stability. At node: ($i, $j) and iteration: $iters."));
-      end
+      gamma = gamma < gamma_min ? gamma_min : gamma;
 
-      muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+      muij = mu_p + tau_y / gamma * (1 - exp(-m * gamma));
 
       s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
       Sij[8,8] = s_8;
       Sij[9,9] = s_8;
+
+      D_ext = -1.0 / (2 * c_ssq) * (Fij * uij' + uij * Fij');
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol || iters > max_iters
@@ -540,13 +427,100 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       mu_prev = muij;
     end
 
-    lat.f[i,j,:] = fij - iM * Sij * (mij - mij_eq) + f_force; # perform collision
+    lat.f[i,j,:] = fij - iM * Sij * (mij - mij_eq) + Gij; # perform collision
 
     # update collision frequency matrix
     msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
   end
 end
 
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S Function that returns (sparse) diagonal relaxation matrix
+#! \param mu_p Plastic viscosity
+#! \param tau_y Yield stress
+#! \param m Stress growth exponent
+#! \param max_iters Maximum iterations for determining apparent viscosity
+#! \param tol Tolerance for apparent viscosity convergence
+#! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
+#! \param f Body force vector
+function mrt_bingham_farnf_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
+  mu_p::Number, tau_y::Number, m::Number, max_iters::Int, tol::FloatingPoint,
+  gamma_min::FloatingPoint, f::Array{Float64,1})
+
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  Gij = Array(Float64, 9);
+
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+    Fij = msm.F[i,j];
+
+    for k=1:9
+      wk = lat.w[k];
+      ck = vec(lat.c[k,:]);
+
+      f_eq[k] = incomp_f_eq_HL(rhoij, msm.rho_0, wk, c_ssq, ck, uij);
+    end
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    muij = @mu(msm.omega[i,j], rhoij, c_ssq);
+    Sij = S(muij, rhoij, c_ssq, lat.dt);
+    D_ext = zeros(2, 2);
+
+    fij = vec(lat.f[i,j,:]);
+    mij = M * fij;
+    mij_eq = M * f_eq;
+    f_neq = fij - f_eq;
+    muo = muij;
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+
+    while true
+      iters += 1;
+
+      D = (strain_rate_tensor(msm.rho_0, f_neq, lat.c, c_ssq, lat.dt, M, Sij)
+            + D_ext);
+      divD = div_strain_rate(D, lat.c);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      gamma = gamma < gamma_min ? gamma_min : gamma;
+
+      muij = mu_p + tau_y / gamma * (1 - exp(-m * gamma));
+
+      s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
+      Sij[8,8] = s_8;
+      Sij[9,9] = s_8;
+
+      D_ext = -1.0 / (2 * c_ssq) * (Fij * uij' + uij * Fij');
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol || iters > max_iters
+        break;
+      end
+
+      mu_prev = muij;
+    end
+
+    lat.f[i,j,:] = fij - iM * Sij * (mij - mij_eq) + Gij; # perform collision
+
+    # update collision frequency matrix
+    msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
+  end
+end
+
+#= TODO: write collision functions in more DRY manner
 #! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param lat Lattice
@@ -617,19 +591,6 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       Sij[8,8] = s_8;
       Sij[9,9] = s_8;
 
-      #=
-      println("mu = $muij, mu_p = $mu_prev, relerr = ", abs(mu_prev - muij) / muo);
-      println("node $i, $j");
-      println("iters = $iters, ", abs(mu_prev - muij) / muo);
-      println("D = ", D);
-      println("gamma = ", gamma);
-      println("muij = ", muij);
-      println("tau = ", @relax_t(muij, rhoij, lat.dx, lat.dt));
-      println("Sij = ", Sij);
-      println("Enter to continue...");
-      readline(STDIN);
-      =#
-
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol || iters > max_iters
         break;
@@ -665,6 +626,7 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
     msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
   end
 end
+=#
 
 #! Vikhansky relaxation matrix
 #!
@@ -678,9 +640,7 @@ function vikhansky_relax_matrix(mu::Number, rho::Number, c_ssq::Number,
 
 	const s_8 = @viks_8(mu, rho, c_ssq, dt);
 	return spdiagm([0.0; 1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8]);
-
 end
-=#
 
 #! Chen relaxation matrix
 #!
@@ -688,5 +648,4 @@ end
 #! \return Chen relaxation matix
 function chen_relax_matrix(omega::Number)
   return spdiagm([0.0; 1.1; 1.0; 0.0; 1.2; 0.0; 1.2; omega; omega]);
-
 end

@@ -1,22 +1,32 @@
-data = csvread('data\newt-srt_ss\prof-midchan_step-5000.dsv');
-data(:,1) = (data(:,1) - 14) / 26.0;
+data1 = csvread('data\sukop\ux_profile.dsv');
+data1(:,1) = (data1(:,1) - 6.5) / 11.0;
 
-p_in = 0.9 / 3.
-p_out = 0.885 / 3.
-delta_p = p_out - p_in
-ni = 250
-grad_p = delta_p / ni
-nu = 0.02
+grad_p = -1.102e-3
+nu = 1/6
 rhoo = 1.0
 mu = nu * rhoo
-h = 13
+h = 5.5
 
-y = data(:,1)
-u = -h^2 / (2 * mu) * grad_p * (1 - (26 * y/h).^2)
+y = data1(:,1)
+u = -1 / (2 * mu) * grad_p * (h^2 - (2*h*y).^2)
+e = zeros(length(u), 1);
 
-u_bar = u / max(u);
-lbm_u_bar = data(:,2) / max(data(:,2))
+for i=1:length(u)
+    if (u(i) == 0)
+        e(i) = abs(u(i) - data1(i,2));
+    else
+        e(i) = abs(u(i) - data1(i,2)) / abs(u(i));
+    end
+end
 
-plot(y, data(:,2), 'r-', y, u, 'bo');
-legend('LBM','analytical');
+sum(e)
 
+figure(1);
+plot(y, data1(:,2), 'r-', y, u, 'bo');
+legend('LBM-Gou', 'analytical');
+ylabel('u (lu / s)');
+xlabel('y (lu / lu)');
+
+figure(2);
+plot(y, e);
+title('Relative Error');

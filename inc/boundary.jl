@@ -12,7 +12,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f)
+  const ni, nj = size(lat.f);
   north_bounce_back!(lat, 1, ni, nj);
 end
 

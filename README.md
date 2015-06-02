@@ -8,10 +8,12 @@ to approximate hydrodynamics.
 
 ## TODO list
 * [ ] verify Newtonian Poiseuille flow
+** [ ] debug BCs at inlet/outlet (bounceback, periodic)
 * [x] implement MRT scheme for Bingham plastic flow
 * [ ] implement free surface flow
 * [ ] clean up api
 * [ ] clean up existing BCs / more general BCs
+* [ ] break collision functions down into forcing method, constitutive eqn, etc.
 * [x] develop post processing and animations
 * [ ] consider "DSL" for mapping particle to macroscale and vice versa
 * [ ] implement Jonas Latt BCs
