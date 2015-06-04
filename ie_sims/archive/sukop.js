@@ -4,7 +4,7 @@
   "rhoo": 1.0,
   "dx": 1.0,
   "dt": 1.0,
-  "ni": 400,
+  "ni": 20,
   "nj": 12,
   "nu": 0.166666666,
   "col_f":
@@ -19,7 +19,22 @@
     "periodic_east_to_west!"
   ],
   "callbacks": [
-    "plot_ux_profile_callback(200, 5, (-0.05, 0.01), 0.0)",
+    "(msm::MultiscaleMap, k::Int) -> begin
+      if k % 10 == 0
+        const nj = size(msm.u)[2];
+
+        x = linspace(-0.5, 0.5, nj);
+        y1 = vec(msm.u[1,:,1]);
+        y2 = vec(msm.u[10,:,1]);
+        y3 = vec(msm.u[20,:,1]);
+
+        clf();
+        plot(x,y1,x,y2,x,y3);
+        legend([\"1\",\"10\",\"20\"]);
+        xlabel(\"x / width\");
+        ylabel(\"ux (lat / sec)\");
+      end
+    end",
     "print_step_callback(25)"
   ],
   "postsim": "(msm::MultiscaleMap) -> begin

@@ -1,6 +1,6 @@
 {
-  "preamble": "using PyPlot; const datadir = \"data/bmrt_006_008\";",
-  "datadir": "data/bmrt_006_008",
+  "preamble": "const datadir = \"data/bmrt_006_008-2\";",
+  "datadir": "data/bmrt_006_008-2",
   "dx": 1.0,
   "dt": 1.0,
   "ni": 500,
@@ -9,14 +9,11 @@
   "nu": 0.06,
   "mu_p": 0.06,
   "tau_y": 8.0e-3,
-  "m": 100000,
-  "max_iters": 20,
-  "tol": 0.005,
-  "nsteps": 50000,
+  "m": 10000000,
+  "nsteps": 15000,
   "col_f": "begin;
-              curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
-                vikhansky_relax_matrix, 0.06, 8.0e-3, 1.0e6, 200, 5.0e-3, 1.0e-11
-                );
+              curry_mrt_bingham_col_f!(lat, msm) = mrt_fallah_bingham_col_f!(
+                lat, msm, vikhansky_relax_matrix, 0.06, 8.0e-3, 1.0e6, 1.0e-11);
               return curry_mrt_bingham_col_f!;
             end",
   "bcs": [

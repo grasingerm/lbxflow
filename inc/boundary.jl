@@ -146,14 +146,24 @@ end
 function periodic_east_to_west!(lat::Lattice)
   const ni, nj = size(lat.f);
 
-  for j=2:nj-1
-    for (ck,k) in zip((0,1,-1),(2,6,9))
-      lat.f[1,j+ck,k] = lat.f[ni,j,k];
-    end
-    for (ck,k) in zip((0,1,-1),(4,7,8))
-      lat.f[ni,j+ck,k] = lat.f[1,j,k];
-    end
+  # stream horizontals
+  for j=1:nj
+    lat.f[1,j,2] = lat.f[ni,j,2];
+    lat.f[ni,j,4] = lat.f[1,j,4];
   end
+
+  # stream upper diagonals
+  for j=1:nj-1
+    lat.f[1,j+1,6] = lat.f[ni,j,6];
+    lat.f[ni,j+1,7] = lat.f[1,j,7];
+  end
+
+  # stream lower diagonals
+  for j=2:nj
+    lat.f[1,j-1,9] = lat.f[ni,j,9];
+    lat.f[ni,j-1,8] = lat.f[1,j,8];
+  end
+
 end
 
 #! Lid driven flow

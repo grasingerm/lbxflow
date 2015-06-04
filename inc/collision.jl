@@ -206,6 +206,122 @@ macro viks_8(mu, rho, c_ssq, dt)
   return :(1.0/($mu / ($rho * $c_ssq * $dt) + 0.5));
 end
 
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S Function that returns (sparse) diagonal relaxation matrix
+#! \param mu_p Plastic viscosity
+#! \param tau_y Yield stress
+#! \param m Stress growth exponent
+#! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
+function mrt_fallah_bingham_col_f! (lat::Lattice, msm::MultiscaleMap,
+  S::Function, mu_p::Number, tau_y::Number, m::Number, gamma_min::FloatingPoint)
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i, j, :]);
+
+    for k=1:9
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
+    end
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    muij = @mu(msm.omega[i,j], rhoij, c_ssq);
+    Sij = S(muij, rhoij, c_ssq, lat.dt);
+
+    f = vec(lat.f[i,j,:]);
+    mij = M * f;
+    mij_eq = M * f_eq;
+    f_neq = f - f_eq;
+    muo = muij;
+
+    D = strain_rate_tensor(msm.rho[i,j], f_neq, lat.c, c_ssq, lat.dt, M, Sij);
+    gamma = @strain_rate(D);
+
+    # update relaxation matrix
+    gamma = gamma < gamma_min ? gamma_min : gamma;
+    muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+    s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
+    Sij[8,8] = s_8;
+    Sij[9,9] = s_8;
+
+    lat.f[i,j,:] = f - iM * Sij * (mij - mij_eq); # perform collision
+
+    # update collision frequency matrix
+    msm.omega[i,j] = @omega(muij, rhoij, lat.dx, lat.dt);
+  end
+end
+
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S Function that returns (sparse) diagonal relaxation matrix
+#! \param mu_p Plastic viscosity
+#! \param tau_y Yield stress
+#! \param m Stress growth exponent
+#! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
+#! \param f Body force vector
+function mrt_fallah_bingham_col_f! (lat::Lattice, msm::MultiscaleMap,
+  S::Function, mu_p::Number, tau_y::Number, m::Number, gamma_min::FloatingPoint,
+  f::Array{Float64,1})
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const c_ssq = @c_ssq(lat.dx, lat.dt);
+  const ni, nj = size(lat.f);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
+  f_eq = Array(Float64, 9);
+  for i=1:ni, j=1:nj
+    rhoij = msm.rho[i, j];
+    uij = vec(msm.u[i,j,:]) + lat.dt / 2.0 * f;
+
+    for k=1:9
+      f_eq[k] = incomp_f_eq(rhoij, lat.w[k], c_ssq, vec(lat.c[k,:]), uij);
+    end
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    muij = @mu(msm.omega[i,j], rhoij, c_ssq);
+    Sij = S(muij, rhoij, c_ssq, lat.dt);
+
+    f = vec(lat.f[i,j,:]);
+    mij = M * f;
+    mij_eq = M * f_eq;
+    f_neq = f - f_eq;
+    muo = muij;
+
+    D = strain_rate_tensor(msm.rho[i,j], f_neq, lat.c, c_ssq, lat.dt, M, Sij);
+    gamma = @strain_rate(D);
+
+    # update relaxation matrix
+    gamma = gamma < gamma_min ? gamma_min : gamma;
+    muij = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
+    s_8 = @viks_8(muij, rhoij, c_ssq, lat.dt);
+    Sij[8,8] = s_8;
+    Sij[9,9] = s_8;
+
+    omegaij = @omega(muij, rhoij, lat.dx, lat.dt);
+
+    fdl = Array(9);
+    for k=1:9
+      ck = vec(lat.c[k,:]);
+      fdl[k] = (1 - 0.5 * omegaij) * lat.w[k] * dot(((ck - uij) / c_ssq +
+                dot(ck, uij) / (c_ssq * c_ssq) * ck), f);
+    end
+
+    lat.f[i,j,:] = f - iM * Sij * (mij - mij_eq) + fdl; # perform collision
+
+    # update collision frequency matrix
+    msm.omega[i,j] = omegaij;
+  end
+end
 
 #! Multiple relaxation time collision function for incompressible flow
 #!
@@ -334,7 +450,12 @@ function mrt_bingham_col_f! (lat::Lattice, msm::MultiscaleMap, S::Function,
       Sij[9,9] = s_8;
 
       # check for convergence
-      if abs(mu_prev - muij) / muo <= tol || iters > max_iters
+      if abs(mu_prev - muij) / muo <= tol
+        break;
+      end
+
+      if iters > max_iters
+        warn("relaxation matrix did not converge");
         break;
       end
 
