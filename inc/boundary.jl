@@ -179,8 +179,8 @@ function lid_driven!(lat::Lattice, u::FloatingPoint)
   end
 end
 
-#! Pressure inlet from west direction
-function west_pressure_inlet!(lat::Lattice, rho_in::FloatingPoint, i::Int,
+#! Pressure west direction
+function west_pressure!(lat::Lattice, rho_in::FloatingPoint, i::Int,
   j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
@@ -196,12 +196,12 @@ function west_pressure_inlet!(lat::Lattice, rho_in::FloatingPoint, i::Int,
   end
 end
 
-#! Pressure inlet from west direction
-function west_pressure_inlet!(lat::Lattice, rho_in::FloatingPoint)
+#! Pressure west direction
+function west_pressure!(lat::Lattice, rho_in::FloatingPoint)
   const ni, nj = size(lat.f);
 
-  # middle of inlet
-  west_pressure_inlet!(lat, rho_in, 1, 2, nj-1);
+  # middle
+  west_pressure!(lat, rho_in, 1, 2, nj-1);
 
   # bottom corner
   lat.f[1,1,2] = lat.f[1,1,4];
@@ -222,8 +222,8 @@ function west_pressure_inlet!(lat::Lattice, rho_in::FloatingPoint)
   lat.f[1,nj,8] = f57;
 end
 
-#! Pressure outlet to east direction
-function east_pressure_outlet!(lat::Lattice, rho_out::FloatingPoint, i::Int,
+#! Pressure east direction
+function east_pressure!(lat::Lattice, rho_out::FloatingPoint, i::Int,
   j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
@@ -239,12 +239,12 @@ function east_pressure_outlet!(lat::Lattice, rho_out::FloatingPoint, i::Int,
   end
 end
 
-#! Pressure outlet to east direction
-function east_pressure_outlet!(lat::Lattice, rho_out::FloatingPoint)
+#! Pressure east direction
+function east_pressure!(lat::Lattice, rho_out::FloatingPoint)
   const ni, nj = size(lat.f);
 
   # middle of inlet
-  east_pressure_outlet!(lat, rho_out, ni, 2, nj-1);
+  east_pressure!(lat, rho_out, ni, 2, nj-1);
 
   # bottom corner
   lat.f[ni,1,4] = lat.f[ni,1,2];
@@ -294,37 +294,5 @@ function zou_pressure_south!(lat::Lattice, rhoo::FloatingPoint)
                       + 0.5 * (lat.f[i,1,4] - lat.f[i,1,2]);
     lat.f[i,1,7] = lat.f[i,1,9] - (1./6.)*ru
                       + 0.5 * (lat.f[i,1,2] - lat.f[i,1,4]);
-  end
-end
-
-#! Zou and He pressure boundary on east side
-function zou_pressure_east!(lat::Lattice, rhoo::FloatingPoint)
-  const ni, nj = size(lat.f);
-
-  for j=1:nj
-    u = -1. + (lat.f[1,j,1] + lat.f[1,j,3] + lat.f[1,j,5]
-        + 2. * (lat.f[1,j,2] + lat.f[1,j,6] + lat.f[1,j,9])) / rhoo;
-    ru = rhoo * u;
-    lat.f[1,j,4] = lat.f[1,j,2] - (2./3.)*ru;
-    lat.f[1,j,8] = lat.f[1,j,6] - (1./6.)*ru
-                      + 0.5 * (lat.f[1,j,3] - lat.f[1,j,5]);
-    lat.f[1,j,7] = lat.f[1,j,9] - (1./6.)*ru
-                      + 0.5 * (lat.f[1,j,5] - lat.f[1,j,3]);
-  end
-end
-
-#! Zou and He pressure boundary on east side
-function zou_pressure_west!(lat::Lattice, rhoo::FloatingPoint)
-  const ni, nj = size(lat.f);
-
-  for j=1:nj
-    u = -1. + (lat.f[ni,j,1] + lat.f[ni,j,3] + lat.f[ni,j,5]
-        + 2. * (lat.f[ni,j,4] + lat.f[ni,j,8] + lat.f[ni,j,7])) / rhoo;
-    ru = rhoo * u;
-    lat.f[ni,j,2] = lat.f[ni,j,4] + (2./3.)*ru;
-    lat.f[ni,j,6] = lat.f[ni,j,8] + (1./6.)*ru
-                      + 0.5 * (lat.f[ni,j,5] - lat.f[ni,j,3]);
-    lat.f[ni,j,9] = lat.f[ni,j,7] + (1./6.)*ru
-                      + 0.5 * (lat.f[ni,j,3] - lat.f[ni,j,5]);
   end
 end
