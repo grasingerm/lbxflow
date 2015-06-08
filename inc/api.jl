@@ -14,6 +14,11 @@ function load_sim_definitions(inputfile::String)
   # parse and evaluate collision function to function pointer
   self["col_f"] = eval(parse(self["col_f"]));
 
+  # parse and evaluate stream function to function pointer
+  if in("stream_f", keys(self))
+    self["stream_f"] = eval(parse(self["stream_f"]));
+  end
+
   # parse and evaluate boundary conditions to function pointers
   new_bcs = Array(Function, size(self["bcs"]));
   for (i, bc) in enumerate(self["bcs"])

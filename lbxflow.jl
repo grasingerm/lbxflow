@@ -11,6 +11,7 @@ require(abspath(joinpath(root, "inc", "lbxio.jl")));
 require(abspath(joinpath(root, "inc", "multiscale.jl")));
 require(abspath(joinpath(root, "inc", "simulate.jl")));
 
+# TODO: find a better way to execute/bootstrap input file
 function main(inputfile)
   println("Load simulation defintions from inputfile $inputfile");
   const def = load_sim_definitions(inputfile);
@@ -33,12 +34,23 @@ function main(inputfile)
   println("Starting simulation...");
   println();
 
-  if in("test_for_term", keys(def))
-    const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-      def["test_for_term"], def["callbacks"]);
+  # TODO: fix this stupid mess
+  if in("stream_f", keys(def))
+    if in("test_for_term", keys(def))
+      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
+        def["test_for_term"], def["callbacks"], def["stream_f"]);
+    else
+      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
+        def["callbacks"], def["stream_f"]);
+    end
   else
-    const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-      def["callbacks"]);
+    if in("test_for_term", keys(def))
+      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
+        def["test_for_term"], def["callbacks"]);
+    else
+      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
+        def["callbacks"]);
+    end
   end
 
   if in("postsim", keys(def))

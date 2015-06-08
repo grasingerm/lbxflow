@@ -89,12 +89,95 @@ function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
 
 end
 
+#! Run simulation
+function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
+  bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
+  callbacks!::Array{Function}, stream_f!::Function)
+
+  temp_f = copy(lat.f);
+
+  sim_step!(lat, temp_f, msm, collision_f!, bcs!, stream_f!);
+
+  for c! in callbacks!
+    c!(msm, 1);
+  end
+
+  prev_msm = MultiscaleMap(msm);
+
+  for i = 2:n_steps
+    sim_step!(lat, temp_f, msm, collision_f!, bcs!);
+
+    for c! in callbacks!
+      c!(msm, i);
+    end
+
+    # if returns true, terminate simulation
+    if test_for_term(msm, prev_msm)
+      return i;
+    end
+
+    copy!(prev_msm.omega, msm.omega);
+    copy!(prev_msm.rho, msm.rho);
+    copy!(prev_msm.u, msm.u);
+    copy!(prev_msm.F, msm.F);
+  end
+
+  return n_steps;
+
+end
+
+#! Run simulation
+function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
+  bcs!::Array{Function}, n_steps::Int, callbacks!::Array{Function},
+  stream_f!::Function)
+
+  temp_f = copy(lat.f);
+  for i = 1:n_steps
+    sim_step!(lat, temp_f, msm, collision_f!, bcs!, stream_f!);
+
+    for c! in callbacks!
+      c!(msm, i);
+    end
+  end
+
+  return n_steps;
+
+end
+
+#! Run simulation
+function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
+  bcs!::Array{Function}, n_steps::Int, stream_f!::Function)
+
+  temp_f = copy(lat.f);
+  for i = 1:n_steps
+    sim_step!(lat, temp_f, msm, collision_f!, bcs!, stream_f!);
+  end
+
+  return n_steps;
+
+end
+
 #! Simulate a single step
 function sim_step!(lat::Lattice, temp_f::Array{Float64,3}, msm::MultiscaleMap,
   collision_f!::Function, bcs!::Array{Function})
 
   collision_f!(lat, msm);
   stream!(lat, temp_f);
+
+  for bc! in bcs!
+    bc!(lat);
+  end
+
+  map_to_macro!(lat, msm);
+
+end
+
+#! Simulate a single step
+function sim_step!(lat::Lattice, temp_f::Array{Float64,3}, msm::MultiscaleMap,
+  collision_f!::Function, bcs!::Array{Function}, stream_f!::Function)
+
+  collision_f!(lat, msm);
+  stream_f!(lat, temp_f);
 
   for bc! in bcs!
     bc!(lat);

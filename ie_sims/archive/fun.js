@@ -1,6 +1,6 @@
 {
-  "preamble": "using PyPlot; const pgrad = -1.102e-3; const f = [-pgrad; 0.0]; const datadir = \"data/sukop\";",
-  "datadir": "data/sukop",
+  "preamble": "using PyPlot; const pgrad = -1.102e-3; const f = [-pgrad; 0.0]; const datadir = \"data/fun\";",
+  "datadir": "data/fun",
   "rhoo": 1.0,
   "dx": 1.0,
   "dt": 1.0,
@@ -14,8 +14,7 @@
     end;",
   "nsteps": 10000,
   "bcs": [
-    "north_bounce_back!",
-    "south_bounce_back!",
+    "periodic_north_to_south!",
     "periodic_east_to_west!"
   ],
   "callbacks": [

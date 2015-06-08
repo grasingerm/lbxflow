@@ -146,22 +146,26 @@ end
 function periodic_east_to_west!(lat::Lattice)
   const ni, nj = size(lat.f);
 
-  # stream horizontals
-  for j=1:nj
-    lat.f[1,j,2] = lat.f[ni,j,2];
-    lat.f[ni,j,4] = lat.f[1,j,4];
+  for j=1:nj, k in (2, 6, 9)
+    lat.f[1,j,k] = lat.f[ni-1,j,k];
   end
 
-  # stream upper diagonals
-  for j=1:nj-1
-    lat.f[1,j+1,6] = lat.f[ni,j,6];
-    lat.f[ni,j+1,7] = lat.f[1,j,7];
+  for j=1:nj, k in (4, 7, 8)
+    lat.f[ni,j,k] = lat.f[2,j,k];
   end
 
-  # stream lower diagonals
-  for j=2:nj
-    lat.f[1,j-1,9] = lat.f[ni,j,9];
-    lat.f[ni,j-1,8] = lat.f[1,j,8];
+end
+
+#! Periodic east to west
+function periodic_north_to_south!(lat::Lattice)
+  const ni, nj = size(lat.f);
+
+  for i=1:ni, k in (3, 6, 7)
+    lat.f[i,1,k] = lat.f[i,nj-1,k];
+  end
+
+  for i=1:ni, k in (5, 8, 9)
+    lat.f[i,nj,k] = lat.f[i,2,k];
   end
 
 end
