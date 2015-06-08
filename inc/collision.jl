@@ -291,10 +291,10 @@ function mrt_fallah_bingham_col_f! (lat::Lattice, msm::MultiscaleMap,
     muij = @mu(msm.omega[i,j], rhoij, c_ssq);
     Sij = S(muij, rhoij, c_ssq, lat.dt);
 
-    f = vec(lat.f[i,j,:]);
-    mij = M * f;
+    fij = vec(lat.f[i,j,:]);
+    mij = M * fij;
     mij_eq = M * f_eq;
-    f_neq = f - f_eq;
+    f_neq = fij - f_eq;
     muo = muij;
 
     D = strain_rate_tensor(msm.rho[i,j], f_neq, lat.c, c_ssq, lat.dt, M, Sij);
@@ -316,7 +316,7 @@ function mrt_fallah_bingham_col_f! (lat::Lattice, msm::MultiscaleMap,
                 dot(ck, uij) / (c_ssq * c_ssq) * ck), f);
     end
 
-    lat.f[i,j,:] = f - iM * Sij * (mij - mij_eq) + fdl; # perform collision
+    lat.f[i,j,:] = fij - iM * Sij * (mij - mij_eq) + fdl; # perform collision
 
     # update collision frequency matrix
     msm.omega[i,j] = omegaij;
