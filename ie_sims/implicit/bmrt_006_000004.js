@@ -6,15 +6,15 @@
   "ni": 40,
   "nj": 25,
   "rhoo": 1.0,
-  "nu": 0.06,
-  "mu_p": 0.06,
+  "nu": 0.2,
+  "mu_p": 0.2,
   "tau_y": 4.0e-5,
   "m": 100000,
   "nsteps": 15000,
   "col_f": "begin;
-              curry_mrt_bingham_col_f!(lat, msm) = mrt_fallah_bingham_col_f!(
-                lat, msm, vikhansky_relax_matrix, 0.06, 4.0e-5, 1.0e6, 1.0e-11,
-                f);
+              curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
+                vikhansky_relax_matrix, 0.2, 4.0e-5, 1.0e8, 7, 1e-5,
+                1e-9, f, 0.75);
               return curry_mrt_bingham_col_f!;
             end",
   "bcs": [
