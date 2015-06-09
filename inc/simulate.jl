@@ -22,6 +22,27 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3})
   copy!(lat.f, temp_f);
 end
 
+#! stream particle densities
+function stream!(lat::Lattice, temp_f::Array{Float64,3}, is::UnitRange{Int64},
+  js::UnitRange{Int64})
+
+  const ni, nj = size(temp_f);
+
+  #! Stream
+  for i = is, j = js, k = 1:9
+    i_new = i + lat.c[k,1];
+    j_new = j + lat.c[k,2];
+
+    if i_new > ni || j_new > nj || i_new < 1 || j_new < 1
+      continue;
+    end
+
+    temp_f[i_new,j_new,k] = lat.f[i,j,k];
+  end
+
+  copy!(lat.f, temp_f);
+end
+
 #! Run simulation
 function simulate!(lat::Lattice, msm::MultiscaleMap, collision_f!::Function,
   bcs!::Array{Function}, n_steps::Int, test_for_term::Function,

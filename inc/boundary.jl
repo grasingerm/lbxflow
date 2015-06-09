@@ -42,7 +42,7 @@ end
 #! Bounceback boundary condition for west boundary of domain
 function east_bounce_back!(lat::Lattice)
   const ni, nj = size(lat.f);
-  west_bounce_back!(lat, ni, 1, nj);
+  east_bounce_back!(lat, ni, 1, nj);
 end
 
 #! Bounceback boundary condition for west boundary
@@ -58,6 +58,178 @@ end
 function west_bounce_back!(lat::Lattice)
   const nj = size(lat.f)[2];
   west_bounce_back!(lat, 1, 1, nj);
+end
+
+#! Bounceback boundary condition for north boundary
+function north_half_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
+  const ks_to = (5, 8, 9);
+  const ks_from = (3, 6, 7);
+  const cs = (0, -1, 1);
+
+  for i=i_begin:i_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
+    lat.f[i+c,j-1,k_to] = lat.f[i,j,k_from];
+  end
+end
+
+#! Bounceback boundary condition for north boundary of domain
+function north_half_bounce_back!(lat::Lattice)
+  const ni, nj = size(lat.f);
+  north_half_bounce_back!(lat, 2, ni-1, nj);
+
+  lat.f[1,nj-1,5] = lat.f[1,nj,3];
+  lat.f[2,nj-1,9] = lat.f[1,nj,7];
+
+  lat.f[ni,nj-1,5] = lat.f[ni,nj,3];
+  lat.f[ni-1,nj-1,8] = lat.f[ni,nj,6];
+end
+
+#! Bounceback boundary condition for south boundary
+function south_half_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
+  const ks_from = (5, 8, 9);
+  const ks_to = (3, 6, 7);
+  const cs = (0, 1, -1);
+
+  for i=i_begin:i_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
+    lat.f[i+c,j+1,k_to] = lat.f[i,j,k_from];
+  end
+end
+
+#! Bounceback boundary condition for south boundary of domain
+function south_half_bounce_back!(lat::Lattice)
+  const ni, nj = size(lat.f);
+  south_half_bounce_back!(lat, 2, ni-1, 1);
+
+  lat.f[1,2,3] = lat.f[1,1,5];
+  lat.f[2,2,6] = lat.f[1,1,8];
+
+  lat.f[ni,2,3] = lat.f[ni,1,5];
+  lat.f[ni-1,2,7] = lat.f[ni,1,9];
+end
+
+#! Bounceback boundary condition for west boundary
+function east_half_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+  const ks_to = (4, 7, 8);
+  const ks_from = (2, 9, 6);
+  const cs = (0, 1, -1);
+
+  for j=j_begin:j_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
+    lat.f[i-1,j+c,k_to] = lat.f[i,j,k_from];
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function east_half_bounce_back!(lat::Lattice)
+  const ni, nj = size(lat.f);
+  east_half_bounce_back!(lat, ni, 2, nj-1);
+
+  lat.f[ni-1,1,4] = lat.f[ni,1,2];
+  lat.f[ni-1,2,7] = lat.f[ni,1,9];
+
+  lat.f[ni-1,nj,4] = lat.f[ni,nj,2];
+  lat.f[ni-1,nj-1,8] = lat.f[ni,nj,6];
+end
+
+#! Bounceback boundary condition for west boundary
+function west_half_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+  const ks_to = (2, 6, 9);
+  const ks_from = (3, 8, 7);
+  const cs = (0, 1, -1);
+
+  for j=j_begin:j_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
+    lat.f[i+1,j+c,k_to] = lat.f[i,j,k_from];
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function west_half_bounce_back!(lat::Lattice)
+  const nj = size(lat.f)[2];
+  west_half_bounce_back!(lat, 1, 2, nj-1);
+
+  lat.f[2,1,2] = lat.f[1,1,4];
+  lat.f[2,2,6] = lat.f[1,1,8];
+
+  lat.f[2,nj,2] = lat.f[1,nj,4];
+  lat.f[2,nj-1,9] = lat.f[1,nj,7]
+end
+
+#! Bounceback boundary condition for north boundary
+function north_halfa_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
+  const ks_to = (5, 8, 9);
+  const ks_from = (3, 6, 7);
+
+  for i=i_begin:i_end, (k_to, k_from) in zip(ks_to, ks_from)
+    lat.f[i,j,k_to] = lat.f[i,j,k_from];
+  end
+
+  for i=i_begin:i_end
+    (lat.f[i,j,2], lat.f[i,j,4]) = (lat.f[i,j,4], lat.f[i,j,2]);
+  end
+end
+
+#! Bounceback boundary condition for north boundary of domain
+function north_halfa_bounce_back!(lat::Lattice)
+  const ni, nj = size(lat.f);
+  north_halfa_bounce_back!(lat, 1, ni, nj);
+end
+
+#! Bounceback boundary condition for south boundary
+function south_halfa_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
+  const ks_from = (5, 8, 9);
+  const ks_to = (3, 6, 7);
+
+  for i=i_begin:i_end, (k_to, k_from) in zip(ks_to, ks_from)
+    lat.f[i,j,k_to] = lat.f[i,j,k_from];
+  end
+
+  for i=i_begin:i_end
+    (lat.f[i,j,2], lat.f[i,j,4]) = (lat.f[i,j,4], lat.f[i,j,2]);
+  end
+end
+
+#! Bounceback boundary condition for south boundary of domain
+function south_halfa_bounce_back!(lat::Lattice)
+  const ni, nj = size(lat.f);
+  south_halfa_bounce_back!(lat, 1, ni, 1);
+end
+
+#! Bounceback boundary condition for west boundary
+function east_halfa_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+  const ks_to = (4, 7, 8);
+  const ks_from = (2, 9, 6);
+
+  for j=j_begin:j_end, (k_to, k_from) in zip(ks_to, ks_from)
+    lat.f[i,j,k_to] = lat.f[i,j,k_from];
+  end
+
+  for i=i_begin:i_end
+    (lat.f[i,j,3], lat.f[i,j,5]) = (lat.f[i,j,5], lat.f[i,j,3]);
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function east_halfa_bounce_back!(lat::Lattice)
+  const ni, nj = size(lat.f);
+  east_halfa_bounce_back!(lat, ni, 1, nj);
+end
+
+#! Bounceback boundary condition for west boundary
+function west_halfa_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
+  const ks_to = (2, 6, 9);
+  const ks_from = (3, 8, 7);
+
+  for j=j_begin:j_end, (k_to, k_from) in zip(ks_to, ks_from)
+    lat.f[i,j,k_to] = lat.f[i,j,k_from];
+  end
+
+  for i=i_begin:i_end
+    (lat.f[i,j,3], lat.f[i,j,5]) = (lat.f[i,j,5], lat.f[i,j,3]);
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function west_halfa_bounce_back!(lat::Lattice)
+  const nj = size(lat.f)[2];
+  west_halfa_bounce_back!(lat, 1, 1, nj);
 end
 
 #! West inlet boundary condition

@@ -14,12 +14,12 @@
     end;",
   "nsteps": 10000,
   "bcs": [
-    "north_bounce_back!",
-    "south_bounce_back!",
+    "north_halfa_bounce_back!",
+    "south_halfa_bounce_back!",
     "periodic_east_to_west!"
   ],
   "callbacks": [
-    "plot_uvecs_callback(5, 0.0)",
+    "plot_ux_profile_callback(10, 10, 0.0)",
     "print_step_callback(25)"
   ],
   "postsim": "(msm::MultiscaleMap) -> begin

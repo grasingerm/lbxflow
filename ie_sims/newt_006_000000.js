@@ -6,7 +6,7 @@
   "ni": 40,
   "nj": 25,
   "rhoo": 1.0,
-  "nu": 0.06,
+  "nu": 0.2,
   "nsteps": 15000,
   "col_f": "begin;
       bind_srt_col_f!(lat, msm) = srt_guo_col_f!(lat, msm, f);
