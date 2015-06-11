@@ -6,9 +6,13 @@ Lattice Boltzmann method is a computational technique that streams and
 collides "psuedo particles", or particle frequency distributions, on a lattice
 to approximate hydrodynamics.
 
+## Dependencies
+* YAML
+* PyPlot (if plotting or animation is used)
+
 ## TODO list
 * [x] verify Newtonian Poiseuille flow
-** [ ] debug BCs at inlet/outlet (bounceback, periodic)
+* [x] debug BCs at inlet/outlet (bounceback, periodic)
 * [x] implement MRT scheme for Bingham plastic flow
 * [ ] implement HB-Bingham constitutive model used in Fluent
 * [ ] implement free surface flow
@@ -20,7 +24,7 @@ to approximate hydrodynamics.
 * [ ] implement Jonas Latt BCs
 * [ ] parallelize streaming and collision steps, multiscale mapping, and BCs
 * [ ] make an autosave feature
-** [ ] should be able to restart from interrupted model where left off
-** [ ] should be able to "catch" from exceptions and/or keyboard interrupt
+* [ ] should be able to restart from interrupted model where left off
+* [ ] should be able to "catch" from exceptions and/or keyboard interrupt
 * [ ] profile simulation steps to identify bottlenecks
 * [ ] write some tests?

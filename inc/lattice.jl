@@ -1,4 +1,4 @@
-immutable Lattice
+type Lattice
   dx::FloatingPoint
   dt::FloatingPoint
   f::Array{Float64, 3}
@@ -13,6 +13,9 @@ immutable Lattice
   Lattice(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
     new(dx, dt, zeros(Float64, (ni, nj, 9)), cdef, wdef);
 
+  Lattice(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
+    new(dx, dt, f, cdef, wdef);
+
   function Lattice(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
     rho::Float64)
 
@@ -24,6 +27,21 @@ immutable Lattice
     new(dx, dt, f, cdef, wdef);
   end
 
+end
+
+function dumpsf(w::IOStream, lat::Lattice)
+  ni, nj, nk = size(lat.f);
+  write(w, "lat:\n");
+  write(w, "  ni: $ni\n");
+  write(w, "  nj: $nj\n");
+  write(w, "  nk: $nk\n");
+  write(w, "  dx: ", lat.dx, "\n");
+  write(w, "  dt: ", lat.dt, "\n");
+  write(w, "  f: ");
+  for fijk in lat.f
+    write(w, fijk);
+  end
+  write(w, "\n\n");
 end
 
 #! Lattice speed of sound squared

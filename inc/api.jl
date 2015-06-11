@@ -1,59 +1,144 @@
-import JSON
+const api_root = dirname(@__FILE__);
 
-#! Load simulation definitions from inputfile
-function load_sim_definitions(inputfile::String)
-  self = JSON.parse(readall(inputfile));
+require(abspath(joinpath(api_root, "boundary.jl")));
+require(abspath(joinpath(api_root, "collision.jl")));
+require(abspath(joinpath(api_root, "convergence.jl")));
+require(abspath(joinpath(api_root, "lattice.jl")));
+require(abspath(joinpath(api_root, "lbxio.jl")));
+require(abspath(joinpath(api_root, "multiscale.jl")));
+require(abspath(joinpath(api_root, "simulate.jl")));
 
-  # parse and evaluate setup code
-  if in("preamble", keys(self))
-    preamble = self["preamble"];
-    println("evalling: $preamble")
-    eval(parse(preamble));
+import YAML
+
+function parse_and_run(infile::String, args::Dict)
+
+  if !isfile(infile)
+    warn(infile * " not found. Please use valid path to input file.");
+    return nothing;
   end
 
-  # parse and evaluate collision function to function pointer
-  self["col_f"] = eval(parse(self["col_f"]));
+  const DEF_EXPR_ATTRS = {
+    "preamble"      =>  { :store => false, :array => false, :type => Nothing  },
+    "col_f"         =>  { :store => true,  :array => false, :type => Function },
+    "bcs"           =>  { :store => true,  :array => true,  :type => Function },
+    "callbacks"     =>  { :store => true,  :array => true,  :type => Function },
+    "finally"       =>  { :store => true,  :array => true,  :type => Function },
+    "test_for_term" =>  { :store => true,  :array => true,  :type => Function }
+  };
 
-  # parse and evaluate stream function to function pointer
-  if in("stream_f", keys(self))
-    self["stream_f"] = eval(parse(self["stream_f"]));
-  end
+  if args["verbose"]; info("parsing $infile from yaml..."); end
+  ins = YAML.load_file(infile);
+  defs = Dict();
 
-  # parse and evaluate boundary conditions to function pointers
-  new_bcs = Array(Function, size(self["bcs"]));
-  for (i, bc) in enumerate(self["bcs"])
-    println("evalling: $bc");
-    new_bcs[i] = eval(parse(bc));
-  end
-  self["bcs"] = new_bcs;
+  for (k, v) in ins
 
-  # if callbacks exist, parse and evaluate them
-  if in("callbacks", keys(self))
-    new_callbacks = Array(Function, size(self["callbacks"]));
-    for (i, cb) in enumerate(self["callbacks"])
-      println("evalling: $cb");
-      new_callbacks[i] = eval(parse(cb));
+    if in(k, keys(DEF_EXPR_ATTRS))
+
+      if !DEF_EXPR_ATTRS[k][:store]
+        eval(parse(v));
+      else
+        if DEF_EXPR_ATTRS[k][:array]
+          n = length(v);
+          # TODO: this syntax is soon deprecated
+          defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
+          for i=1:n
+            defs[k][i] = eval(parse(v[i]));
+          end
+        else
+          defs[k] = convert(DEF_EXPR_ATTRS[k][:type], eval(parse(v)));
+        end
+      end
+
+    else
+      if typeof(v) <: Dict
+        if v["expr"]
+          defs[k] = eval(parse(v["value"]));
+        else
+          defs[k] = v["value"];
+        end
+      else
+        defs[k] = v;
+      end
+
     end
-    self["callbacks"] = new_callbacks;
+
   end
 
-  # if a presim callback exists, parse and evaluate them
-  if in("presim", keys(self))
-    ps = self["presim"];
-    println("evalling: $ps");
-    self["presim"] = eval(parse(ps));
+  const DEFAULTS = {
+    "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
+    "rho_0"   =>  (defs::Dict) -> error("`rho_0` is a required parameter."),
+    "nu"      =>  (defs::Dict) -> error("`nu` is a required parameter."),
+    "dx"      =>  (defs::Dict) -> return 1.0,
+    "dt"      =>  (defs::Dict) -> return 1.0,
+    "ni"      =>  (defs::Dict) -> error("`ni` is a required parameter."),
+    "nj"      =>  (defs::Dict) -> error("`nj` is a required parameter."),
+    "nsteps"  =>  (defs::Dict) -> error("`nsteps` is a required parameter."),
+    "col_f"   =>  (defs::Dict) -> error("`col_f` is a required parameter."),
+    "sbounds" =>  (defs::Dict) -> [[1, defs["ni"], 1, defs["nj"]]],
+    "cbounds" =>  (defs::Dict) -> [[1, defs["ni"], 1, defs["nj"]]],
+    "bcs"     =>  (defs::Dict) -> Array(Function, 0),
+    "callbacks" =>  (defs::Dict) -> Array(Function, 0),
+    "finally" =>  (defs::Dict) -> Array(Function, 0)
+  };
+
+  if args["verbose"]; info("setting defaults."); end
+  # set defaults
+  for (k, f) in DEFAULTS
+    if !in(k, keys(defs))
+      defs[k] = f(defs);
+    end
   end
 
-  # if a postsim callback exists, parse and evaluate them
-  if in("postsim", keys(self))
-    ps = self["postsim"];
-    println("evalling: $ps");
-    self["postsim"] = eval(parse(ps));
+  # syntactic sugar for backing up simulation on program exit
+  if in("backup_on_exit", keys(defs)) && defs["backup_on_exit"]
+    defs["finally"][end] = write_backup_file_callback(defs["datadir"], 1);
   end
 
-  if in("test_for_term", keys(self))
-    self["test_for_term"] = eval(parse(self["test_for_term"]));
+  if args["verbose"]; println("$infile definitions:"); println(defs); end
+
+  # if datadir does not exist, create it
+  if !isdir(def["datadir"])
+    info(def["datadir"] * " does not exist. Creating now...");
+    mkdir(def["datadir"]);
   end
 
-  return self;
+  if args["resume"] && isfile(joinpath(defs["datadir"], "sim.bak"))
+    k, sim = load_backup_file(joinpath(defs["datadir"], "sim.bak"));
+  else
+    # construct objects
+    k = 0;
+    lat = Lattice(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
+    msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
+    sim = Sim(lat, msm);
+  end
+
+  try
+    if !in("test_for_term", keys(defs))
+      # this simulate should be more memory and computationally efficient
+      const n = simulate!(sim, def["sbounds"], def["col_f"], def["cbounds"], 
+        defs["bcs"], defs["nsteps"], def["callbacks"], k);
+    else
+      const n = simulate!(sim, def["sbounds"], def["col_f"], def["cbounds"], 
+        defs["bcs"], defs["nsteps"], def["test_for_term"], def["callbacks"], k);
+    end
+
+  catch e
+    showerror(STDERR, e);
+    warn("$infile: not completed successfully.");
+
+  finally
+    for fin in defs["finally"]
+      fin(sim);
+    end
+
+    println("$infile:");
+    println("\tSteps simulated: $n");
+
+  end
+
+end
+
+#! Loads simulation where it left off
+function load_backup_file(path_to_backup_file)
+  error("Function not implemented");
 end

@@ -2,6 +2,8 @@ const __multiscale_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__multiscale_root__, "lattice.jl")));
 require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
 
+# TODO: storing dx and dt in both the lattice and multiscale maps seems redundant
+# TODO: probably not necessary storing dx or dt AT ALL
 immutable MultiscaleMap
   dx::FloatingPoint;
   dt::FloatingPoint;
@@ -9,13 +11,15 @@ immutable MultiscaleMap
   omega::Array{Float64,2};
   u::Array{Float64,3};
   rho::Array{Float64,2};
-  F::Array{Float64,3};
+
+  MultiscaleMap(dx::FloatingPoint, dt::FloatingPoint, rho_0::FloatingPoint,
+    omega::Array{Float64,2}, u::Array{Float64,3}, rho::Array{Float64,2}) =
+    new(dx, dt, rho_0, omega, u, rho);
 
   MultiscaleMap(nu::FloatingPoint, dx::FloatingPoint, dt::FloatingPoint,
     ni::Unsigned, nj::Unsigned) =
     new(dx, dt, 1.0, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)),
-      zeros(Float64, (ni, nj, 2)));
+      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint)
     const dx = lat.dx;
@@ -23,8 +27,7 @@ immutable MultiscaleMap
     const ni, nj = size(lat.f);
 
     new(dx, dt, rho, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)),
-      zeros(Float64, (ni, nj, 2)));
+      zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
   end
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice)
@@ -33,13 +36,11 @@ immutable MultiscaleMap
     const ni, nj = size(lat.f);
 
     new(dx, dt, 1.0, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)),
-      zeros(Float64, (ni, nj, 2)));
+      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
   end
 
   function MultiscaleMap(msm::MultiscaleMap)
-    new(msm.dx, msm.dt, msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho),
-      copy(msm.F));
+    new(msm.dx, msm.dt, msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho));
   end
 end
 
@@ -212,4 +213,39 @@ end
 #! Macroscopic rho from pressure
 macro rho(p, c_ssq)
   return :($p / $c_ssq);
+end
+
+function dumpsf(w::IOStream, msm::MultiscaleMap)
+  dx::FloatingPoint;
+  dt::FloatingPoint;
+  rho_0::FloatingPoint;
+  omega::Array{Float64,2};
+  u::Array{Float64,3};
+  rho::Array{Float64,2};
+
+  ni, nj = size(msm.rho);
+  write(w, "msm:\n");
+  write(w, "  ni: $ni\n");
+  write(w, "  nj: $nj\n");
+  write(w, "  dx: ", msm.dx, "\n");
+  write(w, "  dt: ", msm.dt, "\n");
+  write(w, "  rho_0: ", msm.rho_0, "\n");
+
+  write(w, "  omega: ");
+  for omegaij in msm.omega
+    write(w, omegaij);
+  end
+  write(w, "\n");
+
+  write(w, "  u: ");
+  for uij in msm.u
+    write(w, uij);
+  end
+  write(w, "\n");
+
+  write(w, "  rho: ");
+  for rhoij in msm.rho
+    write(w, rhoij);
+  end
+  write(w, "\n\n");
 end
