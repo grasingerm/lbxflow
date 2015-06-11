@@ -18,21 +18,24 @@ function parse_and_run(infile::String, args::Dict)
   end
 
   const DEF_EXPR_ATTRS = {
-    "preamble"      =>  { :store => false, :array => false, :type => Nothing  },
     "col_f"         =>  { :store => true,  :array => false, :type => Function },
     "bcs"           =>  { :store => true,  :array => true,  :type => Function },
     "callbacks"     =>  { :store => true,  :array => true,  :type => Function },
     "finally"       =>  { :store => true,  :array => true,  :type => Function },
-    "test_for_term" =>  { :store => true,  :array => true,  :type => Function }
+    "test_for_term" =>  { :store => true,  :array => false, :type => Function }
   };
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = YAML.load_file(infile);
   defs = Dict();
 
+  if haskey(ins, "preamble")
+    eval(parse(pop!(ins, "preamble")));
+  end
+
   for (k, v) in ins
 
-    if in(k, keys(DEF_EXPR_ATTRS))
+    if haskey(DEF_EXPR_ATTRS, k)
 
       if !DEF_EXPR_ATTRS[k][:store]
         eval(parse(v));
@@ -84,22 +87,22 @@ function parse_and_run(infile::String, args::Dict)
   if args["verbose"]; info("setting defaults."); end
   # set defaults
   for (k, f) in DEFAULTS
-    if !in(k, keys(defs))
+    if !haskey(defs, k)
       defs[k] = f(defs);
     end
   end
 
   # syntactic sugar for backing up simulation on program exit
-  if in("backup_on_exit", keys(defs)) && defs["backup_on_exit"]
+  if haskey(defs, "backup_on_exit") && defs["backup_on_exit"]
     defs["finally"][end] = write_backup_file_callback(defs["datadir"], 1);
   end
 
   if args["verbose"]; println("$infile definitions:"); println(defs); end
 
   # if datadir does not exist, create it
-  if !isdir(def["datadir"])
-    info(def["datadir"] * " does not exist. Creating now...");
-    mkdir(def["datadir"]);
+  if !isdir(defs["datadir"])
+    info(defs["datadir"] * " does not exist. Creating now...");
+    mkdir(defs["datadir"]);
   end
 
   if args["resume"] && isfile(joinpath(defs["datadir"], "sim.bak"))
@@ -112,27 +115,44 @@ function parse_and_run(infile::String, args::Dict)
     sim = Sim(lat, msm);
   end
 
-  try
-    if !in("test_for_term", keys(defs))
+  if !args["debug"]
+
+    try
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
+        const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+          defs["bcs"], defs["nsteps"], defs["callbacks"], k);
+      else
+        const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+          defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"], 
+          k);
+      end
+
+    catch e
+      showerror(STDERR, e);
+      warn("\n$infile: not completed successfully.");
+
+    finally
+      for fin in defs["finally"]
+        fin(sim);
+      end
+
+      println("$infile:");
+      println("\tSteps simulated: $n");
+
+    end
+
+  else # debugging on, run simulation without exception catching
+
+    if !haskey(defs, "test_for_term")
       # this simulate should be more memory and computationally efficient
-      const n = simulate!(sim, def["sbounds"], def["col_f"], def["cbounds"], 
-        defs["bcs"], defs["nsteps"], def["callbacks"], k);
+      const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+        defs["bcs"], defs["nsteps"], defs["callbacks"], k);
     else
-      const n = simulate!(sim, def["sbounds"], def["col_f"], def["cbounds"], 
-        defs["bcs"], defs["nsteps"], def["test_for_term"], def["callbacks"], k);
+      const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+        defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"], 
+        k);
     end
-
-  catch e
-    showerror(STDERR, e);
-    warn("$infile: not completed successfully.");
-
-  finally
-    for fin in defs["finally"]
-      fin(sim);
-    end
-
-    println("$infile:");
-    println("\tSteps simulated: $n");
 
   end
 

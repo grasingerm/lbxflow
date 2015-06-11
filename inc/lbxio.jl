@@ -2,7 +2,18 @@ const __lbxio_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));
 
 #! Create a callback function for writing a backup file
-function write_backup_file_callback(datadir::String, stepout::Int = 1)
+function write_backup_file_callback(datadir::String)
+  return (sim::Sim, k::Int) -> begin
+    w = open(joinpath(datadir, "sim.bak"), "w");
+    write(w, "step: $k\n\n");
+    dumpsf(w, sim.lat);
+    dumpsf(w, sim.msm);
+    close(w);
+  end;
+end
+
+#! Create a callback function for writing a backup file
+function write_backup_file_callback(datadir::String, stepout::Int)
   return (sim::Sim, k::Int) -> begin
     if k % stepout == 0
       w = open(joinpath(datadir, "sim.bak"), "w");
@@ -91,12 +102,12 @@ end
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
   pause::FloatingPoint = 0.1)
 
-  return (msm::MultiscaleMap, k::Int) -> begin
+  return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(msm.u)[2];
+      const nj = size(sim.msm.u)[2];
 
       x = linspace(-0.5, 0.5, nj);
-      y = vec(msm.u[i,:,1]);
+      y = vec(sim.msm.u[i,:,1]);
 
       clf();
       plot(x,y);
@@ -187,7 +198,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String,
       const nj = size(sim.msm.u)[2];
 
       x = linspace(-0.5, 0.5, nj);
-      y = vec(msm.u[i,:,1]);
+      y = vec(sim.msm.u[i,:,1]);
 
       clf();
       plot(x,y);
@@ -397,7 +408,7 @@ end
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
   xy::(Number,Number), fname::String, pause::FloatingPoint = 0.1)
 
-  return (msm::MultiscaleMap, k::Int) -> begin
+  return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
       const nj = size(sim.msm.u)[2];
       const u = vec(sim.msm.u[i,:,1]);

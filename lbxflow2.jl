@@ -1,8 +1,10 @@
 const VERSION = 0.2;
 const root = dirname(@__FILE__);
 
-println("=== Lbxflow === version $VERSION");
+println();
 println(readall(abspath(joinpath(root, "banner.txt"))));
+println("version: $VERSION");
+println();
 
 # load dependencies
 require(abspath(joinpath(root, "inc", "api.jl")));
@@ -28,6 +30,9 @@ s = ArgParseSettings();
     action = :store_true
   "--log"
     help = "create a logfile"
+    action = :store_true
+  "--debug"
+    help = "turns on debugging mode"
     action = :store_true
 end
 

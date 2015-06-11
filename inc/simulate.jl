@@ -42,8 +42,8 @@ function sim_step!(lat::Lattice, temp_f::Array{Float64,3}, msm::MultiscaleMap,
   sbounds::Array{Int64,2}, collision_f!::Function, cbounds::Array{Int64,2},
   bcs!::Array{Function})
 
-  collision_f!(lat, msm);
-  stream!(lat, temp_f);
+  collision_f!(lat, msm, cbounds);
+  stream!(lat, temp_f, sbounds);
 
   for bc! in bcs!
     bc!(lat);
@@ -56,7 +56,7 @@ end
 #! Run simulation
 function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
   cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
-  tests_for_term::Array{Function}, callbacks!::Array{Function}, k = 1)
+  test_for_term::Function, callbacks!::Array{Function}, k = 1)
 
   temp_f = copy(sim.lat.f);
 

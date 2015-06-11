@@ -1,5 +1,5 @@
 # code to execute before parsing
-preamble: |
+preamble: >
   using PyPlot;
   const pgrad = -1.102e-3;
   const f = [-pgrad; 0.0];
@@ -25,23 +25,17 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >
   begin;
-    bind_srt_col_f!(lat, msm) = srt_guo_col_f!(lat, msm, f);
+    bind_srt_col_f!(lat, msm, bounds) = srt_guo_col_f!(lat, msm, f, bounds);
     return bind_srt_col_f!
   end;
 
 # boundaries
 sbounds:
-  value: >
-    [
-      [1, ni, 1, nj]
-    ]
+  value: "[1 ni 1 nj;]"
   expr: true
 
 cbounds:
-  value: >
-      [
-        [1, ni, 1, nj]
-      ]
+  value: "[1 ni 1 nj;]"
   expr: true
 
 # boundary conditions
@@ -52,18 +46,19 @@ bcs:
 
 # callback functions
 callbacks:
-  - plot_ux_profile_callback(ni/2, 10, 0.0)
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
   - print_step_callback(25)
   - write_backup_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 finally:
-  - |
+  - >
     (sim::Sim) -> begin
-      writedlm(joinpath(datadir, ""), extract_ux_prof_callback(ni / 2)(sim), 
+      writedlm(joinpath(datadir, "ux_profile.dsv"), 
+        extract_ux_prof_callback(convert(Int64, round(ni/2)))(sim), 
         ",");
     end
-  - write_backup_file_callback(datadir, 1)
+  - write_backup_file_callback(datadir)
 
 # test for conditions to end simulation
 test_for_term: is_steadystate_x
