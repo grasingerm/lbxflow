@@ -9,7 +9,6 @@ to approximate hydrodynamics.
 ## Dependencies
 * YAML
 * PyPlot (if plotting or animation is used)
-* Dates
 
 ## TODO list
 * [x] verify Newtonian Poiseuille flow
