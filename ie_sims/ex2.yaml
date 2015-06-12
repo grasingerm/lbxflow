@@ -1,6 +1,5 @@
 # code to execute before parsing
 preamble: >
-  using PyPlot;
   const pgrad = -1.102e-3;
   const f = [-pgrad; 0.0];
   const datadir = "data/sukop";
@@ -46,8 +45,7 @@ bcs:
 
 # callback functions
 callbacks:
-  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
-  - print_step_callback(25, "ex1")
+  - print_step_callback(25, "ex2")
   - write_backup_file_callback(datadir, 500)
 
 # clean-up, backup, write out

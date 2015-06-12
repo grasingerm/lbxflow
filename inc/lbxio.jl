@@ -1,14 +1,52 @@
 const __lbxio_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));
+require(abspath(joinpath(__lbxio_root__, "simulate.jl")));
+
+function dumpsim(datadir::String, sim::Sim, step::Int)
+  const dumpdir = joinpath(datadir, "bak_$step");
+  if !isdir(dumpdir)
+    mkdir(dumpdir);
+  end
+ 
+  # backup particle distributions and lattice config
+  ni, nj, nk = size(sim.lat.f);
+  w = open(joinpath(dumpdir, "lat.dat"), "w");
+  write(w, "ni: $ni\n");
+  write(w, "nj: $nj\n");
+  write(w, "nk: $nk\n");
+  write(w, string("dx: ", sim.lat.dx, "\n"));
+  write(w, string("dt: ", sim.lat.dt, "\n"));
+  close(w);
+
+  for k=1:nk
+    writedlm(joinpath(dumpdir, "f$k.dat"), sim.lat.f[:,:,k]);
+  end
+
+  # backup multiscale map
+  w = open(joinpath(dumpdir, "msm.dat"), "w");
+  write(w, "ni: $ni\n");
+  write(w, "nj: $nj\n");
+  write(w, string("dx: ", sim.msm.dx, "\n"));
+  write(w, string("dt: ", sim.msm.dt, "\n"));
+  write(w, string("rho_0: ", sim.msm.rho_0), "\n");
+  close(w);
+
+  for d=1:2
+    writedlm(joinpath(dumpdir, "u$d.dat"), sim.msm.u[:,:,d]);
+  end
+  writedlm(joinpath(dumpdir, "rho.dat"), sim.msm.rho);
+  writedlm(joinpath(dumpdir, "omega.dat"), sim.msm.omega);
+end
+
+# load simulation from backup dir
+function loadsim(datadir)
+  error("Function not yet implemented.");
+end
 
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::String)
   return (sim::Sim, k::Int) -> begin
-    w = open(joinpath(datadir, "sim.bak"), "w");
-    write(w, "step: $k\n\n");
-    dumpsf(w, sim.lat);
-    dumpsf(w, sim.msm);
-    close(w);
+    dumpsim(datadir, sim, k)
   end;
 end
 
@@ -16,11 +54,7 @@ end
 function write_backup_file_callback(datadir::String, stepout::Int)
   return (sim::Sim, k::Int) -> begin
     if k % stepout == 0
-      w = open(joinpath(datadir, "sim.bak"), "w");
-      write(w, "step: $k\n\n");
-      dumpsf(w, sim.lat);
-      dumpsf(w, sim.msm);
-      close(w);
+      dumpsim(datadir, sim, k)
     end
   end;
 end
@@ -94,6 +128,15 @@ function print_step_callback(step::Int)
   return (sim::Sim, k::Int) -> begin
     if k % step == 0
       println("step $k");
+    end
+  end
+end
+
+#! Create callback for reporting step
+function print_step_callback(step::Int, name::String)
+  return (sim::Sim, k::Int) -> begin
+    if k % step == 0
+      println(name * ":\tstep $k");
     end
   end
 end

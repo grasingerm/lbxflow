@@ -56,33 +56,44 @@ end
 #! Run simulation
 function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
   cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
-  test_for_term::Function, callbacks!::Array{Function}, k = 1)
+  test_for_term::Function, callbacks!::Array{Function}, k = 0)
 
   temp_f = copy(sim.lat.f);
 
   sim_step!(sim.lat, temp_f, sim.msm, sbounds, collision_f!, cbounds, bcs!);
 
   for c! in callbacks!
-    c!(sim, k);
+    c!(sim, k+1);
   end
 
   prev_msm = MultiscaleMap(sim.msm);
 
-  for i = k+1:n_steps
-    sim_step!(sim.lat, temp_f, sim.msm, collision_f!, bcs!);
+  for i = k+2:n_steps
+    try
 
-    for c! in callbacks!
-      c!(sim, i);
-    end
+      sim_step!(sim.lat, temp_f, sim.msm, sbounds, collision_f!, cbounds, bcs!);
 
-    # if returns true, terminate simulation
-    if test_for_term(sim.msm, prev_msm)
+      for c! in callbacks!
+        c!(sim, i);
+      end
+
+      # if returns true, terminate simulation
+      if test_for_term(sim.msm, prev_msm)
+        return i;
+      end
+
+      copy!(prev_msm.omega, sim.msm.omega);
+      copy!(prev_msm.rho, sim.msm.rho);
+      copy!(prev_msm.u, sim.msm.u);
+    
+    catch e
+
+      showerror(STDERR, e);
+      println();
+      warn("Simulation interrupted at step $i !");
       return i;
-    end
 
-    copy!(prev_msm.omega, sim.msm.omega);
-    copy!(prev_msm.rho, sim.msm.rho);
-    copy!(prev_msm.u, sim.msm.u);
+    end
   end
 
   return n_steps;
@@ -92,14 +103,25 @@ end
 #! Run simulation
 function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
   cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
-  callbacks!::Array{Function}, k = 1)
+  callbacks!::Array{Function}, k = 0)
 
   temp_f = copy(sim.lat.f);
-  for i = k:n_steps
-    sim_step!(sim.lat, temp_f, sim.msm, sbounds, collision_f!, cbounds, bcs!);
+  for i = k+1:n_steps
+    try
 
-    for c! in callbacks!
-      c!(sim, i);
+      sim_step!(sim.lat, temp_f, sim.msm, sbounds, collision_f!, cbounds, bcs!);
+
+      for c! in callbacks!
+        c!(sim, i);
+      end
+
+    catch e
+
+      showerror(STDERR, e);
+      println();
+      warn("Simulation interrupted at step $i !");
+      return i;
+
     end
   end
 
@@ -109,11 +131,15 @@ end
 
 #! Run simulation
 function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
-  cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int, k = 1)
+  cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int, k = 0)
 
   temp_f = copy(sim.lat.f);
-  for i = k:n_steps
-    sim_step!(sim.lat, temp_f, sim.msm, sbounds, collision_f!, cbounds, bcs!);
+  for i = k+1:n_steps
+    try; sim_step!(sim.lat, temp_f, sim.msm, sbounds, collision_f!, cbounds, bcs!);
+    catch e
+      showerror(STDERR, e); println(); warn("Simulation interrupted at step $i !");
+      return i;
+    end
   end
 
   return n_steps;

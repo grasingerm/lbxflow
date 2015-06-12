@@ -29,21 +29,6 @@ type Lattice
 
 end
 
-function dumpsf(w::IOStream, lat::Lattice)
-  ni, nj, nk = size(lat.f);
-  write(w, "lat:\n");
-  write(w, "  ni: $ni\n");
-  write(w, "  nj: $nj\n");
-  write(w, "  nk: $nk\n");
-  write(w, "  dx: ", lat.dx, "\n");
-  write(w, "  dt: ", lat.dt, "\n");
-  write(w, "  f: ");
-  for fijk in lat.f
-    write(w, fijk);
-  end
-  write(w, "\n\n");
-end
-
 #! Lattice speed of sound squared
 macro c_ssq(dx::Expr, dt::Expr)
   return :(($dx * $dx) / (3 * $dt * $dt));

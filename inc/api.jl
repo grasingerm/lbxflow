@@ -109,7 +109,7 @@ function parse_and_run(infile::String, args::Dict)
     k, sim = load_backup_file(joinpath(defs["datadir"], "sim.bak"));
   else
     # construct objects
-    k = 0;
+    k = 0; # this is so every simulation can start from "k+1"
     lat = Lattice(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     sim = Sim(lat, msm);
@@ -120,25 +120,25 @@ function parse_and_run(infile::String, args::Dict)
     try
       if !haskey(defs, "test_for_term")
         # this simulate should be more memory and computationally efficient
-        const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+        nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
           defs["bcs"], defs["nsteps"], defs["callbacks"], k);
       else
-        const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
-          defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"], 
+        nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+          defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"],
           k);
       end
 
     catch e
       showerror(STDERR, e);
-      warn("\n$infile: not completed successfully.");
+      println();
+      warn("$infile: not completed successfully.");
 
     finally
       for fin in defs["finally"]
-        fin(sim);
+        fin(sim, nsim);
       end
 
-      println("$infile:");
-      println("\tSteps simulated: $n");
+      println("$infile:\tSteps simulated: $nsim");
 
     end
 
@@ -146,19 +146,16 @@ function parse_and_run(infile::String, args::Dict)
 
     if !haskey(defs, "test_for_term")
       # this simulate should be more memory and computationally efficient
-      const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+      nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
         defs["bcs"], defs["nsteps"], defs["callbacks"], k);
     else
-      const n = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
-        defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"], 
+      nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
+        defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"],
         k);
     end
+    
+    println("$infile:\tSteps simulated: $nsim");
 
   end
 
-end
-
-#! Loads simulation where it left off
-function load_backup_file(path_to_backup_file)
-  error("Function not implemented");
 end

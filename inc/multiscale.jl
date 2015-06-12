@@ -216,14 +216,8 @@ macro rho(p, c_ssq)
 end
 
 function dumpsf(w::IOStream, msm::MultiscaleMap)
-  dx::FloatingPoint;
-  dt::FloatingPoint;
-  rho_0::FloatingPoint;
-  omega::Array{Float64,2};
-  u::Array{Float64,3};
-  rho::Array{Float64,2};
-
   ni, nj = size(msm.rho);
+
   write(w, "msm:\n");
   write(w, "  ni: $ni\n");
   write(w, "  nj: $nj\n");
