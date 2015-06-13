@@ -8,7 +8,9 @@ require(abspath(joinpath(api_root, "lbxio.jl")));
 require(abspath(joinpath(api_root, "multiscale.jl")));
 require(abspath(joinpath(api_root, "simulate.jl")));
 
-import YAML
+#import YAML
+using PyCall
+@pyimport yaml # more mature parser than YAML.jl
 
 function parse_and_run(infile::String, args::Dict)
 
@@ -26,7 +28,7 @@ function parse_and_run(infile::String, args::Dict)
   };
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
-  ins = YAML.load_file(infile);
+  ins = yaml.load(readall(infile));
   defs = Dict();
 
   if haskey(ins, "preamble")
@@ -102,7 +104,7 @@ function parse_and_run(infile::String, args::Dict)
   # if datadir does not exist, create it
   if !isdir(defs["datadir"])
     info(defs["datadir"] * " does not exist. Creating now...");
-    mkdir(defs["datadir"]);
+    mkpath(defs["datadir"]); # makes all directories in a given path
   end
 
   if args["resume"] && isfile(joinpath(defs["datadir"], "sim.bak"))
@@ -131,6 +133,7 @@ function parse_and_run(infile::String, args::Dict)
     catch e
       showerror(STDERR, e);
       println();
+      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("$infile: not completed successfully.");
 
     finally

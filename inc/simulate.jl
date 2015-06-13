@@ -90,6 +90,7 @@ function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
 
       showerror(STDERR, e);
       println();
+      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("Simulation interrupted at step $i !");
       return i;
 
@@ -119,6 +120,7 @@ function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
 
       showerror(STDERR, e);
       println();
+      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("Simulation interrupted at step $i !");
       return i;
 
@@ -146,14 +148,16 @@ function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
 
 end
 
+# ============================================================================
 # ------------------------- Deprecated functions in v0.2 ---------------------
+# ============================================================================
 
 # TODO: deprecate this
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3})
 
-  global VERSION;
-  if VERSION > 0.1
+  global LBX_VERSION;
+  if LBX_VERSION > 0.1
     warn("This stream function is deprecated as of v0.2.");
   end
 
@@ -179,8 +183,8 @@ end
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, is::UnitRange{Int64},
   js::UnitRange{Int64})
 
-  global VERSION;
-  if VERSION > 0.1
+  global LBX_VERSION;
+  if LBX_VERSION > 0.1
     warn("This stream function is deprecated.");
   end
 
@@ -205,8 +209,8 @@ end
 function sim_step!(lat::Lattice, temp_f::Array{Float64,3}, msm::MultiscaleMap,
   collision_f!::Function, bcs!::Array{Function}, stream_f!::Function)
 
-  global VERSION;
-  if VERSION > 0.1
+  global LBX_VERSION;
+  if LBX_VERSION > 0.1
     warn("This stream function is deprecated.");
   end
 
@@ -225,8 +229,8 @@ function simulate!(sim::Sim, collision_f!::Function,
   bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
   callbacks!::Array{Function}, stream_f!::Function)
 
-  global VERSION;
-  if VERSION > 0.1
+  global LBX_VERSION;
+  if LBX_VERSION > 0.1
     warn("This stream function is deprecated.");
   end
 
@@ -266,8 +270,8 @@ function simulate!(sim::Sim, collision_f!::Function,
   bcs!::Array{Function}, n_steps::Int, callbacks!::Array{Function},
   stream_f!::Function)
 
-  global VERSION;
-  if VERSION > 0.1
+  global LBX_VERSION;
+  if LBX_VERSION > 0.1
     warn("This stream function is deprecated.");
   end
 
@@ -288,8 +292,8 @@ end
 function simulate!(sim::Sim, collision_f!::Function,
   bcs!::Array{Function}, n_steps::Int, stream_f!::Function)
 
-  global VERSION;
-  if VERSION > 0.1
+  global LBX_VERSION;
+  if LBX_VERSION > 0.1
     warn("This stream function is deprecated.");
   end
 
