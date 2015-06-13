@@ -7,7 +7,7 @@
 # description: >
 #   Poiseuille bingham plastic flow for verification. Based on parameters from
 #   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
-#   relaxation-time latice Boltzmann model. Yield stress is 4e-5.
+#   relaxation-time latice Boltzmann model. Yield stress is 12e-5.
 
 preamble: >
   const ni = 128;
@@ -15,14 +15,14 @@ preamble: >
   const pgrad = -5.6e-6;
   const f = [-pgrad; 0.0];
   const mu_p = 0.2;
-  const tau_y = 4.0e-5;
+  const tau_y = 12.0e-5;
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
   const relax = 0.8;
   const nsteps = 20000;
-  const id = "poise-chen-e-000004";
-  const datadir = joinpath("data","poise","chen","explicit","000004");
+  const id = "poise-chen-e-000012";
+  const datadir = joinpath("data","poise","chen","explicit","000012");
 
 datadir:    { value: datadir,   expr: true    }
 

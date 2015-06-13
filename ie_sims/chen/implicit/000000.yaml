@@ -7,7 +7,7 @@
 # description: >
 #   Poiseuille bingham plastic flow for verification. Based on parameters from
 #   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
-#   relaxation-time latice Boltzmann model. Yield stress is 4e-5.
+#   relaxation-time latice Boltzmann model. Yield stress is 0e-5.
 
 preamble: >
   const ni = 128;
@@ -15,14 +15,14 @@ preamble: >
   const pgrad = -5.6e-6;
   const f = [-pgrad; 0.0];
   const mu_p = 0.2;
-  const tau_y = 4.0e-5;
+  const tau_y = 0.0;
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
   const relax = 0.8;
   const nsteps = 20000;
-  const id = "poise-chen-e-000004";
-  const datadir = joinpath("data","poise","chen","explicit","000004");
+  const id = "poise-chen-i-000000";
+  const datadir = joinpath("data","poise","chen","implicit","000000");
 
 datadir:    { value: datadir,   expr: true    }
 
@@ -40,7 +40,7 @@ nj:         { value: nj,        expr: true    }
 nsteps:     { value: nsteps,    expr: true    }
 col_f: >
       begin;
-        binded_col_f!(lat, msm, bounds) = mrt_bingham_explicit_col_f!(lat,
+        binded_col_f!(lat, msm, bounds) = mrt_bingham_implicit_col_f!(lat,
           msm, vikhansky_relax_matrix, mu_p, tau_y, m, max_iters, tol,
           1.0e-11, bounds, relax);
         return binded_col_f!;

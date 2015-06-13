@@ -5,8 +5,8 @@ preamble: >
   const ni = 250;
   const nj = 250;
   const U = 0.01;
-  const mu_p = 0.0025;
-  const tau_y = 0.000000001;
+  const mu_p = 0.025;
+  const tau_y = 0.00000001;
   const m = 1.0e8;
   const max_iters = 10;
   const tol = 0.001;
@@ -56,7 +56,6 @@ bcs:
       curry_lid_driven!(lat) = lid_driven!(lat, U);
       return curry_lid_driven!;
     end
-
   - south_bounce_back!
   - east_bounce_back!
   - west_bounce_back!

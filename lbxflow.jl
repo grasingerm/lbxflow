@@ -1,74 +1,54 @@
+ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
+const LBX_VERSION = 0.2;
 const root = dirname(@__FILE__);
 
+println();
 println(readall(abspath(joinpath(root, "banner.txt"))));
+println("version: $LBX_VERSION");
+println();
 
+# load dependencies
 require(abspath(joinpath(root, "inc", "api.jl")));
-require(abspath(joinpath(root, "inc", "boundary.jl")));
-require(abspath(joinpath(root, "inc", "collision.jl")));
-require(abspath(joinpath(root, "inc", "convergence.jl")));
-require(abspath(joinpath(root, "inc", "lattice.jl")));
-require(abspath(joinpath(root, "inc", "lbxio.jl")));
-require(abspath(joinpath(root, "inc", "multiscale.jl")));
-require(abspath(joinpath(root, "inc", "simulate.jl")));
+require("argparse");
+using ArgParse;
 
-# TODO: find a better way to execute/bootstrap input file
-function main(inputfile)
-  println("Load simulation defintions from inputfile $inputfile");
-  const def = load_sim_definitions(inputfile);
+s = ArgParseSettings();
+@add_arg_table s begin
+  "--file", "-f"
+    help = "path to input file"
+    arg_type = String
+  "--dir", "-d"
+    help = "directory with input files"
+    arg_type = String
+  "--ext", "-x"
+    help = "file extension of input files (for directory search)"
+    default = "lbx"
+  "--verbose", "-v"
+    help = "print extra information about execution status"
+    action = :store_true
+  "--resume"
+    help = "search for backup files and use if applicable"
+    action = :store_true
+  "--log"
+    help = "create a logfile"
+    action = :store_true
+  "--debug"
+    help = "turns on debugging mode"
+    action = :store_true
+end
 
-  println("Definitions: ", def);
+pa = parse_args(s);
 
-  lat = Lattice(def["dx"], def["dt"], def["ni"], def["nj"], def["rhoo"]);
-  msm = MultiscaleMap(def["nu"], lat, def["rhoo"]);
+# run input file
+if pa["file"] != nothing
+  parse_and_run(pa["file"], pa);
+end
 
-  # if data directory does not exist, create it
-  if !isdir(def["datadir"])
-    println(def["datadir"], " does not exist. Creating now...");
-    mkdir(def["datadir"]);
-  end
-
-  if in("presim", keys(def))
-    def["presim"](msm);
-  end
-
-  println("Starting simulation...");
-  println();
-
-  # TODO: fix this stupid mess
-  if in("stream_f", keys(def))
-    if in("test_for_term", keys(def))
-      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-        def["test_for_term"], def["callbacks"], def["stream_f"]);
-    else
-      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-        def["callbacks"], def["stream_f"]);
-    end
-  else
-    if in("test_for_term", keys(def))
-      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-        def["test_for_term"], def["callbacks"]);
-    else
-      const n = simulate!(lat, msm, def["col_f"], def["bcs"], def["nsteps"],
-        def["callbacks"]);
+# run input files from directory in parallel
+if pa["dir"] != nothing
+  @parallel for file in readdir(pa["dir"])
+    if endswith(file, "." * pa["ext"])
+      parse_and_run(file, pa);
     end
   end
-
-  if in("postsim", keys(def))
-    def["postsim"](msm);
-  end
-
-  println("\nSteps simulated: $n");
-
 end
-
-# parsing arguments and user interface
-if length(ARGS) != 1
-  println("usage: julia lbxflow.jl inputfile.js");
-  exit(1);
-end
-
-if !isfile(ARGS[1])
-  println(ARGS[1], " not found. Please use valid path to input file.");
-end
-
-main(ARGS[1]);

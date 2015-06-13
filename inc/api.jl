@@ -8,9 +8,8 @@ require(abspath(joinpath(api_root, "lbxio.jl")));
 require(abspath(joinpath(api_root, "multiscale.jl")));
 require(abspath(joinpath(api_root, "simulate.jl")));
 
-#import YAML
 using PyCall
-@pyimport yaml # more mature parser than YAML.jl
+@pyimport yaml
 
 function parse_and_run(infile::String, args::Dict)
 
@@ -29,12 +28,17 @@ function parse_and_run(infile::String, args::Dict)
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
-  defs = Dict();
 
   if haskey(ins, "preamble")
-    eval(parse(pop!(ins, "preamble")));
+    if args["verbose"]; info("evaluating preamble..."); end;
+    pre = pop!(ins, "preamble");
+    if start(search(pre, "#")) != 0
+      warn("`#` character in the preamble can lead to undefined behavior");
+    end
+    eval(parse(pre));
   end
 
+  defs = Dict();
   for (k, v) in ins
 
     if haskey(DEF_EXPR_ATTRS, k)
@@ -117,6 +121,7 @@ function parse_and_run(infile::String, args::Dict)
     sim = Sim(lat, msm);
   end
 
+  nsim = 0;
   if !args["debug"]
 
     try
