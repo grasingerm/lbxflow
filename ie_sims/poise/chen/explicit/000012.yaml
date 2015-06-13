@@ -1,0 +1,79 @@
+# author:         
+#  name:         Matthew Grasinger
+#  email:        grasingerm at gmail dot com
+#
+# date-created:   2015-06-12
+#
+# description: >
+#   Poiseuille bingham plastic flow for verification. Based on parameters from
+#   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
+#   relaxation-time latice Boltzmann model. Yield stress is 12e-5.
+
+preamble: >
+  const ni = 128;
+  const nj = 64;
+  const pgrad = -5.6e-6;
+  const f = [-pgrad; 0.0];
+  const mu_p = 0.2;
+  const tau_y = 12.0e-5;
+  const m = 1.0e8;
+  const max_iters = 11;
+  const tol = 1e-3;
+  const relax = 0.8;
+  const nsteps = 20000;
+  const id = "poise-chen-e-000012";
+  const datadir = joinpath("data","poise","chen","explicit","000012");
+
+datadir:    { value: datadir,   expr: true    }
+
+# material init
+rho_0:      { value: 1.0,       expr: false   }
+nu:         { value: mu_p,      expr: true    }
+
+# lattice configuration
+dx:         { value: 1.0,       expr: false   }
+dt:         { value: 1.0,       expr: false   }
+ni:         { value: ni,        expr: true    }
+nj:         { value: nj,        expr: true    }
+
+# simulation parameters
+nsteps:     { value: nsteps,    expr: true    }
+col_f: >
+      begin;
+        binded_col_f!(lat, msm, bounds) = mrt_bingham_explicit_col_f!(lat,
+          msm, vikhansky_relax_matrix, mu_p, tau_y, m, 1.0e-11, bounds, relax);
+        return binded_col_f!;
+      end
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_backup_file_callback(datadir, convert(Int64, round(nsteps/20)))
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      writedlm(joinpath(datadir, "ux_profile.dsv"), 
+        extract_ux_prof_callback(convert(Int64, round(ni/2)))(sim), 
+        ",");
+    end
+  - write_backup_file_callback(datadir)
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x
