@@ -111,9 +111,31 @@ function parse_and_run(infile::String, args::Dict)
     mkpath(defs["datadir"]); # makes all directories in a given path
   end
 
-  if args["resume"] && isfile(joinpath(defs["datadir"], "sim.bak"))
-    k, sim = load_backup_file(joinpath(defs["datadir"], "sim.bak"));
-  else
+  # recursively remove data from previous runs
+  if args["clean"]
+    for f in readdir(defs["datadir"]); rrm(joinpath(defs["datadir"], f)); end
+  end
+
+  # check for `noexe` switch
+  if args["noexe"]
+    info("`noexe` switch was passed. $infile will not be simulated.");
+    return nothing;
+  end
+
+  is_init = false;
+  if args["resume"]
+    k, backup_dir = latest_backup_dir(defs["datadir"]);
+    if k != 0 && backup_dir != ""
+      if args["verbose"];
+        info("Attempting to resume earlier simulation at step $k");
+      end
+      sim, is_init = load_backup_dir(backup_dir);
+      if !is_init; warn("Failed to load backup directory `$backup_dir`"); end
+    else
+      if args["verbose"]; info("No backup directory found."); end
+    end
+  end
+  if !is_init
     # construct objects
     k = 0; # this is so every simulation can start from "k+1"
     lat = Lattice(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
@@ -165,5 +187,4 @@ function parse_and_run(infile::String, args::Dict)
     println("$infile:\tSteps simulated: $nsim");
 
   end
-
 end

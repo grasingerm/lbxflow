@@ -4,7 +4,7 @@ require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
 
 # TODO: storing dx and dt in both the lattice and multiscale maps seems redundant
 # TODO: probably not necessary storing dx or dt AT ALL
-immutable MultiscaleMap
+type MultiscaleMap
   dx::FloatingPoint;
   dt::FloatingPoint;
   rho_0::FloatingPoint;

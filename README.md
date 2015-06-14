@@ -7,7 +7,8 @@ collides "psuedo particles", or particle frequency distributions, on a lattice
 to approximate hydrodynamics.
 
 ## Dependencies
-* YAML
+* PyCall
+* PyYaml
 * PyPlot (if plotting or animation is used)
 
 ## TODO list
@@ -18,7 +19,7 @@ to approximate hydrodynamics.
 * [x] clean up api
 * [x] make an autosave feature
 * [x] should be able to "catch" from exceptions and/or keyboard interrupt
-* [ ] should be able to restart from interrupted model where left off
+* [x] should be able to restart from interrupted model where left off
 * [ ] parallelize streaming and collision steps, multiscale mapping, and BCs
 * [ ] write user documentation
 * [ ] clean up existing BCs / more general BCs
