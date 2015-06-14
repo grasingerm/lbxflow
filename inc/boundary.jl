@@ -250,6 +250,28 @@ function west_inlet!(lat::Lattice, u::FloatingPoint)
   west_inlet!(lat, u, 1, 1, size(lat.f)[2]);
 end
 
+#! North inlet boundary condition
+function north_inlet!(lat::Lattice, u::FloatingPoint, i_begin::Int, i_end::Int,
+  j::Int)
+
+  for i=i_begin:i_end
+    const rhon = (lat.f[i,j,1] + lat.f[i,j,2] + lat.f[i,j,4] +
+           2.0 * (lat.f[i,j,3] + lat.f[i,j,6] + lat.f[i,j,7]));
+    const jy = rhon * u;    
+    lat.f[i,j,5] = lat.f[i,j,3] - 2.0/3.0 * jy;
+    lat.f[i,j,8] = (lat.f[i,j,6] - 1.0/6.0 * jy +
+                   0.5 * (lat.f[i,j,2] - lat.f[i,j,4]));
+    lat.f[i,j,9] = (lat.f[i,j,7] - 1.0/6.0 * jy +
+                   0.5 * (lat.f[i,j,4] - lat.f[i,j,2]));
+  end
+end
+
+#! North inlet boundary condition
+function north_inlet!(lat::Lattice, u::FloatingPoint)
+  const ni, nj = size(lat);
+  north_inlet!(lat, u, 1, ni, nj);
+end
+
 #! East open boundary
 function east_open!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
 

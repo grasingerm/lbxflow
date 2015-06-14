@@ -44,6 +44,7 @@ function parse_and_run(infile::String, args::Dict)
     if haskey(DEF_EXPR_ATTRS, k)
 
       if !DEF_EXPR_ATTRS[k][:store]
+        if args["verbose"]; info("evalling... $v"); end
         eval(parse(v));
       else
         if DEF_EXPR_ATTRS[k][:array]
@@ -51,9 +52,11 @@ function parse_and_run(infile::String, args::Dict)
           # TODO: this syntax is soon deprecated
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
+            if args["verbose"]; info("evalling... $(v[i])"); end
             defs[k][i] = eval(parse(v[i]));
           end
         else
+          if args["verbose"]; info("evalling... $v"); end
           defs[k] = convert(DEF_EXPR_ATTRS[k][:type], eval(parse(v)));
         end
       end
@@ -61,6 +64,7 @@ function parse_and_run(infile::String, args::Dict)
     else
       if typeof(v) <: Dict
         if v["expr"]
+          if args["verbose"]; info("evalling... $v"); end
           defs[k] = eval(parse(v["value"]));
         else
           defs[k] = v["value"];
@@ -114,6 +118,7 @@ function parse_and_run(infile::String, args::Dict)
   # recursively remove data from previous runs
   if args["clean"]
     for f in readdir(defs["datadir"]); rrm(joinpath(defs["datadir"], f)); end
+    if args["noexe"]; rm(defs["datadir"]); end
   end
 
   # check for `noexe` switch

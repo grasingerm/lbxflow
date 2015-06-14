@@ -1,0 +1,64 @@
+preamble: >
+  using PyPlot;
+  const u = 0.01;
+  const datadir = joinpath("data", "tee");
+  const ni = 150;
+  const nj = 25;
+
+datadir:    {   value:  datadir,    expr:   true  }
+
+rho_0:      {   value:  1.0,        expr:   false }
+nu:         {   value:  0.2,        expr:   false }
+
+dx:         {   value:  1.0,        expr:   false }
+dt:         {   value:  1.0,        expr:   false }
+ni:         {   value:  ni,         expr:   true  }
+nj:         {   value:  nj,         expr:   true  }
+
+nsteps:     {   value: 100000,      expr:   false }
+col_f:  srt_col_f!
+
+sbounds:
+  value: "[1 ni 1 nj;]"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]"
+  expr: true
+
+# boundary conditions
+bcs:
+  - >
+    begin;
+      bind_north_bounce_back!(lat::Lattice) = begin;
+        north_bounce_back!(lat, 1, 25, nj);
+        north_bounce_back!(lat, 51, 150, nj);
+      end
+      return bind_north_bounce_back!;
+    end
+  - south_bounce_back!
+  - >
+    begin;
+      bind_west_inlet!(lat::Lattice) = west_inlet!(lat, u);
+      return bind_west_inlet!;
+    end
+  - >
+    begin;
+      bind_east_pressure!(lat::Lattice) = east_pressure!(lat, 1.0);
+      return bind_east_pressure!;
+    end
+  - >
+    begin;
+      bind_north_inlet!(lat::Lattice) = north_inlet!(lat, -u, 26, 50, nj);
+      return bind_north_inlet!;
+    end
+# callback functions
+callbacks:
+  - plot_streamlines_callback(20, 0.0)
+  - print_step_callback(100, "tee")
+  - write_backup_file_callback(datadir, 500)
+
+# clean-up, backup, write out
+finally:
+  - plot_streamlines_callback(1, joinpath(datadir, "sl"), 0.0);
+  - write_backup_file_callback(datadir)

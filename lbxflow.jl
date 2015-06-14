@@ -75,8 +75,8 @@ if pa["dir"] != nothing
   else
     files = filter((x)->endswith(".$(pa["ext"])"), readdir(pa["dir"]));
   end
-
-  @parallel for file in files
+  
+  for file in files
     parse_and_run(file, pa);
   end
 

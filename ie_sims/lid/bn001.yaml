@@ -1,7 +1,7 @@
 # code to execute before parsing
 preamble: >
   const id = "bn001";
-  const datadir = joinpath("data","lid",id);
+  const datadir = joinpath("data","lid", id);
   const ni = 200;
   const nj = 200;
   const U = 0.01;
