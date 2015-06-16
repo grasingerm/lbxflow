@@ -129,15 +129,12 @@ function parse_and_run(infile::String, args::Dict)
 
   is_init = false;
   if args["resume"]
-    k, backup_dir = latest_backup_dir(defs["datadir"]);
-    if k != 0 && backup_dir != ""
-      if args["verbose"];
-        info("Attempting to resume earlier simulation at step $k");
-      end
-      sim, is_init = load_backup_dir(backup_dir);
-      if !is_init; warn("Failed to load backup directory `$backup_dir`"); end
+    k, sim = load_latest_backup(defs["datadir"]);
+    if k == 0 || sim == nothing
+      if args["verbose"]; info("No backup files found."); end
     else
-      if args["verbose"]; info("No backup directory found."); end
+      if args["verbose"]; info("Loaded previous simulation data from step $k."); end
+      is_init = true;
     end
   end
   if !is_init

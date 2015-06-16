@@ -77,6 +77,6 @@ finally:
       writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(msm.u[round(ni/2),:,1]) ys], ",");
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(msm.u[:,round(nj/2),2])], ",");
     end;
-  - write_backup_file_callback(datadir)
+  - write_jld_file_callback(datadir)
   - >
     plot_streamlines_callback(1, (0.45, -0.075), datadir, 0.0);

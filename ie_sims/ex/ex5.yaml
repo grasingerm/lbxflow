@@ -1,10 +1,14 @@
 preamble: >
   using PyPlot;
   const id = "street";
-  const u = 0.05;
+  const u = 0.1;
   const datadir = joinpath("data", id);
-  const ni = 275;
-  const nj = 50;
+  const ni = 1500;
+  const nj = 250;
+  const iso = 50;
+  const ieo = 100;
+  const jso = 100;
+  const jeo = 150;
 
 datadir:    {   value:  datadir,    expr:   true  }
 
@@ -21,18 +25,18 @@ col_f:  srt_col_f!
 
 sbounds:
   value: >
-    [1    50    1     nj;
-     50   95    1     14;
-     50   95    36    nj;
-     95   ni    1     nj]
+    [1    iso   1     nj;
+     iso  ieo   1     jso;
+     iso  ieo   jeo   nj;
+     ieo  ni    1     nj]
   expr: true
 
 cbounds:
   value: >
-    [1    50    1     nj;
-     50   95    1     14;
-     50   95    36    nj;
-     95   ni    1     nj]
+    [1    iso   1     nj;
+     iso  ieo   1     jso;
+     iso  ieo   jeo   nj;
+     ieo  ni    1     nj]
   expr: true
 
 # boundary conditions
@@ -52,10 +56,10 @@ bcs:
   - >
     begin;
       obstacle_bounce_back!(lat::Lattice) = begin;
-        north_bounce_back!(lat, 50, 95, 14);
-        west_bounce_back!(lat, 50, 14, 36);
-        south_bounce_back!(lat, 50, 95, 36);
-        east_bounce_back!(lat, 95, 14, 36);
+        north_bounce_back!(lat, iso, ieo, jso);
+        west_bounce_back!(lat, iso, jso, jeo);
+        south_bounce_back!(lat, iso, ieo, jeo);
+        east_bounce_back!(lat, ieo, jso, jeo);
       end
       return obstacle_bounce_back!;
     end

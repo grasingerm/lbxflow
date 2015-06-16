@@ -2,6 +2,33 @@ const __lbxio_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));
 require(abspath(joinpath(__lbxio_root__, "simulate.jl")));
 
+import HDF5, JLD
+
+# ===========================================================================
+# ================================= Data output and loading =================
+# ===========================================================================
+
+#! Dump simulation to JLD file
+function dumpsim_jld(datadir::String, sim::Sim, step::Int,
+  append_step_to_name::Bool = false)
+  
+  const jldpath = (append_step_to_name) ? joinpath(datadir, "bak_$step.jld") :
+                                          joinpath(datadir, "bak.jld");
+  JLD.jldopen(jldpath, "w") do file
+    write(file, "sim", sim);
+    write(file, "step", step);
+  end
+end
+
+#! Load simulation from JLD file
+function loadsim_jld(path::String)
+  d = JLD.jldopen(path, "r") do file
+    read(file);
+  end
+  return d["step"], d["sim"];
+end
+
+#! Dump simulation to a text file
 function dumpsim(datadir::String, sim::Sim, step::Int)
   const dumpdir = joinpath(datadir, "bak_$step");
   if !isdir(dumpdir)
@@ -72,7 +99,7 @@ function load_backup_dir(backup_dir::String)
         defs[k] = parse(v);
       end
     catch e
-      return nothing, false;
+      return 0, nothing;
     end
   end
 
@@ -83,7 +110,7 @@ function load_backup_dir(backup_dir::String)
     try
       lat.f[:,:,k] = readdlm(joinpath(backup_dir,"f$k.dat"));
     catch e
-      return nothing, false;
+      return 0, nothing;
     end
   end
 
@@ -91,29 +118,105 @@ function load_backup_dir(backup_dir::String)
     try
       msm.u[:,:,d] = readdlm(joinpath(backup_dir,"u$d.dat"));
     catch e
-      return nothing, false;
+      return 0, nothing;
     end
   end
 
   try
     msm.rho = readdlm(joinpath(backup_dir, "rho.dat"));
   catch e
-    return nothing, false;
+    return 0, nothing;
   end
 
   try
     msm.omega = readdlm(joinpath(backup_dir, "omega.dat"));
   catch e
-    return nothing, false;
+    return 0, nothing;
   end
 
-  return Sim(lat, msm), true;
+  return parse(split(backup_dir, "_")[end]), Sim(lat, msm);
 end
 
+#! Search data directory for latest backup information
+function load_latest_backup(datadir::String)
+  if isfile(joinpath(datadir, "bak.jld"))
+    return loadsim_jld(joinpath(datadir, "bak.jld"))
+  end
+
+  step = 0;
+  latest_path = "";
+  paths = filter((p) -> beginswith(p, "bak"), readdir(datadir));
+  for path in paths
+    if contains(path, "_")
+      this_step = parse(split(split(path, "_")[2], ".")[1]);
+      if this_step > step
+        step = this_step;
+        latest_path = path;
+      end
+    end
+  end
+
+
+  const latest_fpath = joinpath(datadir, latest_path);
+  if latest_path == ""; return 0, nothing;
+  elseif isdir(latest_fpath)
+    return load_backup_dir(latest_fpath);
+  elseif isfile(latest_fpath) && endswith(latest_fpath, ".jld")
+    return loadsim_jld(latest_fpath);
+  end
+
+  return 0, nothing; # no backup files found
+end
+
+#! Search data directory for latest backup information
+function load_latest_jld(datadir::String)
+  if isfile(joinpath(datadir, "bak.jld"))
+    return loadsim_jld(joinpath(datadir, "bak.jld"))
+  end
+
+  step = 0;
+  latest_path = "";
+  paths = filter((p) -> beginswith(p, "bak") && endswith(".jld"),
+                 readdir(datadir));
+  for path in paths
+    this_step = split(split(path, "_")[2], ".")[1];
+    if this_step > step
+      step = this_step;
+      latest_path = path;
+    end
+  end
+
+  if step == 0; return 0, nothing; end;
+  return loadsim_jld(latest_path);
+end
+
+# ===========================================================================
+# ===================== Sim callbacks: IO and visualization =================
+# ===========================================================================
+
+#! Create a callback function for writing a jld backup file
+function write_jld_file_callback(datadir::String,
+  append_step_to_name::Bool = false)
+ 
+  return (sim::Sim, k::Int) -> begin
+    dumpsim_jld(datadir, sim, k, append_step_to_name);
+  end;
+end
+
+#! Create a callback function for writing a jld backup file
+function write_jld_file_callback(datadir::String, stepout::Int,
+  append_step_to_name::Bool = false)
+
+  return (sim::Sim, k::Int) -> begin
+    if k % stepout == 0
+      dumpsim_jld(datadir, sim, k, append_step_to_name);
+    end
+  end;
+end
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::String)
   return (sim::Sim, k::Int) -> begin
-    dumpsim(datadir, sim, k)
+    dumpsim(datadir, sim, k);
   end;
 end
 
@@ -121,11 +224,10 @@ end
 function write_backup_file_callback(datadir::String, stepout::Int)
   return (sim::Sim, k::Int) -> begin
     if k % stepout == 0
-      dumpsim(datadir, sim, k)
+      dumpsim(datadir, sim, k);
     end
   end;
 end
-
 
 #! Create a callback function for writing to a delimited file
 #!
