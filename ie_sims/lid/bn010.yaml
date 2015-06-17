@@ -1,12 +1,12 @@
 # code to execute before parsing
 preamble: >
-  const id = "bn010"
-  const datadir = joinpath("data","lid",id);
+  const id = "bn010";
+  const datadir = joinpath("data","lid", id);
   const ni = 200;
   const nj = 200;
   const U = 0.01;
-  const mu_p = 0.002;
-  const tau_y = 0.00000001;
+  const mu_p = 0.02;
+  const tau_y = 0.0000001;
   const m = 1.0e8;
   const max_iters = 10;
   const tol = 0.001;
@@ -22,7 +22,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: 1.0,       expr: false }
-nu:       { value: nu_p,      expr: true  }
+nu:       { value: mu_p,      expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }
@@ -33,12 +33,12 @@ nj:       { value: nj,      expr: true  }
 # simulation parameters
 nsteps:   { value: 40000,   expr: false }
 col_f: >
-  begin;
-    curry_mrt_bingham_col_f!(lat, msm) = mrt_bingham_col_f!(lat, msm,
-      vikhansky_relax_matrix, mu_p, tau_y, m, max_iters, tol,
-      1.0e-11, relax);
-    return curry_mrt_bingham_col_f!;
-  end
+      begin;
+        binded_col_f!(lat, msm, bounds) = mrt_bingham_implicit_col_f!(lat,
+          msm, vikhansky_relax_matrix, mu_p, tau_y, m, max_iters, tol,
+          1.0e-11, bounds, relax);
+        return binded_col_f!;
+      end
 
 # boundaries
 sbounds:
@@ -55,7 +55,7 @@ bcs:
     begin;
       curry_lid_driven!(lat) = lid_driven!(lat, U);
       return curry_lid_driven!;
-    end;
+    end
   - south_bounce_back!
   - east_bounce_back!
   - west_bounce_back!
@@ -68,7 +68,7 @@ callbacks:
 # clean-up, backup, write out
 finally:
   - >
-    (sim::Sim) -> begin;
+    (sim::Sim, k::Int) -> begin
       const ni, nj = size(msm.u);
       const xs = linspace(0, 1.0, ni);
       const ys = linspace(0, 1.0, nj);
@@ -76,7 +76,6 @@ finally:
       writedlm(joinpath(datadir, "v.dsv"), transpose(msm.u[:,:,2]), ",");
       writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(msm.u[round(ni/2),:,1]) ys], ",");
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(msm.u[:,round(nj/2),2])], ",");
-    end;
+    end
   - write_jld_file_callback(datadir)
-  - >
-    plot_streamlines_callback(1, (0.45, -0.075), datadir, 0.0);
+  - plot_streamlines_callback(1, (0.45, -0.075), datadir, 0.0)
