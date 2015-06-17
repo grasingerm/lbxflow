@@ -44,6 +44,7 @@ function parse_and_run(infile::String, args::Dict)
     if haskey(DEF_EXPR_ATTRS, k)
 
       if !DEF_EXPR_ATTRS[k][:store]
+        if args["verbose"]; info("evalling... $v"); end
         eval(parse(v));
       else
         if DEF_EXPR_ATTRS[k][:array]
@@ -51,9 +52,11 @@ function parse_and_run(infile::String, args::Dict)
           # TODO: this syntax is soon deprecated
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
+            if args["verbose"]; info("evalling... $(v[i])"); end
             defs[k][i] = eval(parse(v[i]));
           end
         else
+          if args["verbose"]; info("evalling... $v"); end
           defs[k] = convert(DEF_EXPR_ATTRS[k][:type], eval(parse(v)));
         end
       end
@@ -61,6 +64,7 @@ function parse_and_run(infile::String, args::Dict)
     else
       if typeof(v) <: Dict
         if v["expr"]
+          if args["verbose"]; info("evalling... $v"); end
           defs[k] = eval(parse(v["value"]));
         else
           defs[k] = v["value"];
@@ -111,9 +115,29 @@ function parse_and_run(infile::String, args::Dict)
     mkpath(defs["datadir"]); # makes all directories in a given path
   end
 
-  if args["resume"] && isfile(joinpath(defs["datadir"], "sim.bak"))
-    k, sim = load_backup_file(joinpath(defs["datadir"], "sim.bak"));
-  else
+  # recursively remove data from previous runs
+  if args["clean"]
+    for f in readdir(defs["datadir"]); rrm(joinpath(defs["datadir"], f)); end
+    if args["noexe"]; rm(defs["datadir"]); end
+  end
+
+  # check for `noexe` switch
+  if args["noexe"]
+    info("`noexe` switch was passed. $infile will not be simulated.");
+    return nothing;
+  end
+
+  is_init = false;
+  if args["resume"]
+    k, sim = load_latest_backup(defs["datadir"]);
+    if k == 0 || sim == nothing
+      if args["verbose"]; info("No backup files found."); end
+    else
+      if args["verbose"]; info("Loaded previous simulation data from step $k."); end
+      is_init = true;
+    end
+  end
+  if !is_init
     # construct objects
     k = 0; # this is so every simulation can start from "k+1"
     lat = Lattice(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
@@ -165,5 +189,4 @@ function parse_and_run(infile::String, args::Dict)
     println("$infile:\tSteps simulated: $nsim");
 
   end
-
 end

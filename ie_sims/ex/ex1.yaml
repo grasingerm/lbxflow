@@ -48,7 +48,7 @@ bcs:
 callbacks:
   - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
   - print_step_callback(25, "ex1")
-  - write_backup_file_callback(datadir, 500)
+  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 finally:
@@ -58,7 +58,7 @@ finally:
         extract_ux_prof_callback(convert(Int64, round(ni/2)))(sim), 
         ",");
     end
-  - write_backup_file_callback(datadir)
+  - write_jld_file_callback(datadir)
 
 # test for conditions to end simulation
 test_for_term: is_steadystate_x

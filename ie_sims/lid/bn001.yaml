@@ -1,11 +1,11 @@
 # code to execute before parsing
 preamble: >
   const id = "bn001";
-  const datadir = "data/lid-" * id;
-  const ni = 250;
-  const nj = 250;
+  const datadir = joinpath("data","lid", id);
+  const ni = 200;
+  const nj = 200;
   const U = 0.01;
-  const mu_p = 0.025;
+  const mu_p = 0.02;
   const tau_y = 0.00000001;
   const m = 1.0e8;
   const max_iters = 10;
@@ -22,7 +22,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: 1.0,       expr: false }
-nu:       { value: 0.025,     expr: false }
+nu:       { value: mu_p,      expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }
@@ -63,7 +63,7 @@ bcs:
 # callback functions
 callbacks:
   - print_step_callback(50, id)
-  - write_backup_file_callback(datadir, 500)
+  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 finally:
@@ -77,5 +77,5 @@ finally:
       writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(msm.u[round(ni/2),:,1]) ys], ",");
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(msm.u[:,round(nj/2),2])], ",");
     end
-  - write_backup_file_callback(datadir)
+  - write_jld_file_callback(datadir)
   - plot_streamlines_callback(1, (0.45, -0.075), datadir, 0.0)
