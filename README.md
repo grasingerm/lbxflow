@@ -8,8 +8,9 @@ to approximate hydrodynamics.
 
 ## Dependencies
 * PyCall
-* PyYaml
-* PyPlot (if plotting or animation is used)
+* PyYaml (python library)
+* PyPlot
+* HDF5
 
 ## TODO list
 * [x] verify Newtonian Poiseuille flow
