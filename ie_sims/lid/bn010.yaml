@@ -63,7 +63,7 @@ bcs:
 # callback functions
 callbacks:
   - print_step_callback(50, id)
-  - write_backup_file_callback(datadir, 500)
+  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 finally:
