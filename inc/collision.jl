@@ -462,7 +462,6 @@ function mrt_bingham_implicit_col_f! (lat::Lattice, msm::MultiscaleMap,
         end
 
         if iters > max_iters
-          warn("relaxation matrix did not converge");
           break;
         end
 
@@ -553,7 +552,6 @@ function mrt_bingham_implicit_col_f! (lat::Lattice, msm::MultiscaleMap,
         end
 
         if iters > max_iters
-          warn("relaxation matrix did not converge");
           break;
         end
 
