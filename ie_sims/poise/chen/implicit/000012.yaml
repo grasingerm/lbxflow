@@ -40,9 +40,9 @@ nj:         { value: nj,        expr: true    }
 nsteps:     { value: nsteps,    expr: true    }
 col_f: >
       begin;
-        binded_col_f!(lat, msm, bounds) = mrt_bingham_implicit_col_f!(lat,
-          msm, vikhansky_relax_matrix, mu_p, tau_y, m, max_iters, tol,
-          1.0e-11, bounds, relax);
+        binded_col_f!(lat, msm, bounds) = mrt_bingham_explicit_col_f!(lat,
+          msm, vikhansky_relax_matrix, mu_p, tau_y, m, 1.0e-11, f, bounds,
+          relax);
         return binded_col_f!;
       end
 
