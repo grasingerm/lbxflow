@@ -9,7 +9,7 @@ println();
 
 # load dependencies
 require(abspath(joinpath(root, "inc", "api.jl")));
-require("argparse");
+if VERSION > v"0.3.7"; require("argparse"); end
 using ArgParse;
 
 s = ArgParseSettings();
