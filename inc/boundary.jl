@@ -4,9 +4,9 @@ require(abspath(joinpath(__boundary_root__, "lattice.jl")));
 #! Bounceback boundary condition for north boundary
 function north_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
   for i=i_begin:i_end
-    lat.f[i,j,5] = lat.f[i,j,3];
+    lat.f[i,j,4] = lat.f[i,j,2];
+    lat.f[i,j,7] = lat.f[i,j,5];
     lat.f[i,j,8] = lat.f[i,j,6];
-    lat.f[i,j,9] = lat.f[i,j,7];
   end
 end
 
@@ -19,23 +19,23 @@ end
 #! Bounceback boundary condition for south boundary
 function south_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
   for i=i_begin:i_end
-    lat.f[i,j,3] = lat.f[i,j,5];
+    lat.f[i,j,2] = lat.f[i,j,4];
+    lat.f[i,j,5] = lat.f[i,j,7];
     lat.f[i,j,6] = lat.f[i,j,8];
-    lat.f[i,j,7] = lat.f[i,j,9];
   end
 end
 
 #! Bounceback boundary condition for south boundary of domain
 function south_bounce_back!(lat::Lattice)
-  south_bounce_back!(lat, 1, size(lat.f)[1], 1);
+  south_bounce_back!(lat, 1, size(lat.f, 1), 1);
 end
 
 #! Bounceback boundary condition for west boundary
 function east_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
   for j=j_begin:j_end
-    lat.f[i,j,4] = lat.f[i,j,2];
-    lat.f[i,j,8] = lat.f[i,j,6];
-    lat.f[i,j,7] = lat.f[i,j,9];
+    lat.f[i,j,3] = lat.f[i,j,1];
+    lat.f[i,j,7] = lat.f[i,j,5];
+    lat.f[i,j,6] = lat.f[i,j,8];
   end
 end
 
@@ -48,22 +48,23 @@ end
 #! Bounceback boundary condition for west boundary
 function west_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
   for j=j_begin:j_end
-    lat.f[i,j,2] = lat.f[i,j,4];
-    lat.f[i,j,6] = lat.f[i,j,8];
-    lat.f[i,j,9] = lat.f[i,j,7];
+    lat.f[i,j,1] = lat.f[i,j,3];
+    lat.f[i,j,5] = lat.f[i,j,7];
+    lat.f[i,j,8] = lat.f[i,j,6];
   end
 end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_bounce_back!(lat::Lattice)
-  const nj = size(lat.f)[2];
+  const nj = size(lat.f, 2);
   west_bounce_back!(lat, 1, 1, nj);
 end
 
+# TODO: refactor half bounce back boundary schemes
 #! Bounceback boundary condition for north boundary
 function north_half_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
-  const ks_to = (5, 8, 9);
-  const ks_from = (3, 6, 7);
+  const ks_to = (4, 7, 8);
+  const ks_from = (2, 5, 6);
   const cs = (0, -1, 1);
 
   for i=i_begin:i_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
@@ -76,17 +77,17 @@ function north_half_bounce_back!(lat::Lattice)
   const ni, nj = size(lat.f);
   north_half_bounce_back!(lat, 2, ni-1, nj);
 
-  lat.f[1,nj-1,5] = lat.f[1,nj,3];
-  lat.f[2,nj-1,9] = lat.f[1,nj,7];
+  lat.f[1,nj-1,4] = lat.f[1,nj,2];
+  lat.f[2,nj-1,8] = lat.f[1,nj,6];
 
-  lat.f[ni,nj-1,5] = lat.f[ni,nj,3];
-  lat.f[ni-1,nj-1,8] = lat.f[ni,nj,6];
+  lat.f[ni,nj-1,4] = lat.f[ni,nj,2];
+  lat.f[ni-1,nj-1,7] = lat.f[ni,nj,5];
 end
 
 #! Bounceback boundary condition for south boundary
 function south_half_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
-  const ks_from = (5, 8, 9);
-  const ks_to = (3, 6, 7);
+  const ks_from = (4, 7, 8);
+  const ks_to = (2, 5, 6);
   const cs = (0, 1, -1);
 
   for i=i_begin:i_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
@@ -99,17 +100,17 @@ function south_half_bounce_back!(lat::Lattice)
   const ni, nj = size(lat.f);
   south_half_bounce_back!(lat, 2, ni-1, 1);
 
-  lat.f[1,2,3] = lat.f[1,1,5];
-  lat.f[2,2,6] = lat.f[1,1,8];
+  lat.f[1,2,2] = lat.f[1,1,4];
+  lat.f[2,2,5] = lat.f[1,1,7];
 
-  lat.f[ni,2,3] = lat.f[ni,1,5];
-  lat.f[ni-1,2,7] = lat.f[ni,1,9];
+  lat.f[ni,2,2] = lat.f[ni,1,4];
+  lat.f[ni-1,2,6] = lat.f[ni,1,8];
 end
 
 #! Bounceback boundary condition for west boundary
 function east_half_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
-  const ks_to = (4, 7, 8);
-  const ks_from = (2, 9, 6);
+  const ks_to = (3, 6, 7);
+  const ks_from = (1, 8, 5);
   const cs = (0, 1, -1);
 
   for j=j_begin:j_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
@@ -122,17 +123,17 @@ function east_half_bounce_back!(lat::Lattice)
   const ni, nj = size(lat.f);
   east_half_bounce_back!(lat, ni, 2, nj-1);
 
-  lat.f[ni-1,1,4] = lat.f[ni,1,2];
-  lat.f[ni-1,2,7] = lat.f[ni,1,9];
+  lat.f[ni-1,1,3] = lat.f[ni,1,1];
+  lat.f[ni-1,2,6] = lat.f[ni,1,8];
 
-  lat.f[ni-1,nj,4] = lat.f[ni,nj,2];
-  lat.f[ni-1,nj-1,8] = lat.f[ni,nj,6];
+  lat.f[ni-1,nj,3] = lat.f[ni,nj,1];
+  lat.f[ni-1,nj-1,7] = lat.f[ni,nj,5];
 end
 
 #! Bounceback boundary condition for west boundary
 function west_half_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
-  const ks_to = (2, 6, 9);
-  const ks_from = (3, 8, 7);
+  const ks_to = (1, 5, 8);
+  const ks_from = (2, 7, 6);
   const cs = (0, 1, -1);
 
   for j=j_begin:j_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
@@ -142,27 +143,27 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_half_bounce_back!(lat::Lattice)
-  const nj = size(lat.f)[2];
+  const nj = size(lat.f, 2);
   west_half_bounce_back!(lat, 1, 2, nj-1);
 
-  lat.f[2,1,2] = lat.f[1,1,4];
-  lat.f[2,2,6] = lat.f[1,1,8];
+  lat.f[2,1,1] = lat.f[1,1,3];
+  lat.f[2,2,5] = lat.f[1,1,7];
 
-  lat.f[2,nj,2] = lat.f[1,nj,4];
-  lat.f[2,nj-1,9] = lat.f[1,nj,7]
+  lat.f[2,nj,1] = lat.f[1,nj,3];
+  lat.f[2,nj-1,8] = lat.f[1,nj,6]
 end
 
 #! Bounceback boundary condition for north boundary
 function north_halfa_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
-  const ks_to = (5, 8, 9);
-  const ks_from = (3, 6, 7);
+  const ks_to = (4, 7, 8);
+  const ks_from = (2, 5, 6);
 
   for i=i_begin:i_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[i,j,k_to] = lat.f[i,j,k_from];
   end
 
   for i=i_begin:i_end
-    (lat.f[i,j,2], lat.f[i,j,4]) = (lat.f[i,j,4], lat.f[i,j,2]);
+    (lat.f[i,j,1], lat.f[i,j,3]) = (lat.f[i,j,3], lat.f[i,j,1]);
   end
 end
 
@@ -174,15 +175,15 @@ end
 
 #! Bounceback boundary condition for south boundary
 function south_halfa_bounce_back!(lat::Lattice, i_begin::Int, i_end::Int, j::Int)
-  const ks_from = (5, 8, 9);
-  const ks_to = (3, 6, 7);
+  const ks_from = (4, 7, 8);
+  const ks_to = (2, 5, 6);
 
   for i=i_begin:i_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[i,j,k_to] = lat.f[i,j,k_from];
   end
 
   for i=i_begin:i_end
-    (lat.f[i,j,2], lat.f[i,j,4]) = (lat.f[i,j,4], lat.f[i,j,2]);
+    (lat.f[i,j,1], lat.f[i,j,3]) = (lat.f[i,j,3], lat.f[i,j,1]);
   end
 end
 
@@ -194,15 +195,15 @@ end
 
 #! Bounceback boundary condition for west boundary
 function east_halfa_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
-  const ks_to = (4, 7, 8);
-  const ks_from = (2, 9, 6);
+  const ks_to = (3, 6, 7);
+  const ks_from = (3, 8, 5);
 
   for j=j_begin:j_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[i,j,k_to] = lat.f[i,j,k_from];
   end
 
   for i=i_begin:i_end
-    (lat.f[i,j,3], lat.f[i,j,5]) = (lat.f[i,j,5], lat.f[i,j,3]);
+    (lat.f[i,j,2], lat.f[i,j,4]) = (lat.f[i,j,4], lat.f[i,j,2]);
   end
 end
 
@@ -214,21 +215,21 @@ end
 
 #! Bounceback boundary condition for west boundary
 function west_halfa_bounce_back!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
-  const ks_to = (2, 6, 9);
-  const ks_from = (3, 8, 7);
+  const ks_to = (1, 5, 8);
+  const ks_from = (2, 7, 6);
 
   for j=j_begin:j_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[i,j,k_to] = lat.f[i,j,k_from];
   end
 
   for i=i_begin:i_end
-    (lat.f[i,j,3], lat.f[i,j,5]) = (lat.f[i,j,5], lat.f[i,j,3]);
+    (lat.f[i,j,2], lat.f[i,j,4]) = (lat.f[i,j,4], lat.f[i,j,2]);
   end
 end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_halfa_bounce_back!(lat::Lattice)
-  const nj = size(lat.f)[2];
+  const nj = size(lat.f, 2);
   west_halfa_bounce_back!(lat, 1, 1, nj);
 end
 
@@ -237,17 +238,17 @@ function west_inlet!(lat::Lattice, u::FloatingPoint, i::Int, j_begin::Int,
   j_end::Int)
 
   for j=j_begin:j_end
-    rhow = (lat.f[i,j,1] + lat.f[i,j,3] + lat.f[i,j,5] +
-            2.0 * (lat.f[i,j,4] + lat.f[i,j,7] + lat.f[i,j,8])) / (1.0 - u);
-    lat.f[i,j,2] = lat.f[i,j,4] + 2.0 * rhow * u / 3.0;
-    lat.f[i,j,6] = lat.f[i,j,8] + rhow * u / 6.0;
-    lat.f[i,j,9] = lat.f[i,j,7] + rhow * u / 6.0;
+    rhow = (lat.f[i,j,9] + lat.f[i,j,2] + lat.f[i,j,4] +
+            2.0 * (lat.f[i,j,3] + lat.f[i,j,6] + lat.f[i,j,7])) / (1.0 - u);
+    lat.f[i,j,1] = lat.f[i,j,3] + 2.0 * rhow * u / 3.0;
+    lat.f[i,j,5] = lat.f[i,j,7] + rhow * u / 6.0;
+    lat.f[i,j,8] = lat.f[i,j,6] + rhow * u / 6.0;
   end
 end
 
 #! West inlet boundary condition
 function west_inlet!(lat::Lattice, u::FloatingPoint)
-  west_inlet!(lat, u, 1, 1, size(lat.f)[2]);
+  west_inlet!(lat, u, 1, 1, size(lat.f, 2);
 end
 
 #! North inlet boundary condition
@@ -255,14 +256,14 @@ function north_inlet!(lat::Lattice, u::FloatingPoint, i_begin::Int, i_end::Int,
   j::Int)
 
   for i=i_begin:i_end
-    const rhon = (lat.f[i,j,1] + lat.f[i,j,2] + lat.f[i,j,4] +
-           2.0 * (lat.f[i,j,3] + lat.f[i,j,6] + lat.f[i,j,7]));
+    const rhon = (lat.f[i,j,9] + lat.f[i,j,1] + lat.f[i,j,3] +
+           2.0 * (lat.f[i,j,2] + lat.f[i,j,5] + lat.f[i,j,6]));
     const jy = rhon * u;    
-    lat.f[i,j,5] = lat.f[i,j,3] - 2.0/3.0 * jy;
+    lat.f[i,j,4] = lat.f[i,j,2] - 2.0/3.0 * jy;
+    lat.f[i,j,7] = (lat.f[i,j,5] - 1.0/6.0 * jy +
+                   0.5 * (lat.f[i,j,1] - lat.f[i,j,3]));
     lat.f[i,j,8] = (lat.f[i,j,6] - 1.0/6.0 * jy +
-                   0.5 * (lat.f[i,j,2] - lat.f[i,j,4]));
-    lat.f[i,j,9] = (lat.f[i,j,7] - 1.0/6.0 * jy +
-                   0.5 * (lat.f[i,j,4] - lat.f[i,j,2]));
+                   0.5 * (lat.f[i,j,3] - lat.f[i,j,1]));
   end
 end
 
@@ -276,9 +277,9 @@ end
 function east_open!(lat::Lattice, i::Int, j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
-    lat.f[i,j,2] = 2.0 * lat.f[i-1,j,2] - lat.f[i-2,j,2];
-    lat.f[i,j,6] = 2.0 * lat.f[i-1,j,6] - lat.f[i-2,j,6];
-    lat.f[i,j,9] = 2.0 * lat.f[i-1,j,9] - lat.f[i-2,j,9];
+    lat.f[i,j,1] = 2.0 * lat.f[i-1,j,1] - lat.f[i-2,j,1];
+    lat.f[i,j,5] = 2.0 * lat.f[i-1,j,5] - lat.f[i-2,j,5];
+    lat.f[i,j,8] = 2.0 * lat.f[i-1,j,8] - lat.f[i-2,j,8];
   end
 end
 
@@ -340,11 +341,11 @@ end
 function periodic_east_to_west!(lat::Lattice)
   const ni, nj = size(lat.f);
 
-  for j=1:nj, k in (2, 6, 9)
+  for j=1:nj, k in (1, 5, 8)
     lat.f[1,j,k] = lat.f[ni-1,j,k];
   end
 
-  for j=1:nj, k in (4, 7, 8)
+  for j=1:nj, k in (3, 6, 7)
     lat.f[ni,j,k] = lat.f[2,j,k];
   end
 
@@ -354,11 +355,11 @@ end
 function periodic_north_to_south!(lat::Lattice)
   const ni, nj = size(lat.f);
 
-  for i=1:ni, k in (3, 6, 7)
+  for i=1:ni, k in (2, 5, 6)
     lat.f[i,1,k] = lat.f[i,nj-1,k];
   end
 
-  for i=1:ni, k in (5, 8, 9)
+  for i=1:ni, k in (4, 7, 8)
     lat.f[i,nj,k] = lat.f[i,2,k];
   end
 
@@ -369,11 +370,11 @@ function lid_driven!(lat::Lattice, u::FloatingPoint)
   const ni, nj = size(lat.f)
 
   for i=1:ni
-    rho = lat.f[i,nj,1] + lat.f[i,nj,2] + lat.f[i,nj,4] + 2.0 * (lat.f[i,nj,3]
-      + lat.f[i,nj,7] + lat.f[i,nj,6]);
-    lat.f[i,nj,5] = lat.f[i,nj,3];
-    lat.f[i,nj,9] = lat.f[i,nj,7] + rho * u / 6.0;
-    lat.f[i,nj,8] = lat.f[i,nj,6] - rho * u / 6.0;
+    rho = lat.f[i,nj,9] + lat.f[i,nj,1] + lat.f[i,nj,3] + 2.0 * (lat.f[i,nj,2]
+      + lat.f[i,nj,6] + lat.f[i,nj,5]);
+    lat.f[i,nj,4] = lat.f[i,nj,2];
+    lat.f[i,nj,8] = lat.f[i,nj,6] + rho * u / 6.0;
+    lat.f[i,nj,7] = lat.f[i,nj,5] - rho * u / 6.0;
   end
 end
 
@@ -382,15 +383,15 @@ function west_pressure!(lat::Lattice, rho_in::FloatingPoint, i::Int,
   j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
-    u_x = 1 - (lat.f[i,j,1] + lat.f[i,j,3] + lat.f[i,j,5] +
-                2 * (lat.f[i,j,4] + lat.f[i,j,7] + lat.f[i,j,8])) / rho_in;
-    lat.f[i,j,2] = lat.f[i,j,4] + 2/3 * rho_in * u_x;
+    u_x = 1 - (lat.f[i,j,9] + lat.f[i,j,2] + lat.f[i,j,4] +
+                2 * (lat.f[i,j,3] + lat.f[i,j,6] + lat.f[i,j,7])) / rho_in;
+    lat.f[i,j,1] = lat.f[i,j,3] + 2/3 * rho_in * u_x;
 
-    second_term = 0.5 * (lat.f[i,j,3] - lat.f[i,j,5]);
+    second_term = 0.5 * (lat.f[i,j,2] - lat.f[i,j,4]);
     third_term = 1/6 * rho_in * u_x;
 
-    lat.f[i,j,6] = lat.f[i,j,8] - second_term + third_term;
-    lat.f[i,j,9] = lat.f[i,j,7] + second_term + third_term;
+    lat.f[i,j,5] = lat.f[i,j,7] - second_term + third_term;
+    lat.f[i,j,8] = lat.f[i,j,6] + second_term + third_term;
   end
 end
 
@@ -402,22 +403,22 @@ function west_pressure!(lat::Lattice, rho_in::FloatingPoint)
   west_pressure!(lat, rho_in, 1, 2, nj-1);
 
   # bottom corner
+  lat.f[1,1,1] = lat.f[1,1,3];
   lat.f[1,1,2] = lat.f[1,1,4];
-  lat.f[1,1,3] = lat.f[1,1,5];
-  lat.f[1,1,6] = lat.f[1,1,8];
-  f68 = 0.5 * (rho_in - (lat.f[1,1,1] + lat.f[1,1,2] + lat.f[1,1,3]
-          + lat.f[1,1,4] + lat.f[1,1,5] + lat.f[1,1,6] + lat.f[1,1,8]));
-  lat.f[1,1,7] = f68;
-  lat.f[1,1,9] = f68;
+  lat.f[1,1,5] = lat.f[1,1,7];
+  f68 = 0.5 * (rho_in - (lat.f[1,1,9] + lat.f[1,1,1] + lat.f[1,1,2]
+          + lat.f[1,1,3] + lat.f[1,1,4] + lat.f[1,1,5] + lat.f[1,1,7]));
+  lat.f[1,1,6] = f68;
+  lat.f[1,1,8] = f68;
 
   # top corner
-  lat.f[1,nj,2] = lat.f[1,nj,5];
-  lat.f[1,nj,5] = lat.f[1,nj,3];
-  lat.f[1,nj,7] = lat.f[1,nj,9];
-  f57 = 0.5 * (rho_in - (lat.f[1,nj,1] + lat.f[1,nj,2] + lat.f[1,nj,3]
-          + lat.f[1,nj,4] + lat.f[1,nj,5] + lat.f[1,nj,7] + lat.f[1,nj,9]));
-  lat.f[1,nj,6] = f57;
-  lat.f[1,nj,8] = f57;
+  lat.f[1,nj,1] = lat.f[1,nj,4];
+  lat.f[1,nj,4] = lat.f[1,nj,2];
+  lat.f[1,nj,6] = lat.f[1,nj,8];
+  f57 = 0.5 * (rho_in - (lat.f[1,nj,9] + lat.f[1,nj,1] + lat.f[1,nj,2]
+          + lat.f[1,nj,3] + lat.f[1,nj,4] + lat.f[1,nj,6] + lat.f[1,nj,8]));
+  lat.f[1,nj,5] = f57;
+  lat.f[1,nj,7] = f57;
 end
 
 #! Pressure east direction
@@ -425,15 +426,15 @@ function east_pressure!(lat::Lattice, rho_out::FloatingPoint, i::Int,
   j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
-    u_x = (lat.f[i,j,1] + lat.f[i,j,3] + lat.f[i,j,5] +
-                2 * (lat.f[i,j,2] + lat.f[i,j,6] + lat.f[i,j,9])) / rho_out - 1;
-    lat.f[i,j,4] = lat.f[i,j,2] - 2/3 * rho_out * u_x;
+    u_x = (lat.f[i,j,9] + lat.f[i,j,2] + lat.f[i,j,4] +
+                2 * (lat.f[i,j,1] + lat.f[i,j,5] + lat.f[i,j,8])) / rho_out - 1;
+    lat.f[i,j,3] = lat.f[i,j,1] - 2/3 * rho_out * u_x;
 
-    second_term = 0.5 * (lat.f[i,j,3] - lat.f[i,j,5]);
+    second_term = 0.5 * (lat.f[i,j,2] - lat.f[i,j,5]);
     third_term = 1/6 * rho_out * u_x;
 
-    lat.f[i,j,8] = lat.f[i,j,6] + second_term - third_term;
-    lat.f[i,j,7] = lat.f[i,j,9] - second_term - third_term;
+    lat.f[i,j,7] = lat.f[i,j,5] + second_term - third_term;
+    lat.f[i,j,6] = lat.f[i,j,8] - second_term - third_term;
   end
 end
 
@@ -445,22 +446,22 @@ function east_pressure!(lat::Lattice, rho_out::FloatingPoint)
   east_pressure!(lat, rho_out, ni, 2, nj-1);
 
   # bottom corner
-  lat.f[ni,1,4] = lat.f[ni,1,2];
-  lat.f[ni,1,3] = lat.f[ni,1,5];
-  lat.f[ni,1,8] = lat.f[ni,1,6];
-  f68 = 0.5 * (rho_out - (lat.f[ni,1,1] + lat.f[ni,1,2] + lat.f[ni,1,3]
-          + lat.f[ni,1,4] + lat.f[ni,1,5] + lat.f[ni,1,6] + lat.f[ni,1,8]));
-  lat.f[ni,1,7] = f68;
-  lat.f[ni,1,9] = f68;
+  lat.f[ni,1,3] = lat.f[ni,1,1];
+  lat.f[ni,1,2] = lat.f[ni,1,4];
+  lat.f[ni,1,7] = lat.f[ni,1,5];
+  f68 = 0.5 * (rho_out - (lat.f[ni,1,9] + lat.f[ni,1,1] + lat.f[ni,1,2]
+          + lat.f[ni,1,3] + lat.f[ni,1,4] + lat.f[ni,1,5] + lat.f[ni,1,7]));
+  lat.f[ni,1,6] = f68;
+  lat.f[ni,1,8] = f68;
 
   # top corner
+  lat.f[ni,nj,3] = lat.f[ni,nj,1];
   lat.f[ni,nj,4] = lat.f[ni,nj,2];
-  lat.f[ni,nj,5] = lat.f[ni,nj,3];
-  lat.f[ni,nj,7] = lat.f[ni,nj,9];
-  f57 = 0.5 * (rho_out - (lat.f[ni,nj,1] + lat.f[ni,nj,2] + lat.f[ni,nj,3]
-          + lat.f[ni,nj,4] + lat.f[ni,nj,5] + lat.f[ni,nj,7] + lat.f[ni,nj,9]));
-  lat.f[ni,nj,6] = f57;
-  lat.f[ni,nj,8] = f57;
+  lat.f[ni,nj,6] = lat.f[ni,nj,8];
+  f57 = 0.5 * (rho_out - (lat.f[ni,nj,9] + lat.f[ni,nj,1] + lat.f[ni,nj,2]
+          + lat.f[ni,nj,3] + lat.f[ni,nj,4] + lat.f[ni,nj,6] + lat.f[ni,nj,8]));
+  lat.f[ni,nj,5] = f57;
+  lat.f[ni,nj,7] = f57;
 end
 
 #! Zou and He pressure boundary on north side
@@ -468,14 +469,14 @@ function zou_pressure_north!(lat::Lattice, rhoo::FloatingPoint)
   const ni, nj = size(lat.f);
 
   for i=1:ni
-    v = -1. + (lat.f[i,nj,1] + lat.f[i,nj,2] + lat.f[i,nj,4]
-        + 2. * (lat.f[i,nj,3] + lat.f[i,nj,6] + lat.f[i,nj,7])) / rhoo;
+    v = -1. + (lat.f[i,nj,9] + lat.f[i,nj,1] + lat.f[i,nj,3]
+        + 2. * (lat.f[i,nj,2] + lat.f[i,nj,5] + lat.f[i,nj,6])) / rhoo;
     ru = rhoo * v;
-    lat.f[i,nj,5] = lat.f[i,nj,3] - (2./3.)*ru;
+    lat.f[i,nj,4] = lat.f[i,nj,2] - (2./3.)*ru;
+    lat.f[i,nj,7] = lat.f[i,nj,5] - (1./6.)*ru
+                      + 0.5 * (lat.f[i,nj,1] - lat.f[i,nj,3]);
     lat.f[i,nj,8] = lat.f[i,nj,6] - (1./6.)*ru
-                      + 0.5 * (lat.f[i,nj,2] - lat.f[i,nj,4]);
-    lat.f[i,nj,9] = lat.f[i,nj,7] - (1./6.)*ru
-                      + 0.5 * (lat.f[i,nj,4] - lat.f[i,nj,2]);
+                      + 0.5 * (lat.f[i,nj,3] - lat.f[i,nj,1]);
   end
 end
 
@@ -484,13 +485,13 @@ function zou_pressure_south!(lat::Lattice, rhoo::FloatingPoint)
   const ni, nj = size(lat.f);
 
   for i=1:ni
-    v = -1. + (lat.f[i,1,1] + lat.f[i,1,2] + lat.f[i,1,4]
-        + 2. * (lat.f[i,1,5] + lat.f[i,1,8] + lat.f[i,1,9])) / rhoo;
+    v = -1. + (lat.f[i,1,9] + lat.f[i,1,1] + lat.f[i,1,3]
+        + 2. * (lat.f[i,1,4] + lat.f[i,1,7] + lat.f[i,1,8])) / rhoo;
     ru = rhoo * v;
-    lat.f[i,1,3] = lat.f[i,1,5] - (2./3.)*ru;
+    lat.f[i,1,2] = lat.f[i,1,4] - (2./3.)*ru;
+    lat.f[i,1,5] = lat.f[i,1,7] - (1./6.)*ru
+                      + 0.5 * (lat.f[i,1,3] - lat.f[i,1,1]);
     lat.f[i,1,6] = lat.f[i,1,8] - (1./6.)*ru
-                      + 0.5 * (lat.f[i,1,4] - lat.f[i,1,2]);
-    lat.f[i,1,7] = lat.f[i,1,9] - (1./6.)*ru
-                      + 0.5 * (lat.f[i,1,2] - lat.f[i,1,4]);
+                      + 0.5 * (lat.f[i,1,1] - lat.f[i,1,3]);
   end
 end

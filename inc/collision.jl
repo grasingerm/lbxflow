@@ -6,19 +6,17 @@ require(abspath(joinpath(__collision_root__, "numerics.jl")));
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow
 #!
-#! \param rho Density at lattice site
-#! \param w Weight for lattice direction
-#! \param c_ssq Lattice speed of sound squared
-#! \param c_k Vector for lattice direction
+#! \param lat D2Q9 lattice
+#! \param rho Macroscopic density at lattice site
 #! \param u Macroscopic flow at lattice site
 #! \return Equilibrium frequency
-function incomp_f_eq(rho::Float64, w::Float64, c_ssq::Float64,
-  c_k::Array{Float64, 1}, u::Array{Float64, 1})
+function feq_incomp(lat::LatticeD2Q9, rho::FloatingPoint, u::Vector{Float64},
+                    k::Int)
+  const cssq = 1/3;
+  const ckdotu = dot(lat.c[:,k], u);
 
-  const ckdotu = dot(c_k, u);
-
-  return rho * w * (1.0 + ckdotu/(c_ssq) + 0.5*(ckdotu*ckdotu)/(c_ssq*c_ssq)
-    - 0.5 * dot(u, u) / (c_ssq));
+  return rho * lat.w[k] * (1.0 + ckdotu/(cssq) + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
+                           - 0.5 * dot(u, u) / (cssq));
 end
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow
@@ -29,14 +27,13 @@ end
 #! \param c_k Vector for lattice direction
 #! \param u Macroscopic flow at lattice site
 #! \return Equilibrium frequency
-function incomp_f_eq_HL(rho::FloatingPoint, rho_0::FloatingPoint,
-  w::FloatingPoint, c_ssq::FloatingPoint, c_k::Array{Float64, 1},
-  u::Array{Float64, 1})
+function feq_incomp_HL(lat::LatticeD2Q9, rho::FloatingPoint,
+                       rho_0::FloatingPoint, u::Vector{Float64})
+  const cssq = 1/3;
+  const ckdotu = dot(lat.c[:,k], u);
 
-  const ckdotu = dot(c_k, u);
-
-  return w * (rho + rho_0 * (ckdotu/(c_ssq) + 0.5*(ckdotu*ckdotu)/(c_ssq*c_ssq)
-    - 0.5 * dot(u, u) / (c_ssq)));
+  return w * (rho + rho_0 * (ckdotu/(cssq) + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
+              - 0.5 * dot(u, u) / (cssq)));
 end
 
 #! Single relaxation time collision function for incompressible Newtonian flow
