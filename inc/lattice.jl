@@ -21,18 +21,18 @@ type LatticeD2Q9 <: Lattice
 
   # Lattice functions for computing `c`, `cs`, and `cssq`
   cf(dx, dt)    = dx/dt;
-  csf(dx, dt)   = c(dx, dt) / sqrt(3);
+  csf(dx, dt)   = cf(dx, dt) / sqrt(3);
   cssqf(dx, dt) = csf(dx, dt) * csf(dx, dt);
 
-  Lattice(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
+  LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
         zeros(Float64, (n, ni, nj)), cdef, wdef);
 
-  Lattice(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
+  LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef);
 
-  function Lattice(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
-                   rho::Float64)
+  function LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
+                   rho::FloatingPoint)
     f = zeros(Float64, (n, ni, nj));
     for k=1:n
       f[k,:,:] = fill(rho * wdef[k], (ni, nj));
@@ -60,17 +60,17 @@ type LatticeD2Q4 <: Lattice
 
   # Lattice functions for computing `c`, `cs`, and `cssq`
   cf(dx, dt)    = dx/dt;
-  csf(dx, dt)   = c(dx, dt) / sqrt(2);
+  csf(dx, dt)   = cf(dx, dt) / sqrt(2);
   cssqf(dx, dt) = csf(dx, dt) * csf(dx, dt);
 
-  Lattice(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
+  LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
         zeros(Float64, (n, ni, nj)), cdef, wdef);
 
-  Lattice(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
+  LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef);
 
-  function Lattice(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
+  function LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
                    rho::Float64)
     f = zeros(Float64, (n, ni, nj));
     for k=1:n

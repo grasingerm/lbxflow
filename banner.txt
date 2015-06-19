@@ -3,5 +3,5 @@ LBXFLOW
 Complex flow using lattice Boltzmann Method
 
 author: 
-  name: Matthew Grasinger
-  email: grasingerm@gmail.com
+  name:   Matthew Grasinger
+  email:  grasingerm at gmail dot com

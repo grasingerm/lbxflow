@@ -1,10 +1,10 @@
 ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
-const LBX_VERSION = 0.2;
+const LBX_VERSION = v"0.2.1";
 const root = dirname(@__FILE__);
 
 println();
 println(readall(abspath(joinpath(root, "banner.txt"))));
-println("version: $LBX_VERSION");
+println("version:  $LBX_VERSION");
 println();
 
 # load dependencies

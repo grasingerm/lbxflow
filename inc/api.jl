@@ -29,6 +29,10 @@ function parse_and_run(infile::String, args::Dict)
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
 
+  if haskey(ins, "version") && eval(parse("v\"$(ins["version"])\"")) > LBX_VERSION
+    warn("$infile recommends v$(ins["version"]), consider updating.");
+  end
+
   if haskey(ins, "preamble")
     if args["verbose"]; info("evaluating preamble..."); end;
     pre = pop!(ins, "preamble");
@@ -140,7 +144,7 @@ function parse_and_run(infile::String, args::Dict)
   if !is_init
     # construct objects
     k = 0; # this is so every simulation can start from "k+1"
-    lat = Lattice(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
+    lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     sim = Sim(lat, msm);
   end
@@ -149,6 +153,8 @@ function parse_and_run(infile::String, args::Dict)
   if !args["debug"]
 
     try
+      tic();
+
       if !haskey(defs, "test_for_term")
         # this simulate should be more memory and computationally efficient
         nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
@@ -172,9 +178,11 @@ function parse_and_run(infile::String, args::Dict)
 
       println("$infile:\tSteps simulated: $nsim");
 
+      toc();
     end
 
   else # debugging on, run simulation without exception catching
+    tic();
 
     if !haskey(defs, "test_for_term")
       # this simulate should be more memory and computationally efficient
@@ -188,5 +196,6 @@ function parse_and_run(infile::String, args::Dict)
     
     println("$infile:\tSteps simulated: $nsim");
 
+    toc();
   end
 end

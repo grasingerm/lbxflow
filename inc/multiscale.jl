@@ -9,8 +9,8 @@ end
 
 # TODO: create a type `ConstitutiveModel`
 #! Calculate apparent viscosity of a Bingham plastic using Papanstasiou's model
-macro papanstasiou_mu(mu_p, tau_o, m, gamma)
-  return :($mu_p + $tau_o / $gamma * (1 - exp(-$m * abs($gamma))));
+macro mu_papanstasiou(mu_p, tau_y, m, gamma)
+  return :($mu_p + $tau_y / $gamma * (1 - exp(-$m * abs($gamma))));
 end
 
 #! Calculate relaxation time
@@ -20,7 +20,7 @@ end
 
 #! Calculate collision frequency
 macro omega(nu, cssq, dt)
-	return :(1.0 / @relax_t(nu, cssq, dt));
+	return :(1.0 / @relax_t($nu, $cssq, $dt));
 end
 
 #! Viscosity from collision frequency
@@ -50,28 +50,16 @@ immutable MultiscaleMap
                 u::Array{Float64,3}, rho::Matrix{Float64}) =
     new(lat, rho_0, omega, u, rho);
 
-  MultiscaleMap(lat::Lattice, nu::FloatingPoint) =
-    new(lat, 1.0, fill(@omega(nu, lat.cssq, lat.dt), (size(lat.f)),
-      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
-
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint = 1.0)
-    const ni, nj, = size(lat.f);
+    const ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 
-    new(dx, dt, rho, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
+    new(lat, rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
       zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
   end
 
-  function MultiscaleMap(nu::FloatingPoint, lat::Lattice)
-    const dx = lat.dx;
-    const dt = lat.dt;
-    const ni, nj = size(lat.f);
-
-    new(dx, dt, 1.0, fill(1.0/(3 * nu * dt / (dx*dx) + 0.5), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), zeros(Float64, (ni, nj)));
-  end
-
   function MultiscaleMap(msm::MultiscaleMap)
-    new(msm.dx, msm.dt, msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho));
+    new(msm.lat, msm.dx, msm.dt, msm.rho_0, copy(msm.omega), copy(msm.u),
+        copy(msm.rho));
   end
 end
 
@@ -133,23 +121,24 @@ end
 #! \param M Transformation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
 #! \return D Strain rate matrix
-function strain_rate_tensor(lat::Lattice, rho::Float64, f_neq::Vector{Float64},
-                            M::Matrix{Float64}, S::SparseMatrixCSC)
+function strain_rate_tensor(lat::Lattice, rho::Float64, fneq::Vector{Float64},
+                            M::Matrix{Float64}, iM::Matrix{Float64},
+                            S::SparseMatrixCSC)
 
   D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
-  const ni = length(f_neq);
-  const MiSM = inv(M) * S * M;
+  const ni = length(fneq);
+  const MiSM = iM * S * M;
 
   for alpha=1:2, beta=1:2
     sum = 0;
     for i=1:ni
       MiSMsum = 0;
       for j=1:ni
-        MiSMsum += MiSM[i, j] * f_neq[j];
+        MiSMsum += MiSM[i,j] * fneq[j];
       end
-      sum += lat.c[alpha, i] * c[beta, i] * MiSMsum;
+      sum += lat.c[alpha,i] * c[beta,i] * MiSMsum;
     end
-    D[alpha, beta] = -1.0 / (2.0 * rho * cssq * dt) * sum;
+    D[alpha, beta] = -1.0 / (2.0 * rho * lat.cssq * lat.dt) * sum;
   end
 
   return D;
