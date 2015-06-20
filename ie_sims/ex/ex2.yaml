@@ -1,7 +1,7 @@
 # code to execute before parsing
 preamble: >
   const pgrad = -1.102e-3;
-  const f = [-pgrad; 0.0];
+  const F = [-pgrad; 0.0];
   const datadir = "data/sukop";
   const ni = 20;
   const nj = 12;
@@ -24,17 +24,17 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >
   begin;
-    bind_srt_col_f!(lat, msm, bounds) = srt_guo_col_f!(lat, msm, f, bounds);
-    return bind_srt_col_f!
+    bind_srt!(lat, msm, bounds) = col_srt_guo!(lat, msm, F, bounds);
+    return bind_srt!
   end;
 
 # boundaries
 sbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 cbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 # boundary conditions
@@ -46,7 +46,7 @@ bcs:
 # callback functions
 callbacks:
   - print_step_callback(25, "ex2")
-  - write_backup_file_callback(datadir, 500)
+  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 finally:
@@ -56,7 +56,7 @@ finally:
         extract_ux_prof_callback(convert(Int64, round(ni/2)))(sim), 
         ",");
     end
-  - write_backup_file_callback(datadir)
+  - write_jld_file_callback(datadir)
 
 # test for conditions to end simulation
 test_for_term: is_steadystate_x

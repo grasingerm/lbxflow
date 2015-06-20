@@ -36,7 +36,7 @@ function dumpsim(datadir::String, sim::Sim, step::Int)
   end
  
   # backup particle distributions and lattice config
-  ni, nj, nk = size(sim.lat.f);
+  nk, ni, nj = size(sim.lat.f);
   w = open(joinpath(dumpdir, "lat.dat"), "w");
   write(w, "ni: $ni\n");
   write(w, "nj: $nj\n");
@@ -46,20 +46,18 @@ function dumpsim(datadir::String, sim::Sim, step::Int)
   close(w);
 
   for k=1:nk
-    writedlm(joinpath(dumpdir, "f$k.dat"), sim.lat.f[:,:,k]);
+    writedlm(joinpath(dumpdir, "f$k.dat"), sim.lat.f[k,:,:]);
   end
 
   # backup multiscale map
   w = open(joinpath(dumpdir, "msm.dat"), "w");
   write(w, "ni: $ni\n");
   write(w, "nj: $nj\n");
-  write(w, string("dx: ", sim.msm.dx, "\n"));
-  write(w, string("dt: ", sim.msm.dt, "\n"));
   write(w, string("rho_0: ", sim.msm.rho_0), "\n");
   close(w);
 
   for d=1:2
-    writedlm(joinpath(dumpdir, "u$d.dat"), sim.msm.u[:,:,d]);
+    writedlm(joinpath(dumpdir, "u$d.dat"), sim.msm.u[d,:,:]);
   end
   writedlm(joinpath(dumpdir, "rho.dat"), sim.msm.rho);
   writedlm(joinpath(dumpdir, "omega.dat"), sim.msm.omega);
@@ -106,9 +104,9 @@ function load_backup_dir(backup_dir::String)
   lat = Lattice(latdefs["dx"], latdefs["dt"], latdefs["ni"], latdefs["nj"]);
   msm = MultiscaleMap(0.0, lat, msmdefs["rho_0"]);
 
-  for k=1:9
+  for k=1:lat.n
     try
-      lat.f[:,:,k] = readdlm(joinpath(backup_dir,"f$k.dat"));
+      lat.f[k,:,:] = readdlm(joinpath(backup_dir,"f$k.dat"));
     catch e
       return 0, nothing;
     end
@@ -116,7 +114,7 @@ function load_backup_dir(backup_dir::String)
 
   for d=1:2
     try
-      msm.u[:,:,d] = readdlm(joinpath(backup_dir,"u$d.dat"));
+      msm.u[d,:,:] = readdlm(joinpath(backup_dir,"u$d.dat"));
     catch e
       return 0, nothing;
     end
@@ -190,13 +188,20 @@ function load_latest_jld(datadir::String)
   return loadsim_jld(latest_path);
 end
 
+#! Recursively remove files and directories
+function rrm(path::String)
+  if isdir(path)
+    for f in readdir(path); rrm(joinpath(path, f)); end
+  end
+  rm(path);
+end
 # ===========================================================================
 # ===================== Sim callbacks: IO and visualization =================
 # ===========================================================================
 
 #! Create a callback function for writing a jld backup file
 function write_jld_file_callback(datadir::String,
-  append_step_to_name::Bool = false)
+                                 append_step_to_name::Bool = false)
  
   return (sim::Sim, k::Int) -> begin
     dumpsim_jld(datadir, sim, k, append_step_to_name);
@@ -205,7 +210,7 @@ end
 
 #! Create a callback function for writing a jld backup file
 function write_jld_file_callback(datadir::String, stepout::Int,
-  append_step_to_name::Bool = false)
+                                 append_step_to_name::Bool = false)
 
   return (sim::Sim, k::Int) -> begin
     if k % stepout == 0
@@ -250,11 +255,11 @@ end
 function extract_prof_callback(i::Int)
 
   return (sim::Sim) -> begin
-    const nj = size(sim.msm.u)[2];
+    const nj = size(sim.msm.u, 3);
     x = Array(Float64, (nj, 3));
 
     for j=1:nj
-      x[j,:] = [j, sim.msm.u[i,j,1], sim.msm.u[i,j,2]];
+      x[j,:] = [j, sim.msm.u[1,i,j], sim.msm.u[2,i,j]];
     end
 
     return x;
@@ -266,8 +271,8 @@ end
 function extract_ux_prof_callback(i::Int)
 
   return (sim::Sim) -> begin
-    const ni, nj = size(sim.msm.u);
-    const u = vec(sim.msm.u[i,:,1]);
+    const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+    const u = vec(sim.msm.u[1,i,:]);
 
     x = linspace(-0.5, 0.5, nj);
     y = u;
@@ -281,8 +286,8 @@ end
 function extract_ubar_prof_callback(i::Int)
 
   return (sim::Sim) -> begin
-    const ni, nj = size(sim.msm.u);
-    const u = vec(sim.msm.u[i,:,1]);
+    const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+    const u = vec(sim.msm.u[1,i,:]);
 
     x = linspace(-0.5, 0.5, nj);
     y = u / maximum(u);
@@ -312,14 +317,14 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
-  pause::FloatingPoint = 0.1)
+                                  pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
+      const nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
-      y = vec(sim.msm.u[i,:,1]);
+      y = vec(sim.msm.u[1,i,:]);
 
       clf();
       plot(x,y);
@@ -333,12 +338,12 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
-  pause::FloatingPoint = 0.1)
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
-      const u = vec(sim.msm.u[i,:,1]);
+      const nj = size(sim.msm.u, 3);
+      const u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -355,7 +360,7 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_umag_contour_callback(iters_per_frame::Int,
-  pause::FloatingPoint = 0.1)
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -369,12 +374,12 @@ end
 
 #! Plot velocity vectors for the domain
 function plot_uvecs_callback(iters_per_frame::Int,
-  pause::FloatingPoint = 0.1)
+                             pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      quiver(transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       sleep(pause);
     end
   end
@@ -383,16 +388,16 @@ end
 
 #! Plot streamlines for the domain
 function plot_streamlines_callback(iters_per_frame::Int,
-  pause::FloatingPoint = 0.1)
+                                   pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      const ni, nj = size(sim.msm.rho, 2), size(sim.msm.rho, 3);
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y, transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      streamplot(x, y, transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       sleep(pause);
@@ -403,14 +408,14 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String,
-  pause::FloatingPoint = 0.1)
+                                  pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
+      const nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
-      y = vec(sim.msm.u[i,:,1]);
+      y = vec(sim.msm.u[1,i,:]);
 
       clf();
       plot(x,y);
@@ -425,12 +430,12 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, fname::String,
-  pause::FloatingPoint = 0.1)
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
-      const u = vec(sim.msm.u[i,:,1]);
+      const nj = size(sim.msm.u, 3);
+      const u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -448,7 +453,7 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
-  pause::FloatingPoint = 0.1)
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -463,12 +468,12 @@ end
 
 #! Plot velocity vectors for the domain
 function plot_uvecs_callback(iters_per_frame::Int, fname::String,
-  pause::FloatingPoint = 0.1)
+                             pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      quiver(transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -478,16 +483,16 @@ end
 
 #! Plot streamlines for the domain
 function plot_streamlines_callback(iters_per_frame::Int, fname::String,
-  pause::FloatingPoint = 0.1)
+                                   pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      const ni, nj = size(sim.msm.rho, 2), size(sim.msm.rho, 3);
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y, transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      streamplot(x, y, transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       savefig(fname*"_step-$k.png");
@@ -499,14 +504,15 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
-  xy::(Number,Number), pause::FloatingPoint = 0.1)
+                                  xy::(Number,Number),
+                                  pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
+      const nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
-      y = vec(sim.msm.u[i,:,1]);
+      y = vec(sim.msm.u[1,i,:]);
 
       clf();
       plot(x,y);
@@ -521,12 +527,13 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
-  xy::(Number,Number), pause::FloatingPoint = 0.1)
+                                    xy::(Number,Number),
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
-      const u = vec(sim.msm.u[i,:,1]);
+      const nj = size(sim.msm.u, 3);
+      const u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -544,7 +551,7 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
-  pause::FloatingPoint = 0.1)
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -559,12 +566,12 @@ end
 
 #! Plot velocity vectors for the domain
 function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
-  pause::FloatingPoint = 0.1)
+                             pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      quiver(transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       text(xy[1], xy[2], "step: $k");
       sleep(pause);
     end
@@ -574,7 +581,7 @@ end
 
 #! Plot streamlines for the domain
 function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
-  pause::FloatingPoint = 0.1)
+                                   pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -583,7 +590,7 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y,transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      streamplot(x, y,transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       text(xy[1], xy[2], "step: $k");
@@ -595,14 +602,15 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
-  xy::(Number,Number), fname::String, pause::FloatingPoint = 0.1)
+                                  xy::(Number,Number), fname::String,
+                                  pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
+      const nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
-      y = vec(sim.msm.u[i,:,1]);
+      y = vec(sim.msm.u[1,i,:]);
 
       clf();
       plot(x,y);
@@ -618,12 +626,13 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
-  xy::(Number,Number), fname::String, pause::FloatingPoint = 0.1)
+                                    xy::(Number,Number), fname::String,
+                                    pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u)[2];
-      const u = vec(sim.msm.u[i,:,1]);
+      const nj = size(sim.msm.u, 3);
+      const u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -642,7 +651,7 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
-  fname::String, pause::FloatingPoint = 0.1)
+                                    fname::String, pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -658,12 +667,12 @@ end
 
 #! Plot velocity vectors for the domain
 function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
-  fname::String, pause::FloatingPoint = 0.1)
+                             fname::String, pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      quiver(transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       text(xy[1], xy[2], "step: $k");
       savefig(fname*"_step-$k.png");
       sleep(pause);
@@ -674,16 +683,16 @@ end
 
 #! Plot streamlines for the domain
 function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
-  fname::String, pause::FloatingPoint = 0.1)
+                                   fname::String, pause::FloatingPoint = 0.025)
 
   return (sim::Sim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      const ni, nj = size(sim.msm.rho, 2), size(sim.msm.rho, 3);
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y,transpose(sim.msm.u[:,:,1]), transpose(sim.msm.u[:,:,2]));
+      streamplot(x, y,transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       text(xy[1], xy[2], "step: $k");
@@ -692,12 +701,4 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
     end
   end
 
-end
-
-#! Recursively remove files and directories
-function rrm(path::String)
-  if isdir(path)
-    for f in readdir(path); rrm(joinpath(path, f)); end
-  end
-  rm(path);
 end

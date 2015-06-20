@@ -12,7 +12,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_bounce_back!(lat, 1, ni, nj);
 end
 
@@ -27,7 +27,7 @@ end
 
 #! Bounceback boundary condition for south boundary of domain
 function south_bounce_back!(lat::Lattice)
-  south_bounce_back!(lat, 1, size(lat.f, 1), 1);
+  south_bounce_back!(lat, 1, size(lat.f, 2), 1);
 end
 
 #! Bounceback boundary condition for west boundary
@@ -41,7 +41,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function east_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_bounce_back!(lat, ni, 1, nj);
 end
 
@@ -56,7 +56,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_bounce_back!(lat::Lattice)
-  const nj = size(lat.f, 2);
+  const nj = size(lat.f, 3);
   west_bounce_back!(lat, 1, 1, nj);
 end
 
@@ -74,7 +74,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_half_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_half_bounce_back!(lat, 2, ni-1, nj);
 
   lat.f[4,1,nj-1] = lat.f[2,1,nj];
@@ -97,7 +97,7 @@ end
 
 #! Bounceback boundary condition for south boundary of domain
 function south_half_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_half_bounce_back!(lat, 2, ni-1, 1);
 
   lat.f[2,1,2] = lat.f[4,1,1];
@@ -120,7 +120,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function east_half_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_half_bounce_back!(lat, ni, 2, nj-1);
 
   lat.f[3,ni-1,1] = lat.f[1,ni,1];
@@ -169,7 +169,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_halfa_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_halfa_bounce_back!(lat, 1, ni, nj);
 end
 
@@ -189,7 +189,7 @@ end
 
 #! Bounceback boundary condition for south boundary of domain
 function south_halfa_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_halfa_bounce_back!(lat, 1, ni, 1);
 end
 
@@ -209,7 +209,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function east_halfa_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_halfa_bounce_back!(lat, ni, 1, nj);
 end
 
@@ -229,7 +229,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_halfa_bounce_back!(lat::Lattice)
-  const nj = size(lat.f, 2);
+  const nj = size(lat.f, 3);
   west_halfa_bounce_back!(lat, 1, 1, nj);
 end
 
@@ -248,7 +248,7 @@ end
 
 #! West inlet boundary condition
 function west_inlet!(lat::Lattice, u::FloatingPoint)
-  west_inlet!(lat, u, 1, 1, size(lat.f, 2));
+  west_inlet!(lat, u, 1, 1, size(lat.f, 3));
 end
 
 #! North inlet boundary condition
@@ -268,7 +268,7 @@ end
 
 #! North inlet boundary condition
 function north_inlet!(lat::Lattice, u::FloatingPoint)
-  const ni, nj = size(lat);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_inlet!(lat, u, 1, ni, nj);
 end
 
@@ -284,7 +284,7 @@ end
 
 #! East open boundary
 function east_open!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_open!(lat, ni, 1, nj);
 end
 
@@ -292,7 +292,7 @@ end
 function periodic!(lat::Lattice, is::Array{Int, 1}, ks::Array{Int, 1},
   j_from::Int, j_to::Int)
 
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i in is, k in ks
     c = lat.c[k,:];
@@ -316,7 +316,7 @@ end
 function periodic!(lat::Lattice, i_from::Int, i_to::Int, js::Array{Int, 1},
   ks::Array{Int, 1})
 
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for j in js, k in ks
     c = lat.c[k,:];
@@ -338,7 +338,7 @@ end
 
 #! Periodic east to west
 function periodic_east_to_west!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for j=1:nj, k in (1, 5, 8)
     lat.f[k,1,j] = lat.f[k,ni-1,j];
@@ -347,12 +347,11 @@ function periodic_east_to_west!(lat::Lattice)
   for j=1:nj, k in (3, 6, 7)
     lat.f[k,ni,j] = lat.f[k,2,j];
   end
-
 end
 
-#! Periodic east to west
+#! Periodic north to south 
 function periodic_north_to_south!(lat::Lattice)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni, k in (2, 5, 6)
     lat.f[k,i,1] = lat.f[k,i,nj-1];
@@ -361,12 +360,11 @@ function periodic_north_to_south!(lat::Lattice)
   for i=1:ni, k in (4, 7, 8)
     lat.f[k,i,nj] = lat.f[k,i,2];
   end
-
 end
 
 #! Lid driven flow
 function lid_driven!(lat::Lattice, u::FloatingPoint)
-  const ni, nj = size(lat.f)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
     rho = lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj] + 2.0 * (lat.f[2,i,nj]
@@ -383,7 +381,7 @@ function west_pressure!(lat::Lattice, rho_in::FloatingPoint, i::Int,
 
   for j=j_begin:j_end
     u_x = 1 - (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
-                2 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / rho_in;
+               2 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / rho_in;
     lat.f[1,i,j] = lat.f[3,i,j] + 2/3 * rho_in * u_x;
 
     second_term = 0.5 * (lat.f[2,i,j] - lat.f[4,i,j]);
@@ -396,7 +394,7 @@ end
 
 #! Pressure west direction
 function west_pressure!(lat::Lattice, rho_in::FloatingPoint)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   # middle
   west_pressure!(lat, rho_in, 1, 2, nj-1);
@@ -439,7 +437,7 @@ end
 
 #! Pressure east direction
 function east_pressure!(lat::Lattice, rho_out::FloatingPoint)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   # middle of inlet
   east_pressure!(lat, rho_out, ni, 2, nj-1);
@@ -465,7 +463,7 @@ end
 
 #! Zou and He pressure boundary on north side
 function zou_pressure_north!(lat::Lattice, rhoo::FloatingPoint)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
     v = -1. + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
@@ -481,7 +479,7 @@ end
 
 #! Zou and He pressure boundary on south side
 function zou_pressure_south!(lat::Lattice, rhoo::FloatingPoint)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
     v = -1. + (lat.f[9,i,1] + lat.f[1,i,1] + lat.f[3,i,1]

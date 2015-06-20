@@ -27,7 +27,7 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >
   begin;
-    bind_col!(lat, msm, bounds) = col_srt_guo!(lat, msm, F, bounds);
+    bind_col!(lat, msm, bounds) = col_srt_sukop!(lat, msm, F, bounds);
     return bind_col!;
   end;
 

@@ -46,26 +46,26 @@ immutable MultiscaleMap
   u::Array{Float64,3};
   rho::Matrix{Float64};
 
-  MultiscaleMap(lat::Lattice, rho_0::FloatingPoint, omega::Matrix{Float64},
-                u::Array{Float64,3}, rho::Matrix{Float64}) =
-    new(lat, rho_0, omega, u, rho);
+  
 
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint = 1.0)
     const ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 
     new(lat, rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
-      zeros(Float64, (ni, nj, 2)), fill(rho, (ni, nj)));
+        zeros(Float64, (2, ni, nj)), fill(rho, (ni, nj)));
   end
+  
+  MultiscaleMap(lat::Lattice, rho_0::FloatingPoint, omega::Matrix{Float64},
+                u::Array{Float64,3}, rho::Matrix{Float64}) =
+    new(lat, rho_0, omega, u, rho);
 
-  function MultiscaleMap(msm::MultiscaleMap)
-    new(msm.lat, msm.dx, msm.dt, msm.rho_0, copy(msm.omega), copy(msm.u),
-        copy(msm.rho));
-  end
+  MultiscaleMap(msm::MultiscaleMap) =
+    new(msm.lat, msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho));
 end
 
 #! Map particle distribution frequencies to macroscopic variables
 function map_to_macro!(lat::Lattice, msm::MultiscaleMap)
-  const ni, nj = size(lat.f);
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
   const nk = lat.n;
 
   for j=1:nj, i=1:ni
@@ -74,9 +74,9 @@ function map_to_macro!(lat::Lattice, msm::MultiscaleMap)
     msm.u[2,i,j] = 0;
 
     for k=1:nk
-      msm.rho[i,j] += lat.f[i,j,k];
-      msm.u[1,i,j] += lat.f[i,j,k] * lat.c[k,1];
-      msm.u[2,i,j] += lat.f[i,j,k] * lat.c[k,2];
+      msm.rho[i,j] += lat.f[k,i,j];
+      msm.u[1,i,j] += lat.f[k,i,j] * lat.c[1,k];
+      msm.u[2,i,j] += lat.f[k,i,j] * lat.c[2,k];
     end
 
     for a=1:2

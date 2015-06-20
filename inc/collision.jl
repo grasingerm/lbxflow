@@ -92,7 +92,7 @@ end
 #! \param F Body force vector
 #! \param bounds Boundaries that define active parts of the lattice
 function col_srt_sukop! (lat::Lattice, msm::MultiscaleMap, F::Vector{Float64},
-                   bounds::Matrix{Int64})
+                         bounds::Matrix{Int64})
   const ni, nj = size(msm.rho);
   const nbounds = size(bounds, 2);
 
@@ -101,10 +101,11 @@ function col_srt_sukop! (lat::Lattice, msm::MultiscaleMap, F::Vector{Float64},
     for j = j_min:j_max, i = i_min:i_max, k = 1:lat.n 
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
+      omegaij = msm.omega[i,j];
       feq = feq_incomp(lat, rhoij, uij, k);
       lat.f[k,i,j] = (omegaij * feq
-                      + (1.0 - omegaij) * lat.f[i,j,k]
-                      + lat.w[k] * lat.dt / lat.cssq * dot(f, lat.c[:,k]));
+                      + (1.0 - omegaij) * lat.f[k,i,j]
+                      + lat.w[k] * lat.dt / lat.cssq * dot(F, lat.c[:,k]));
     end # body force is incorporated with w*dt/c_ssq * dot(f,c)
   end        
 end
@@ -126,16 +127,14 @@ function col_srt_guo! (lat::Lattice, msm::MultiscaleMap, F::Vector{Float64},
       wk = lat.w[k];
       ck = lat.c[:,k];
       rhoij = msm.rho[i,j];
-      println(msm.u[:,i,j]);
       uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
+      omegaij = msm.omega[i,j];
 
       fdlk = (1 - 0.5 * omegaij) * wk * dot(((ck - uij) / lat.cssq +
                   dot(ck, uij) / (lat.cssq * lat.cssq) * ck), F);
       feq = feq_incomp(lat, rhoij, uij, k);
 
-      lat.f[k,i,j] = (omegaij * feq
-                      + (1.0 - omegaij) * lat.f[k,i,j]
-                      + wk * lat.dt / lat.cssq * dot(f, ck));
+      lat.f[k,i,j] = omegaij * feq + (1.0 - omegaij) * lat.f[k,i,j] + fdlk;
     end
   end
  end
@@ -196,7 +195,7 @@ end
 #! \param msm Multiscale map
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
-function mrt_col_f! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC,
+function col_mrt! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC,
                      bounds::Matrix{Int64})
   const M = @DEFAULT_MRT_M();
   const iM = inv(M);

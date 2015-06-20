@@ -15,10 +15,7 @@ end
 
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
-
-  const ni, nj = size(temp_f);
-  const nbounds, = size(bounds);
-
+  const nbounds = size(bounds, 2);
   #! Stream
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -39,8 +36,8 @@ end
 
 #! Simulate a single step
 function sim_step!(lat::Lattice, temp_f::Array{Float64,3}, msm::MultiscaleMap,
-  sbounds::Array{Int64,2}, collision_f!::Function, cbounds::Array{Int64,2},
-  bcs!::Array{Function})
+                   sbounds::Array{Int64,2}, collision_f!::Function, 
+                   cbounds::Array{Int64,2}, bcs!::Array{Function})
 
   collision_f!(lat, msm, cbounds);
   stream!(lat, temp_f, sbounds);
@@ -55,8 +52,8 @@ end
 
 #! Run simulation
 function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
-  cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
-  test_for_term::Function, callbacks!::Array{Function}, k = 0)
+                   cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
+                   test_for_term::Function, callbacks!::Array{Function}, k = 0)
 
   temp_f = copy(sim.lat.f);
 
@@ -103,8 +100,8 @@ end
 
 #! Run simulation
 function simulate!(sim::Sim, sbounds::Array{Int64,2}, collision_f!::Function,
-  cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
-  callbacks!::Array{Function}, k = 0)
+                   cbounds::Array{Int64,2}, bcs!::Array{Function}, n_steps::Int,
+                   callbacks!::Array{Function}, k = 0)
 
   temp_f = copy(sim.lat.f);
   for i = k+1:n_steps

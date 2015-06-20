@@ -26,18 +26,18 @@ type LatticeD2Q9 <: Lattice
 
   LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
-        zeros(Float64, (n, ni, nj)), cdef, wdef);
+        zeros(Float64, (n, ni, nj)), cdef, wdef, n);
 
   LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
 
   function LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
-                   rho::FloatingPoint)
+                       rho::FloatingPoint)
     f = zeros(Float64, (n, ni, nj));
     for k=1:n
       f[k,:,:] = fill(rho * wdef[k], (ni, nj));
     end
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
   end
 end
 
@@ -65,10 +65,10 @@ type LatticeD2Q4 <: Lattice
 
   LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
-        zeros(Float64, (n, ni, nj)), cdef, wdef);
+        zeros(Float64, (n, ni, nj)), cdef, wdef, n);
 
   LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
 
   function LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
                    rho::Float64)
@@ -76,6 +76,6 @@ type LatticeD2Q4 <: Lattice
     for k=1:n
       f[k,:,:] = fill(rho * wdef[k], (ni, nj));
     end
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
   end
 end
