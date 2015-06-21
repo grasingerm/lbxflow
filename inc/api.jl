@@ -6,8 +6,10 @@ require(abspath(joinpath(api_root, "convergence.jl")));
 require(abspath(joinpath(api_root, "lattice.jl")));
 require(abspath(joinpath(api_root, "lbxio.jl")));
 require(abspath(joinpath(api_root, "multiscale.jl")));
+require(abspath(joinpath(api_root, "profile.jl")));
 require(abspath(joinpath(api_root, "simulate.jl")));
 
+using ProfileView
 using PyCall
 @pyimport yaml
 
@@ -53,7 +55,7 @@ function parse_and_run(infile::String, args::Dict)
       else
         if DEF_EXPR_ATTRS[k][:array]
           n = length(v);
-          # TODO: this syntax is soon deprecated
+          # TODO: this syntax is soon deprecated; since when??
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
             if args["verbose"]; info("evalling... $(v[i])"); end
@@ -148,6 +150,11 @@ function parse_and_run(infile::String, args::Dict)
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     sim = Sim(lat, msm);
   end
+ 
+  if args["profile"]
+    Profile.clear();
+    Profile.init(delay=args["profile-delay"]);
+  end
 
   nsim = 0;
   if !args["debug"]
@@ -156,13 +163,14 @@ function parse_and_run(infile::String, args::Dict)
       tic();
 
       if !haskey(defs, "test_for_term")
-        # this simulate should be more memory and computationally efficient
-        nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
-          defs["bcs"], defs["nsteps"], defs["callbacks"], k);
+      # this simulate should be more memory and computationally efficient
+      @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
+              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+              defs["nsteps"], defs["callbacks"], k); end);
       else
-        nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
-          defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"],
-          k);
+        @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
+                defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+                defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); end);
       end
 
     catch e
@@ -177,25 +185,53 @@ function parse_and_run(infile::String, args::Dict)
       end
 
       println("$infile:\tSteps simulated: $nsim");
-
       toc();
+
+      if args["profile"]; Profile.print(args["profile-io"], cols=args["profile-cols"]); end
+      if args["profile-file"] != nothing; 
+        close(args["profile-io"]);
+        bt, lidict = Profile.retrieve();
+        JLD.jldopen(args["profile-file"]*".jld", "w") do file
+          write(file, "bt", bt);
+          write(file, "lidict", lidict);
+        end
+      else
+        ProfileView.view();
+        println("Press enter to continue...");
+        readline(STDIN);
+      end
     end
 
+    # TODO: is `debugging` mode actually useful?
   else # debugging on, run simulation without exception catching
     tic();
 
     if !haskey(defs, "test_for_term")
       # this simulate should be more memory and computationally efficient
-      nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
-        defs["bcs"], defs["nsteps"], defs["callbacks"], k);
+      @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
+              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+              defs["nsteps"], defs["callbacks"], k); end);
     else
-      nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"], 
-        defs["bcs"], defs["nsteps"], defs["test_for_term"], defs["callbacks"],
-        k);
+      @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
+              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+              defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); end);
     end
     
     println("$infile:\tSteps simulated: $nsim");
-
     toc();
+
+    if args["profile"]; Profile.print(args["profile-io"], cols=args["profile-cols"]); end
+    if args["profile-file"] != nothing; 
+      close(args["profile-io"]);
+      bt, lidict = Profile.retrieve();
+      JLD.jldopen(args["profile-file"]*".jld", "w") do file
+        write(file, "bt", bt);
+        write(file, "lidict", lidict);
+      end
+    else
+      ProfileView.view();
+      println("Press enter to continue...");
+      readline(STDIN);
+    end
   end
 end

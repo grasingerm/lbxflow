@@ -288,9 +288,7 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
                (1 - relax) * muij
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
-      s_8 = @fallah_8(muij, rhoij, lat.cssq, lat.dt);
-      Sij[7,7] = s_8;
-      Sij[8,8] = s_8;
+      Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       lat.f[:,i,j] = f - iM * Sij * (m - meq); # perform collision
 
@@ -353,11 +351,7 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
                (1 - relax) * muij
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
-               
-      s_8 = @fallah_8(muij, rhoij, lat.cssq, lat.dt);
-      Sij[7,7] = s_8;
-      Sij[8,8] = s_8;
-
+      Sij = S(muij, rhoij, lat.cssq, lat.dt);
       omegaij = @omega(muij, lat.cssq, lat.dt);
 
       fdl = Array(Float64, lat.n);
@@ -441,9 +435,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
                  (1 - relax) * muij
                   + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
                );
-        s_8 = @fallah_8(muij, rhoij, lat.cssq, lat.dt);
-        Sij[7,7] = s_8;
-        Sij[8,8] = s_8;
+        Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
         # check for convergence
         if abs(mu_prev - muij) / muo <= tol
@@ -528,9 +520,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
                  (1 - relax) * muij
                   + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
                );
-        s_8 = @fallah_8(muij, rhoij, lat.cssq, lat.dt);
-        Sij[7,7] = s_8;
-        Sij[8,8] = s_8;
+        Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
         # check for convergence
         if abs(mu_prev - muij) / muo <= tol
@@ -578,7 +568,9 @@ end
 #!
 #! \param omega Collision frequency
 #! \return Chen relaxation matix
-function S_chen(omega::Number)
+function S_chen(mu::Number, rho::Number, cssq::Number,
+	              dt::Number)
+  omega = @omega(mu, cssq, dt);
   return spdiagm([1.1; 1.0; 0.0; 1.2; 0.0; 1.2; omega; omega; 0.0]);
 end
 
