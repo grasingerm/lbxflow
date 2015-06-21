@@ -1,0 +1,69 @@
+version: 0.2.1
+
+# code to execute before parsing
+preamble: >
+  using PyPlot;
+  const pgrad = -1.102e-3;
+  const F = [-pgrad; 0.0];
+  const datadir = "data/sukop";
+  const ni = 20;
+  const nj = 12;
+  const mu_p = 1/6;
+  const tau_y = 0.0;
+  const m = 1.0e8;
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,     expr: false }
+nu:       { value: mu_p,    expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+nsteps:   { value: 10000,   expr: false }
+col_f: >
+  begin;
+    binded_col_f!(lat, msm, bounds) = col_mrt_bingham_explicit!(lat,
+      msm, S_chen, mu_p, tau_y, m, 1.0e-11, F, bounds,
+      1.0);
+  end;
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+# callback functions
+callbacks:
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
+  - print_step_callback(50, "ex1")
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      writedlm(joinpath(datadir, "ux_profile.dsv"), 
+        extract_ux_prof_callback(convert(Int64, round(ni/2)))(sim), 
+        ",");
+    end
+  - write_jld_file_callback(datadir)
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x

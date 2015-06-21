@@ -263,7 +263,7 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
 
   #! Stream
   for r = 1:nbounds
-    i_min, i_max, j_min, j_max = bounds[r,:];
+    i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
@@ -275,11 +275,11 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
-      m = M * f;
+      mij = M * f;
       meq = M * feq;
       fneq = f - feq;
 
-      D = strain_rate_tensor(lat, rhoij, fneq, M, iM, S);
+      D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
       gamma = @strain_rate(D);
 
       # update relaxation matrix
@@ -290,7 +290,7 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
              );
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
-      lat.f[:,i,j] = f - iM * Sij * (m - meq); # perform collision
+      lat.f[:,i,j] = f - iM * Sij * (mij - meq); # perform collision
 
       # update collision frequency matrix
       msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
@@ -325,7 +325,7 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
 
   #! Stream
   for r = 1:nbounds
-    i_min, i_max, j_min, j_max = bounds[r,:];
+    i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
@@ -337,12 +337,12 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
-      m = M * f;
+      mij = M * f;
       meq = M * feq;
       fneq = f - feq;
       muo = muij;
 
-      D = strain_rate_tensor(lat, rhoij, fneq, M, iM, S);
+      D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
       gamma = @strain_rate(D);
 
       # update relaxation matrix
@@ -357,11 +357,11 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
       fdl = Array(Float64, lat.n);
       for k=1:lat.n
         ck = lat.c[:,k];
-        fdl[k] = (1 - 0.5 * omegaij) * lat.w[k] * dot(((ck - uij) / c_ssq +
+        fdl[k] = (1 - 0.5 * omegaij) * lat.w[k] * dot(((ck - uij) / lat.cssq +
                   dot(ck, uij) / (lat.cssq * lat.cssq) * ck), F);
       end
 
-      lat.f[i,j,:] = f - iM * Sij * (m - meq) + fdl; # perform collision
+      lat.f[:,i,j] = f - iM * Sij * (mij - meq) + fdl; # perform collision
 
       # update collision frequency matrix
       msm.omega[i,j] = omegaij;
@@ -402,7 +402,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
 
   #! Stream
   for r = 1:nbounds
-    i_min, i_max, j_min, j_max = bounds[r,:];
+    i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
@@ -414,7 +414,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
-      m = M * f;
+      mij = M * f;
       meq = M * feq;
       fneq = f - feq;
       muo = muij;
@@ -426,7 +426,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
       while true
         iters += 1;
 
-        D = strain_rate_tensor(lat, rhoij, fneq, M, iM, S);
+        D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
         gamma = @strain_rate(D);
 
         # update relaxation matrix
@@ -449,7 +449,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
         mu_prev = muij;
       end
 
-      lat.f[:,i,j] = f - iM * Sij * (m - meq); # perform collision
+      lat.f[:,i,j] = f - iM * Sij * (mij - meq); # perform collision
 
       # update collision frequency matrix
       msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
@@ -487,7 +487,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
   const nbounds = size(bounds, 2);
 
   for r = 1:nbounds
-    i_min, i_max, j_min, j_max = bounds[r,:];
+    i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
@@ -499,7 +499,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
-      m = M * f;
+      mij = M * f;
       meq = M * feq;
       fneq = f - feq;
       muo = muij;
@@ -511,7 +511,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
       while true
         iters += 1;
 
-        D = strain_rate_tensor(lat, rhoij, fneq, M, iM, S);
+        D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
         gamma = @strain_rate(D);
 
         # update relaxation matrix
@@ -543,7 +543,7 @@ function col_mrt_bingham_implicit! (lat::Lattice, msm::MultiscaleMap,
                   dot(ck, uij) / (lat.cssq * lat.cssq) * ck), F);
       end
 
-      lat.f[:,i,j] = f - iM * Sij * (m - meq) + fdl; # perform collision
+      lat.f[:,i,j] = f - iM * Sij * (mij - meq) + fdl; # perform collision
 
       # update collision frequency matrix
       msm.omega[i,j] = omegaij;

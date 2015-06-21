@@ -136,7 +136,7 @@ function strain_rate_tensor(lat::Lattice, rho::Float64, fneq::Vector{Float64},
       for j=1:ni
         MiSMsum += MiSM[i,j] * fneq[j];
       end
-      sum += lat.c[alpha,i] * c[beta,i] * MiSMsum;
+      sum += lat.c[alpha,i] * lat.c[beta,i] * MiSMsum;
     end
     D[alpha, beta] = -1.0 / (2.0 * rho * lat.cssq * lat.dt) * sum;
   end
@@ -157,5 +157,3 @@ function div_strain_rate(D::Matrix{Float64}, c::Matrix{Float64})
 
   return divD / 6.0;
 end
-
-
