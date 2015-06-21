@@ -46,8 +46,6 @@ immutable MultiscaleMap
   u::Array{Float64,3};
   rho::Matrix{Float64};
 
-  
-
   function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint = 1.0)
     const ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 

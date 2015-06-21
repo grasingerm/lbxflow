@@ -196,7 +196,7 @@ end
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
 function col_mrt! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC,
-                     bounds::Matrix{Int64})
+                   bounds::Matrix{Int64})
   const M = @DEFAULT_MRT_M();
   const iM = inv(M);
   const ni, nj = size(msm.rho);
@@ -224,7 +224,49 @@ function col_mrt! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC,
   end
 end
 
-# TODO: this actually comes from Fallah 2012 and a few other studies
+#! Multiple relaxation time collision function for incompressible flow
+#!
+#! \param lat Lattice
+#! \param msm Multiscale map
+#! \param S (Sparse) diagonal relaxation matrix
+#! \param bounds Boundaries that define active parts of the lattice
+#! \param F Body force vector
+function col_mrt! (lat::Lattice, msm::MultiscaleMap, S::SparseMatrixCSC,
+                   F::Vector{Float64}, bounds::Matrix{Int64})
+  const M = @DEFAULT_MRT_M();
+  const iM = inv(M);
+  const ni, nj = size(msm.rho);
+
+  # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
+  feq = Array(Float64, lat.n);
+  fdl = Array(Float64, lat.n);
+
+  const nbounds = size(bounds, 2);
+
+  #! Stream
+  for r = 1:nbounds
+    i_min, i_max, j_min, j_max = bounds[:,r];
+    for j = j_min:j_max, i = i_min:i_max 
+      rhoij = msm.rho[i,j];
+      uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
+      omegaij = msm.omega[i,j];
+
+      for k=1:lat.n
+        wk = lat.w[k];
+        ck = lat.c[:,k];
+        feq[k] = feq_incomp(lat, rhoij, uij, k);
+        fdl[k] = (1 - 0.5 * omegaij) * wk * dot(((ck - uij) / lat.cssq +
+                  dot(ck, uij) / (lat.cssq * lat.cssq) * ck), F);
+      end
+
+      f = lat.f[:,i,j];
+      m = M * f;
+      meq = M * feq;
+
+      lat.f[:,i,j] = f - iM * S * (m - meq) + fdl; # perform collision
+    end
+  end
+end
 
 #! Fallah relaxation coefficient for s77, s88
 #!
@@ -340,7 +382,6 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
       mij = M * f;
       meq = M * feq;
       fneq = f - feq;
-      muo = muij;
 
       D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
       gamma = @strain_rate(D);
@@ -351,6 +392,7 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
                (1 - relax) * muij
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
+      println(muij);
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
       omegaij = @omega(muij, lat.cssq, lat.dt);
 
@@ -368,7 +410,6 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
     end
   end
 end
-
 
 #TODO: reconsider order of parameters... come up with a convenction
 # phys models, const/material params, Functions, knobs
@@ -560,7 +601,7 @@ end
 #! \return Fallah relaxation matix
 function S_fallah(mu::Number, rho::Number, cssq::Number,
 	                dt::Number)
-	const s_8 = @fallah_8(mu, rho, c_ssq, dt);
+	const s_8 = @fallah_8(mu, rho, cssq, dt);
 	return spdiagm([1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8; 0.0]);
 end
 
