@@ -106,7 +106,7 @@ function load_backup_dir(backup_dir::String)
   lat = Lattice(latdefs["dx"], latdefs["dt"], latdefs["ni"], latdefs["nj"]);
   msm = MultiscaleMap(0.0, lat, msmdefs["rho_0"]);
 
-  for k=1:9
+  for k=1:lat.n
     try
       lat.f[:,:,k] = readdlm(joinpath(backup_dir,"f$k.dat"));
     catch e
