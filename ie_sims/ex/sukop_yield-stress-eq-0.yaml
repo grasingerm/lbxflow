@@ -1,10 +1,17 @@
+version: 0.2.1
+
 # code to execute before parsing
 preamble: >
+  using PyPlot;
   const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
   const datadir = "data/sukop";
   const ni = 20;
   const nj = 12;
+  const mu_p = 1/6;
+  const tau_y = 0.0;
+  const m = 1.0e8;
+  const omega = 1.0 / (3*mu_p + 0.5);
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -12,7 +19,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: 1.0,     expr: false }
-nu:       { value: 1/6,     expr: true  }
+nu:       { value: mu_p,    expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }
@@ -24,8 +31,8 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >
   begin;
-    bind_srt!(lat, msm, bounds) = col_srt_guo!(lat, msm, F, bounds);
-    return bind_srt!
+    const S = spdiagm([1.1, 1.1, 1.1, 1.1, 1.1, 1.1, omega, omega, 1.1]);
+    binded_col_f!(lat, msm, bounds) = col_mrt!(lat, msm, S, F, bounds);
   end;
 
 # boundaries
@@ -45,8 +52,8 @@ bcs:
 
 # callback functions
 callbacks:
-  - print_step_callback(25, "ex2")
-  - write_jld_file_callback(datadir, 500)
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
+  - print_step_callback(50, "ex1")
 
 # clean-up, backup, write out
 finally:

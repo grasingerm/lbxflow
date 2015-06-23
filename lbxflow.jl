@@ -1,16 +1,18 @@
 ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
-const LBX_VERSION = 0.2;
+const LBX_VERSION = v"0.2.1";
 const root = dirname(@__FILE__);
 
 println();
 println(readall(abspath(joinpath(root, "banner.txt"))));
-println("version: $LBX_VERSION");
+println("version:  $LBX_VERSION");
 println();
 
 # load dependencies
 require(abspath(joinpath(root, "inc", "api.jl")));
 require("argparse");
 using ArgParse;
+
+const term_rows, term_cols = Base.tty_size();
 
 s = ArgParseSettings();
 @add_arg_table s begin
@@ -38,15 +40,34 @@ s = ArgParseSettings();
   "--noexe", "-X"
     help = "do not execute input file(s)"
     action = :store_true
-  "--log"
-    help = "create a logfile"
+  "--profile", "-P"
+    help = "profile `simulate` function"
     action = :store_true
+  "--profile-file", "-p"
+    help = "file for profiler to print to"
+    arg_type = String
+  "--profile-delay", "-D"
+    help = "time delay between calls to sampler"
+    arg_type = Number
+    default = 0.001
+  "--profile-cols"
+    help = "number of columns in Profile.print"
+    arg_type = Int
+    default = term_cols 
   "--debug"
     help = "turns on debugging mode"
     action = :store_true
 end
 
 pa = parse_args(s);
+
+# organize profiling args
+if pa["profile-file"] != nothing
+  pa["profile"] = true # e have an output file location, we should be profiling
+  pa["profile-io"] = open((pa["profile-file"]*".txt"), "w");
+elseif pa["profile"]
+  pa["profile-io"] = STDOUT;
+end
 
 # run input file
 if pa["file"] != nothing

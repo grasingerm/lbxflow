@@ -38,7 +38,7 @@ function is_steadystate_x(msm::MultiscaleMap, prev_msm::MultiscaleMap,
   sum_diff = 0.0;
   sum_u = 0.0;
 
-  for (u, u_prev) in zip(msm.u[:,:,1], prev_msm.u[:,:,1])
+  for (u, u_prev) in zip(msm.u[1,:,:], prev_msm.u[1,:,:])
     sum_diff += abs(u - u_prev);
     sum_u += abs(u);
   end
@@ -63,7 +63,7 @@ function is_steadystate_y(msm::MultiscaleMap, prev_msm::MultiscaleMap,
   sum_diff = 0.0;
   sum_u = 0.0;
 
-  for (u, u_prev) in zip(msm.u[:,:,2], prev_msm.u[:,:,2])
+  for (u, u_prev) in zip(msm.u[2,:,:], prev_msm.u[2,:,:])
     sum_diff += abs(u - u_prev);
     sum_u += abs(u);
   end
