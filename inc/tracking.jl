@@ -1,9 +1,9 @@
 const __tracking_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__tracking_root__, "multiscale.jl")));
 
-immutable Gas; end;
-immutable Interface; end;
-immutable Fluid; end;
+immutable Gas; end;         const GAS = Gas();
+immutable Interface; end;   const INTERFACE = Interface();
+immutable Fluid; end;       const FLUID = Fluid();
 
 immutable Tracker
   state::Matrix{Union(Gas, Interface, Fluid)};
