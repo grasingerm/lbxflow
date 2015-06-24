@@ -79,3 +79,38 @@ type LatticeD2Q4 <: Lattice
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
   end
 end
+
+#! Opposite direction lattice vector index
+#!
+#! \param lat Lattice
+#! \param k Index of lattice vector
+#! \return Index of opposite direction
+function opp_lat_vec(lat::LatticeD2Q9, k::Int)
+  if k == 1
+    return 3;
+  elseif k == 2
+    return 4;
+  elseif k == 3
+    return 1;
+  elseif k == 4
+    return 2;
+  elseif k == 5
+    return 7;
+  elseif k == 6
+    return 8;
+  elseif k == 7
+    return 5;
+  elseif k == 8
+    return 6;
+  end
+  return 9;
+end
+
+#! Opposite direction lattice vector index
+#!
+#! \param lat Lattice
+#! \param k Index of lattice vector
+#! \return Index of opposite direction
+function opp_lat_vec(lat::LatticeD2Q4, k::Int)
+  error("not yet implemented");
+end
