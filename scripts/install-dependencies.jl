@@ -4,7 +4,8 @@ for pkgname in (
   "PyCall",
   "PyPlot",
   "YAML",
-  "HDF5"
+  "HDF5",
+  "ArrayViews"
   )
 
   Pkg.add(pkgname);

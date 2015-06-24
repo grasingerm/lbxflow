@@ -82,9 +82,10 @@ end
 
 #! Opposite direction lattice vector index
 #!
+#! \param lat Lattice
 #! \param k Index of lattice vector
 #! \return Index of opposite direction
-function opp_lat_vec_D2Q9(k::Int)
+function opp_lat_vec(lat::LatticeD2Q9, k::Int)
   if k == 1
     return 3;
   elseif k == 2
@@ -103,4 +104,13 @@ function opp_lat_vec_D2Q9(k::Int)
     return 6;
   end
   return 9;
+end
+
+#! Opposite direction lattice vector index
+#!
+#! \param lat Lattice
+#! \param k Index of lattice vector
+#! \return Index of opposite direction
+function opp_lat_vec(lat::LatticeD2Q4, k::Int)
+  error("not yet implemented");
 end
