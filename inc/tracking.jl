@@ -3,6 +3,7 @@ using ArrayViews
 
 const __tracking_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__tracking_root__, "multiscale.jl")));
+require(abspath(joinpath(__tracking_root__, "simulate.jl")));
 
 immutable Gas; end;         const GAS = Gas();
 immutable Interface; end;   const INTERFACE = Interface();
@@ -46,6 +47,7 @@ function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
           all(b -> b >= i, view(sbounds, :, 2)) &&
           all(b -> b <= j, view(sbounds, :, 3)) &&
           all(b -> b >= j, view(sbounds, :, 4)));
+end
 
 #! Simulate mass transfer across interface cells
 #!

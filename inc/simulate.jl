@@ -2,6 +2,7 @@ const __simulate_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__simulate_root__, "collision.jl")));
 require(abspath(joinpath(__simulate_root__, "lattice.jl")));
 require(abspath(joinpath(__simulate_root__, "multiscale.jl")));
+require(abspath(joinpath(__simulate_root__, "tracking.jl")));
 
 abstract AbstractSim
 
@@ -22,7 +23,7 @@ end
 immutable FreeSurfSim <: AbstractSim
   lat::Lattice
   msm::MultiscaleMap
-  tracker::T
+  tracker::Tracker
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker)
     return new(lat, msm, tracker);
