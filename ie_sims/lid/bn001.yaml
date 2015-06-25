@@ -34,19 +34,19 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 40000,   expr: false }
 col_f: >
       begin;
-        binded_col_f!(lat, msm, bounds) = mrt_bingham_implicit_col_f!(lat,
-          msm, vikhansky_relax_matrix, mu_p, tau_y, m, max_iters, tol,
+        binded_col_f!(lat, msm, bounds) = col_mrt_bingham_implicit!(lat,
+          msm, S_fallah, mu_p, tau_y, m, max_iters, tol,
           1.0e-11, bounds, relax);
         return binded_col_f!;
       end
 
 # boundaries
 sbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 cbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 # boundary conditions
@@ -78,4 +78,4 @@ finally:
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(msm.u[:,round(nj/2),2])], ",");
     end
   - write_jld_file_callback(datadir)
-  - plot_streamlines_callback(1, (0.45, -0.075), datadir, 0.0)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png", 0.0)

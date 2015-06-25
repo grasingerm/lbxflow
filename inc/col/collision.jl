@@ -1,8 +1,8 @@
 const __collision_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__collision_root__, "debug.jl")));
-require(abspath(joinpath(__collision_root__, "lattice.jl")));
-require(abspath(joinpath(__collision_root__, "multiscale.jl")));
-require(abspath(joinpath(__collision_root__, "numerics.jl")));
+require(abspath(joinpath(__collision_root__, "..", "debug.jl")));
+require(abspath(joinpath(__collision_root__, "..", "lattice.jl")));
+require(abspath(joinpath(__collision_root__, "..", "multiscale.jl")));
+require(abspath(joinpath(__collision_root__, "..", "numerics.jl")));
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow
 #!

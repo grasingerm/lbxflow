@@ -1,33 +1,9 @@
 const __simulate_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__simulate_root__, "collision.jl")));
-require(abspath(joinpath(__simulate_root__, "lattice.jl")));
-require(abspath(joinpath(__simulate_root__, "multiscale.jl")));
-
-abstract AbstractSim
-
-#! Simulation object
-#! lat Lattice
-#! msm Multiscale map
-immutable Sim <: AbstractSim
-  lat::Lattice
-  msm::MultiscaleMap
-
-  Sim(lat::Lattice, msm::MultiscaleMap) = new(lat, msm);
-end
-
-#! Free surface flow simulation object
-#! lat Lattice
-#! msm Multiscal map
-#! tracker Mass tracker
-immutable FreeSurfSim <: AbstractSim
-  lat::Lattice
-  msm::MultiscaleMap
-  tracker::T
-
-  function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker)
-    return new(lat, msm, tracker);
-  end
-end
+require(abspath(joinpath(__simulate_root__, "..", "col", "collision.jl")));
+require(abspath(joinpath(__simulate_root__, "..", "lattice.jl")));
+require(abspath(joinpath(__simulate_root__, "..", "multiscale.jl")));
+require(abspath(joinpath(__simulate_root__, "simtypes.jl")));
+require(abspath(joinpath(__simulate_root__, "tracking.jl")));
 
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
