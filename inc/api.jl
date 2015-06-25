@@ -1,13 +1,13 @@
 const api_root = dirname(@__FILE__);
 
 require(abspath(joinpath(api_root, "boundary.jl")));
-require(abspath(joinpath(api_root, "collision.jl")));
+require(abspath(joinpath(api_root, "col", "collision.jl")));
 require(abspath(joinpath(api_root, "convergence.jl")));
 require(abspath(joinpath(api_root, "lattice.jl")));
 require(abspath(joinpath(api_root, "lbxio.jl")));
 require(abspath(joinpath(api_root, "multiscale.jl")));
 require(abspath(joinpath(api_root, "profile.jl")));
-require(abspath(joinpath(api_root, "simulate.jl")));
+require(abspath(joinpath(api_root, "sim", "simulate.jl")));
 
 using ProfileView
 using PyCall

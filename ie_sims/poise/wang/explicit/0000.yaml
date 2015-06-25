@@ -43,11 +43,11 @@ col_f: col_srt!
 
 # boundaries
 sbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 cbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 # boundary conditions
