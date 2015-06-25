@@ -1,8 +1,10 @@
+version: 0.2.1
+
 # code to execute before parsing
 preamble: >
   using PyPlot;
   const pgrad = -1.102e-3;
-  const f = [-pgrad; 0.0];
+  const F = [-pgrad; 0.0];
   const datadir = "data/sukop";
   const ni = 20;
   const nj = 12;
@@ -25,17 +27,17 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >
   begin;
-    bind_srt_col_f!(lat, msm, bounds) = srt_guo_col_f!(lat, msm, f, bounds);
-    return bind_srt_col_f!
+    bind_col!(lat, msm, bounds) = col_srt_sukop!(lat, msm, F, bounds);
+    return bind_col!;
   end;
 
 # boundaries
 sbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 cbounds:
-  value: "[1 ni 1 nj;]"
+  value: "[1 ni 1 nj;]'"
   expr: true
 
 # boundary conditions

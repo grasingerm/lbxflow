@@ -11,6 +11,7 @@ to approximate hydrodynamics.
 * PyYaml (python library)
 * PyPlot
 * HDF5
+* ArrayViews
 
 ## TODO list
 * [x] verify Newtonian Poiseuille flow
