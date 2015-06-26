@@ -9,7 +9,6 @@ println();
 
 # load dependencies
 require(abspath(joinpath(root, "inc", "api.jl")));
-if VERSION > v"0.3.7"; require("argparse"); end
 using ArgParse;
 
 const term_rows, term_cols = Base.tty_size();

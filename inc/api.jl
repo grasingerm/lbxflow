@@ -195,7 +195,7 @@ function parse_and_run(infile::String, args::Dict)
           write(file, "bt", bt);
           write(file, "lidict", lidict);
         end
-      else
+      elseif args["profile"]
         ProfileView.view();
         println("Press enter to continue...");
         readline(STDIN);
@@ -220,8 +220,7 @@ function parse_and_run(infile::String, args::Dict)
     println("$infile:\tSteps simulated: $nsim");
     toc();
 
-    if args["profile"]
-      Profile.print(args["profile-io"], cols=args["profile-cols"])
+    if args["profile"]; Profile.print(args["profile-io"], cols=args["profile-cols"]); end
       if args["profile-file"] != nothing; 
         close(args["profile-io"]);
         bt, lidict = Profile.retrieve();
@@ -229,11 +228,10 @@ function parse_and_run(infile::String, args::Dict)
           write(file, "bt", bt);
           write(file, "lidict", lidict);
         end
-      else
+      elseif args["profile"]
         ProfileView.view();
         println("Press enter to continue...");
         readline(STDIN);
       end
     end
-  end
 end

@@ -392,7 +392,6 @@ function col_mrt_bingham_explicit! (lat::Lattice, msm::MultiscaleMap,
                (1 - relax) * muij
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
-      println(muij);
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
       omegaij = @omega(muij, lat.cssq, lat.dt);
 
