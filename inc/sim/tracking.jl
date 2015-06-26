@@ -107,3 +107,55 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64})
     end
   end
 end
+
+function f_reconst!(lat::LatticeD2Q9, t::Tracker, ij::(Int64, Int64))
+  const n = unit_normal(t, ij);
+  const i, j = ij;
+  error("not yet implemented");
+
+  for (k, c) in enumerate(lat.c)
+    if dot(n, c) >= 0
+      # perform reconstruction
+    end
+  end
+end
+
+
+#! Determine unit normal to interface
+#!
+#! \param t Mass tracker
+#! \param ij i and j indices of grid cell
+function unit_normal(t::Tracker, ij::(Int64, Int64))
+  const i, j = ij;
+
+  const CORNERS = ( ((-1,0),(-1,-1),(0,-1)),  ((0,-1),(1,-1),(1,0)),
+                    ((1,0),(1,1),(0,1)    ),  ((0,1),(-1,1),(-1,0))   );
+  const BITS    = (1, 2, 4, 8);
+  const NORMALS = (
+                    [0; 0],                   [-sqrt(2)/2; -sqrt(2)/2],
+                    [sqrt(2)/2; -sqrt(2)/2],  [0;-1],
+                    [sqrt(2)/2; sqrt(2)/2],   [0; 0],
+                    [1; 0],                   [-sqrt(2)/2; -sqrt(2)/2],
+                    [-sqrt(2)/2; sqrt(2)/2],  [1; 0],
+                    [0; 0],                   [-sqrt(2)/2; -sqrt(2)/2],
+                    [0; 1],                   [-sqrt(2)/2; sqrt(2)/2],
+                    [sqrt(2)/2; sqrt(2)/2],   [0; 0]
+                  );
+
+  case = 0;
+  # are any of the neighbors on a corner a GAS cell??
+  for (bit, corner) in zip(BIT, CORNERS)
+    is_fluid = true;
+    for (ci,cj) in corner
+      if t.state[i+ci,j+cj] == GAS
+        is_fluid = false;
+        break;
+      end
+    end
+
+    if is_fluid; case |= bit; end
+  end
+
+  case += 1 # correct for indexing starting at 1
+  return NORMALS[case]; # TODO: increase accuracy with linear interpolation
+end
