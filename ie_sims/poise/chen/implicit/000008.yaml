@@ -41,7 +41,7 @@ nsteps:     { value: nsteps,    expr: true    }
 col_f: >
       begin;
         binded_col_f!(lat, msm, bounds) = col_mrt_bingham_implicit!(lat,
-          msm, S_fallah, mu_p, tau_y, m, max_iters, 1.0e-11, f, bounds,
+          msm, S_fallah, mu_p, tau_y, m, max_iters, tol, 1.0e-11, f, bounds,
           relax);
         return binded_col_f!;
       end
