@@ -1,6 +1,7 @@
 using ArrayViews
 
 const __tracking_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__tracking_root__, "..", "col", "collision.jl")));
 require(abspath(joinpath(__tracking_root__, "..", "multiscale.jl")));
 require(abspath(joinpath(__tracking_root__, "simtypes.jl")));
 
@@ -50,7 +51,8 @@ end
 #!
 #! \param sim FreeSurfSim object
 #! \param sbounds Bounds where fluid can be streaming
-function update!(sim::FreeSurfSim, sbounds::Matrix{Int64})
+function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
+                 threshold::FloatingPoint=1.0e-3)
   t = sim.tracker;
   msm = sim.msm;
 
@@ -60,7 +62,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64})
       continue;
     end
     
-    if t.M[i,j] < 0
+    if t.M[i,j] < -threshold
       t.M[i,j] = 0;
       t.state[i,j] = GAS;
       remove!(lst, node); # no longer an interface cell
@@ -82,7 +84,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64})
           push!(t.interfacels, (i, j+cj)); # push into interface list
         end
       end
-    elseif t.M[i,j] > msm.rho[i,j]
+    elseif t.M[i,j] > (msm.rho[i,j] + threshold)
       t.M[i,j] = msm.rho[i,j];
       t.state[i,j] = FLUID;
       remove!(lst, node); # no longer an interface cell
@@ -108,18 +110,30 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   end
 end
 
-function f_reconst!(lat::LatticeD2Q9, t::Tracker, ij::(Int64, Int64))
+#! Reconstruct distribution functions at interface
+#!
+#! \param sim Free surface simulation object
+#! \param t Mass tracker
+#! \param ij tuple of i and j indices on grid
+#! \param rhog Atmospheric pressure
+function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::(Int64, Int64),
+                    rhog::FloatingPoint)
   const n = unit_normal(t, ij);
   const i, j = ij;
-  error("not yet implemented");
+  lat = sim.lat;
+  msm = sim.msm;
 
   for (k, c) in enumerate(lat.c)
     if dot(n, c) >= 0
-      # perform reconstruction
+      opk = opp_lat_vec(lat, k);
+      rhoij = msm.rho[i,j];
+      uij = sim.u[i,j];
+      f[k,i,j] = (feq_incomp(lat, rhog, uij, k) -
+                  feq_incomp(lat, rhog, uij, opk) -
+                  lat.f[opk,i,j]);
     end
   end
 end
-
 
 #! Determine unit normal to interface
 #!

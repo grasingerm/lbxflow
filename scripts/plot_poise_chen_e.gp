@@ -1,13 +1,13 @@
 set datafile separator ","
 
-set terminal pngcairo \
-  transparent enhanced font "arial,14" fontscale 1.0 size 800, 600
-set key center bottom box
+#set terminal pngcairo \
+#  transparent enhanced font "arial,14" fontscale 1.0 size 800, 600
+#set key center bottom box
 
 set title ""
 set ylabel "u / u_max"
 set xlabel "y / H"
-set output "poise-chen-e.png"
+#set output "poise-chen-e.png"
 plot \
     "data/poise/chen/explicit/000000/ux_profile.dsv" \
     using 1:2 title "yield stress = 0.00000", \

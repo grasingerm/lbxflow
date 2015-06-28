@@ -233,60 +233,9 @@ function west_halfa_bounce_back!(lat::Lattice)
   west_halfa_bounce_back!(lat, 1, 1, nj);
 end
 
-#! West inlet boundary condition
-function west_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
-  j_end::Int)
-
-  for j=j_begin:j_end
-    rhow = (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
-            2.0 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / (1.0 - u);
-    lat.f[1,i,j] = lat.f[3,i,j] + 2.0 * rhow * u / 3.0;
-    lat.f[5,i,j] = lat.f[7,i,j] + rhow * u / 6.0;
-    lat.f[8,i,j] = lat.f[6,i,j] + rhow * u / 6.0;
-  end
-end
-
-#! West inlet boundary condition
-function west_inlet!(lat::Lattice, u::FloatingPoint)
-  west_inlet!(lat, u, 1, 1, size(lat.f, 3));
-end
-
-#! North inlet boundary condition
-function north_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end::Int,
-                      j::Int)
-  for i=i_begin:i_end
-    const rhon = (lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
-           2.0 * (lat.f[2,i,j] + lat.f[5,i,j] + lat.f[6,i,j]));
-    const jy = rhon * u;    
-    lat.f[4,i,j] = lat.f[2,i,j] - 2.0/3.0 * jy;
-    lat.f[7,i,j] = (lat.f[5,i,j] - 1.0/6.0 * jy +
-                   0.5 * (lat.f[1,i,j] - lat.f[3,i,j]));
-    lat.f[8,i,j] = (lat.f[6,i,j] - 1.0/6.0 * jy +
-                   0.5 * (lat.f[3,i,j] - lat.f[1,i,j]));
-  end
-end
-
-#! North inlet boundary condition
-function north_inlet!(lat::Lattice, u::FloatingPoint)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  north_inlet!(lat, u, 1, ni, nj);
-end
-
-#! East open boundary
-function east_open!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
-
-  for j=j_begin:j_end
-    lat.f[1,i,j] = 2.0 * lat.f[1,i-1,j] - lat.f[1,i-2,j];
-    lat.f[5,i,j] = 2.0 * lat.f[5,i-1,j] - lat.f[5,i-2,j];
-    lat.f[8,i,j] = 2.0 * lat.f[8,i-1,j] - lat.f[8,i-2,j];
-  end
-end
-
-#! East open boundary
-function east_open!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  east_open!(lat, ni, 1, nj);
-end
+# =========================================================================== #
+# ============================ periodic BCs ================================= #
+# =========================================================================== #
 
 #! Periodic boundary condition
 function periodic!(lat::LatticeD2Q9, is::Array{Int, 1}, ks::Array{Int, 1},
@@ -362,6 +311,70 @@ function periodic_north_to_south!(lat::LatticeD2Q9)
   end
 end
 
+# =========================================================================== #
+# ============================ velocity BCs ================================= #
+# =========================================================================== #
+
+#! North inlet boundary condition
+function north_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end::Int,
+                      j::Int)
+  for i=i_begin:i_end
+    const rhon = (lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
+           2.0 * (lat.f[2,i,j] + lat.f[5,i,j] + lat.f[6,i,j]));
+    const jy = rhon * u;    
+    lat.f[4,i,j] = lat.f[2,i,j] - 2.0/3.0 * jy;
+    lat.f[7,i,j] = (lat.f[5,i,j] - 1.0/6.0 * jy +
+                   0.5 * (lat.f[1,i,j] - lat.f[3,i,j]));
+    lat.f[8,i,j] = (lat.f[6,i,j] - 1.0/6.0 * jy +
+                   0.5 * (lat.f[3,i,j] - lat.f[1,i,j]));
+  end
+end
+
+#! North inlet boundary condition
+function north_inlet!(lat::Lattice, u::FloatingPoint)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  north_inlet!(lat, u, 1, ni, nj);
+end
+
+#! South inlet boundary condition
+function south_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
+                      i_end::Int, j::Int)
+  for i=i_begin:i_end
+    jy = u * ( ( lat.f[0,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
+             2.0 * (lat.f[4,i,j] + lat.f[7,i,j] + lat.f[8,i,j]) ) 
+             / (1.0 - u) );
+    second_term = 1/6 * jy;
+    third_term = 1/2 * (lat.f[1,i,j] - lat.f[3,i,j]);
+    lat.f[2,i,j] = lat.f[4,i,j] + 2/3 * jy;
+    lat.f[5,i,j] = lat.f[7,i,j] + second_term - third_term;
+    lat.f[6,i,j] = lat.f[8,i,j] + second_term + third_term;
+  end
+end
+
+#! South inlet boundary condition
+function south_inlet!(lat::Lattice, u::FloatingPoint)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  south_inlet!(lat, u, 1, ni, 1);
+end
+#! West inlet boundary condition
+function west_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
+  j_end::Int)
+
+  for j=j_begin:j_end
+    rhow = (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
+            2.0 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / (1.0 - u);
+    lat.f[1,i,j] = lat.f[3,i,j] + 2.0 * rhow * u / 3.0;
+    lat.f[5,i,j] = lat.f[7,i,j] + rhow * u / 6.0;
+    lat.f[8,i,j] = lat.f[6,i,j] + rhow * u / 6.0;
+  end
+end
+
+#! West inlet boundary condition
+function west_inlet!(lat::Lattice, u::FloatingPoint)
+  west_inlet!(lat, u, 1, 1, size(lat.f, 3));
+end
+
+
 #! Lid driven flow
 function lid_driven!(lat::LatticeD2Q9, u::FloatingPoint)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
@@ -375,47 +388,56 @@ function lid_driven!(lat::LatticeD2Q9, u::FloatingPoint)
   end
 end
 
-#! Pressure west direction
-function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint, i::Int,
-  j_begin::Int, j_end::Int)
+# =========================================================================== #
+# ============================ pressure BCs ================================= #
+# =========================================================================== #
 
-  for j=j_begin:j_end
-    u_x = 1 - (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
-               2 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / rho_in;
-    lat.f[1,i,j] = lat.f[3,i,j] + 2/3 * rho_in * u_x;
+#! Pressure north direction
+function north_pressure!(lat::LatticeD2Q9, rhoo::FloatingPoint)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
-    second_term = 0.5 * (lat.f[2,i,j] - lat.f[4,i,j]);
-    third_term = 1/6 * rho_in * u_x;
+  warn("Check implementation details of north pressure BC.");
 
-    lat.f[5,i,j] = lat.f[7,i,j] - second_term + third_term;
-    lat.f[8,i,j] = lat.f[6,i,j] + second_term + third_term;
+  for i=1:ni
+    v = -1. + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
+        + 2. * (lat.f[2,i,nj] + lat.f[5,i,nj] + lat.f[6,i,nj])) / rhoo;
+    ru = rhoo * v;
+    lat.f[4,i,nj] = lat.f[2,i,nj] - (2./3.)*ru;
+    lat.f[7,i,nj] = lat.f[5,i,nj] - (1./6.)*ru
+                      + 0.5 * (lat.f[1,i,nj] - lat.f[3,i,nj]);
+    lat.f[8,i,nj] = lat.f[6,i,nj] - (1./6.)*ru
+                      + 0.5 * (lat.f[3,i,nj] - lat.f[1,i,nj]);
   end
 end
 
-#! Pressure west direction
-function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint)
+#! Pressure north direction
+function north_pressure!(lat::Lattice, rho::FloatingPoint)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  north_pressure!(lat, rho, 1, ni, nj);
+end
+
+#! Pressure south direction
+function south_pressure!(lat::LatticeD2Q9, rhoo::FloatingPoint)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
-  # middle
-  west_pressure!(lat, rho_in, 1, 2, nj-1);
+  warn("Check implementation details of south pressure BC.");
 
-  # bottom corner
-  lat.f[1,1,1] = lat.f[3,1,1];
-  lat.f[2,1,1] = lat.f[4,1,1];
-  lat.f[5,1,1] = lat.f[7,1,1];
-  f68 = 0.5 * (rho_in - (lat.f[9,1,1] + lat.f[1,1,1] + lat.f[2,1,1]
-          + lat.f[3,1,1] + lat.f[4,1,1] + lat.f[5,1,1] + lat.f[7,1,1]));
-  lat.f[6,1,1] = f68;
-  lat.f[8,1,1] = f68;
+  for i=1:ni
+    v = -1. + (lat.f[9,i,1] + lat.f[1,i,1] + lat.f[3,i,1]
+        + 2. * (lat.f[4,i,1] + lat.f[7,i,1] + lat.f[8,i,1])) / rhoo;
+    ru = rhoo * v;
+    lat.f[2,i,1] = lat.f[4,i,1] - (2./3.)*ru;
+    lat.f[5,i,1] = lat.f[7,i,1] - (1./6.)*ru
+                      + 0.5 * (lat.f[3,i,1] - lat.f[1,i,1]);
+    lat.f[6,i,1] = lat.f[8,i,1] - (1./6.)*ru
+                      + 0.5 * (lat.f[1,i,1] - lat.f[3,i,1]);
+  end
+end
 
-  # top corner
-  lat.f[1,1,nj] = lat.f[4,1,nj];
-  lat.f[1,1,nj] = lat.f[2,1,nj];
-  lat.f[6,1,nj] = lat.f[8,1,nj];
-  f57 = 0.5 * (rho_in - (lat.f[9,1,nj] + lat.f[1,1,nj] + lat.f[2,1,nj]
-          + lat.f[3,1,nj] + lat.f[4,1,nj] + lat.f[6,1,nj] + lat.f[8,1,nj]));
-  lat.f[5,1,nj] = f57;
-  lat.f[7,1,nj] = f57;
+#! Pressure north direction
+function south_pressure!(lat::Lattice, rho::FloatingPoint)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  south_pressure!(lat, rho, 1, ni, 1);
 end
 
 #! Pressure east direction
@@ -461,34 +483,111 @@ function east_pressure!(lat::LatticeD2Q9, rho_out::FloatingPoint)
   lat.f[7,ni,nj] = f57;
 end
 
-#! Zou and He pressure boundary on north side
-function zou_pressure_north!(lat::LatticeD2Q9, rhoo::FloatingPoint)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+#! Pressure west direction
+function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint, i::Int,
+  j_begin::Int, j_end::Int)
 
-  for i=1:ni
-    v = -1. + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
-        + 2. * (lat.f[2,i,nj] + lat.f[5,i,nj] + lat.f[6,i,nj])) / rhoo;
-    ru = rhoo * v;
-    lat.f[4,i,nj] = lat.f[2,i,nj] - (2./3.)*ru;
-    lat.f[7,i,nj] = lat.f[5,i,nj] - (1./6.)*ru
-                      + 0.5 * (lat.f[1,i,nj] - lat.f[3,i,nj]);
-    lat.f[8,i,nj] = lat.f[6,i,nj] - (1./6.)*ru
-                      + 0.5 * (lat.f[3,i,nj] - lat.f[1,i,nj]);
+  for j=j_begin:j_end
+    u_x = 1 - (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
+               2 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / rho_in;
+    lat.f[1,i,j] = lat.f[3,i,j] + 2/3 * rho_in * u_x;
+
+    second_term = 0.5 * (lat.f[2,i,j] - lat.f[4,i,j]);
+    third_term = 1/6 * rho_in * u_x;
+
+    lat.f[5,i,j] = lat.f[7,i,j] - second_term + third_term;
+    lat.f[8,i,j] = lat.f[6,i,j] + second_term + third_term;
   end
 end
 
-#! Zou and He pressure boundary on south side
-function zou_pressure_south!(lat::LatticeD2Q9, rhoo::FloatingPoint)
+#! Pressure west direction
+function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
-  for i=1:ni
-    v = -1. + (lat.f[9,i,1] + lat.f[1,i,1] + lat.f[3,i,1]
-        + 2. * (lat.f[4,i,1] + lat.f[7,i,1] + lat.f[8,i,1])) / rhoo;
-    ru = rhoo * v;
-    lat.f[2,i,1] = lat.f[4,i,1] - (2./3.)*ru;
-    lat.f[5,i,1] = lat.f[7,i,1] - (1./6.)*ru
-                      + 0.5 * (lat.f[3,i,1] - lat.f[1,i,1]);
-    lat.f[6,i,1] = lat.f[8,i,1] - (1./6.)*ru
-                      + 0.5 * (lat.f[1,i,1] - lat.f[3,i,1]);
+  # middle
+  west_pressure!(lat, rho_in, 1, 2, nj-1);
+
+  # bottom corner
+  lat.f[1,1,1] = lat.f[3,1,1];
+  lat.f[2,1,1] = lat.f[4,1,1];
+  lat.f[5,1,1] = lat.f[7,1,1];
+  f68 = 0.5 * (rho_in - (lat.f[9,1,1] + lat.f[1,1,1] + lat.f[2,1,1]
+          + lat.f[3,1,1] + lat.f[4,1,1] + lat.f[5,1,1] + lat.f[7,1,1]));
+  lat.f[6,1,1] = f68;
+  lat.f[8,1,1] = f68;
+
+  # top corner
+  lat.f[1,1,nj] = lat.f[4,1,nj];
+  lat.f[1,1,nj] = lat.f[2,1,nj];
+  lat.f[6,1,nj] = lat.f[8,1,nj];
+  f57 = 0.5 * (rho_in - (lat.f[9,1,nj] + lat.f[1,1,nj] + lat.f[2,1,nj]
+          + lat.f[3,1,nj] + lat.f[4,1,nj] + lat.f[6,1,nj] + lat.f[8,1,nj]));
+  lat.f[5,1,nj] = f57;
+  lat.f[7,1,nj] = f57;
+end
+
+# =========================================================================== #
+# ================================ open BCs ================================= #
+# =========================================================================== #
+
+#! North open boundary
+function north_open!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
+  for i=i_begin:i_end
+    lat.f[6,i,j] = 2.0 * lat.f[6,i-1,j] - lat.f[6,i-2,j];
+    lat.f[2,i,j] = 2.0 * lat.f[2,i-1,j] - lat.f[2,i-2,j];
+    lat.f[5,i,j] = 2.0 * lat.f[5,i-1,j] - lat.f[5,i-2,j];
   end
+end
+
+#! North open boundary
+function north_open!(lat::Lattice)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  north_open!(lat, 1, ni, nj);
+end
+
+#! South open boundary
+function south_open!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
+  for i=i_begin:i_end
+    lat.f[7,i,j] = 2.0 * lat.f[7,i-1,j] - lat.f[7,i-2,j];
+    lat.f[4,i,j] = 2.0 * lat.f[4,i-1,j] - lat.f[4,i-2,j];
+    lat.f[8,i,j] = 2.0 * lat.f[8,i-1,j] - lat.f[8,i-2,j];
+  end
+end
+
+#! South open boundary
+function south_open!(lat::Lattice)
+  const ni = size(lat.f, 2);
+  south_open!(lat, 1, ni, 1);
+end
+
+#! East open boundary
+function east_open!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
+
+  for j=j_begin:j_end
+    lat.f[1,i,j] = 2.0 * lat.f[1,i-1,j] - lat.f[1,i-2,j];
+    lat.f[5,i,j] = 2.0 * lat.f[5,i-1,j] - lat.f[5,i-2,j];
+    lat.f[8,i,j] = 2.0 * lat.f[8,i-1,j] - lat.f[8,i-2,j];
+  end
+end
+
+#! East open boundary
+function east_open!(lat::Lattice)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  east_open!(lat, ni, 1, nj);
+end
+
+#! West open boundary
+function west_open!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
+
+  for j=j_begin:j_end
+    lat.f[6,i,j] = 2.0 * lat.f[6,i-1,j] - lat.f[6,i-2,j];
+    lat.f[3,i,j] = 2.0 * lat.f[3,i-1,j] - lat.f[3,i-2,j];
+    lat.f[7,i,j] = 2.0 * lat.f[7,i-1,j] - lat.f[7,i-2,j];
+  end
+end
+
+#! West open boundary
+function west_open!(lat::Lattice)
+  const nj = size(lat.f, 3);
+  east_open!(lat, 1, 1, nj);
 end

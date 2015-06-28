@@ -84,6 +84,8 @@ function parse_and_run(infile::String, args::Dict)
   end
 
   const DEFAULTS = {
+    "simtype" =>  (defs::Dict) -> return "default",
+    "rhog"    =>  (defs::Dict) -> return 1.0,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
     "rho_0"   =>  (defs::Dict) -> error("`rho_0` is a required parameter."),
     "nu"      =>  (defs::Dict) -> error("`nu` is a required parameter."),
@@ -148,7 +150,16 @@ function parse_and_run(infile::String, args::Dict)
     k = 0; # this is so every simulation can start from "k+1"
     lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
-    sim = Sim(lat, msm);
+    if defs["simtype"] == "default"; sim = Sim(lat, msm); end
+    elseif defs["simtype"] == "free_surface"
+      if haskey(defs, "states")
+        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rhog"]);
+      else
+        error("No `states` matrix provided. Cannot initialize free surface flow");
+      end
+    else
+      error("`simtype` $(defs["simtype"]) is not understood");
+    end
   end
  
   if args["profile"]

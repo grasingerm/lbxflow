@@ -58,8 +58,9 @@ immutable FreeSurfSim <: AbstractSim
   lat::Lattice
   msm::MultiscaleMap
   tracker::Tracker
+  rhog::FloatingPoint
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker)
-    return new(lat, msm, tracker);
+    return new(lat, msm, tracker, 1.0);
   end
 end
