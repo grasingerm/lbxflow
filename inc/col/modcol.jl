@@ -13,8 +13,7 @@ require(abspath(joinpath(__modcol_root__, "..", "sim", "simtypes.jl")));
 #! \param sim Simulation object
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
-function init_col_srt! (sim::Sim, bounds::Matrix{Int64},
-                        constit_relation_f::Function)
+function init_col_srt! (constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -48,9 +47,9 @@ end
 #! \param sim Simulation object
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
-#! \param forcing_kf Forcing function
-function init_col_srt! (sim::Sim, bounds::Matrix{Int64},
-                        constit_relation_f::Function, forcing_kf::Function)
+#! \param forcing_kf Forcing functions
+function init_col_srt! (constit_relation_f::Function,
+                        forcing_kf::(Function, Function))
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -87,8 +86,7 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
-function init_col_mrt!(sim::Sim, S::Function, bounds::Matrix{Int64}
-                       constit_relation_f::Function)
+function init_col_mrt!(constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -132,9 +130,9 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
-#! \param forcing_kf Forcing function
-function init_col_mrt!(sim::Sim, S::Function, bounds::Matrix{Int64}
-                       constit_relation_f::Function, forcing_kf::Function)
+#! \param forcing_kf Forcing functions
+function init_col_mrt!(constit_relation_f::Function,
+                       forcing_kf::(Function, Function))
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;

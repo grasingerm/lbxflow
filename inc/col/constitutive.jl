@@ -8,7 +8,7 @@ require(abspath(joinpath(__constitutive_root__, "..", "sim", "simtypes.jl")));
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
 function init_constit_const(mu::FloatingPoint)
-  return (sim::AbstractSim, i::Int, j::Int) -> begin
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     return mu;
   end
 end
@@ -18,7 +18,7 @@ end
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
 function init_constit_const_local()
-  return (sim::AbstractSim, i::Int, j::Int) -> begin
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     return sim.msm.omega[i,j];
   end
 end
@@ -199,7 +199,7 @@ function init_constit_mrt_bingham_explicit(mu_p::FloatingPoint,
                                            gamma_min::FloatingPoint,
                                            relax::Number = 1.0)
 
-  return (sim::AbstractSim, S::Function, M::Matrix{Float64}, iM::Matrix{Float64}
+  return (sim::AbstractSim, S::Function, M::Matrix{Float64}, iM::Matrix{Float64},
           f::Vector{Float64}, feq::Vector{Float64}, fneq::Vector{Float64}, 
           mij::Vector{Float64}, meq::Vector{Float64}, i::Int, j::Int) -> begin
     const rhoij = sim.msm.rho[i,j];
@@ -239,7 +239,7 @@ function init_constit_mrt_bingham_implicit(mu_p::FloatingPoint,
                                            tol::FloatingPoint = 1e-6,
                                            relax::Number = 1.0)
 
-  return (sim::AbstractSim, S::Function, M::Matrix{Float64}, iM::Matrix{Float64}
+  return (sim::AbstractSim, S::Function, M::Matrix{Float64}, iM::Matrix{Float64},
           f::Vector{Float64}, feq::Vector{Float64}, fneq::Vector{Float64}, 
           mij::Vector{Float64}, meq::Vector{Float64}, i::Int, j::Int) -> begin
     lat = sim.lat;

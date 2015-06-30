@@ -85,7 +85,7 @@ function parse_and_run(infile::String, args::Dict)
 
   const DEF_DEFAULTS = {
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
-    "rhog"    =>  (defs::Dict) -> begin; error("`rhog` is a required parameter."); end,
+    "rhog"    =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
     "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
     "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,

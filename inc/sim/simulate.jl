@@ -104,7 +104,7 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
                    bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
                    callbacks!::Array{Function}, k::Int = 0)
 
-  copy!(temp_f, sim.lat.f);
+  temp_f = copy(sim.lat.f);
 
   sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
 
