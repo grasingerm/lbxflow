@@ -22,7 +22,8 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      col_srt
+col_f:      col_srt!
+nsteps:     15000
 
 # boundaries
 sbounds:
@@ -40,13 +41,36 @@ bcs:
   - bind_south_inlet!(lat) = south_inlet!(lat, u);
   - bind_open_north!(lat) = north_pressure!(lat, 1.0);
 
+# free surface conditions
+rhog: 1.0
+
+states:
+  value: >
+    begin;
+      s = Array(Union(Gas, Interface, Fluid), ni, nj);
+      fill!(s, GAS);
+      for i=1:ni
+        s[i,1] = FLUID;
+        s[i,2] = INTERFACE;
+      end
+      return s;
+    end
+  expr: true
+
 # callback functions
 #  - plot_mass_contours_callback(10, "mass", 0.0)
 callbacks:
   - plot_mass_contours_callback(10)
-  - print_step_callback(25, "free-surf")
-  - write_jld_file_callback(datadir, 300)
+  - print_step_callback(1, "free-surf")
+  - >
+    (sim::FreeSurfSim, k::Int) -> begin;
+      if k % 5 == 0
+        println(sim.tracker.M);
+      end
+    end;
+  - pause_sim_callback(1)
+    #  - write_jld_file_callback(datadir, 300)
 
 # clean-up, backup, write out
-finally:
-  - write_jld_file_callback(datadir)
+#finally:
+  #- write_jld_file_callback(datadir)
