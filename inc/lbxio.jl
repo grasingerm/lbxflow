@@ -1,4 +1,4 @@
-import HDF5, JLD
+@everywhere import HDF5, JLD
 
 const __lbxio_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));

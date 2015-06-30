@@ -44,8 +44,9 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
         i_new = i + lat.c[1,k];
         j_new = j + lat.c[2,k];
 
-        if (t.state[i_new,j_new] == GAS
-            i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min)
+        if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
+            || t.state[i_new,j_new] == INTERFACE
+            || t.state[i_new,j_new] == GAS)
           continue;
         end
         temp_f[k,i_new,j_new] = lat.f[k,i,j];
@@ -63,7 +64,7 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
   lat = sim.lat;
   msm = sim.msm;
 
-  collision_f!(lat, msm, cbounds);
+  collision_f!(sim, cbounds);
   stream!(lat, temp_f, sbounds);
 
   for bc! in bcs!
@@ -85,7 +86,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   stream!(lat, temp_f, sbounds, t);
   # Reconstruct missing distribution functions at the interface
   for node in t.interfacels
-    f_reconst!(sim, t, node.val, sim.rhog);
+    f_reconst!(sim, t, node.val, sbounds, sim.rhog);
   end
   collision_f!(sim, cbounds);
   update!(sim, sbounds); # Update the state of cells

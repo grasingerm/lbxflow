@@ -83,28 +83,28 @@ function parse_and_run(infile::String, args::Dict)
 
   end
 
-  const DEFAULTS = {
-    "simtype" =>  (defs::Dict) -> return "default",
-    "rhog"    =>  (defs::Dict) -> return 1.0,
+  const DEF_DEFAULTS = {
+    "simtype" =>  (defs::Dict) -> begin; return "default"; end,
+    "rhog"    =>  (defs::Dict) -> begin; error("`rhog` is a required parameter."); end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
-    "rho_0"   =>  (defs::Dict) -> error("`rho_0` is a required parameter."),
-    "nu"      =>  (defs::Dict) -> error("`nu` is a required parameter."),
-    "dx"      =>  (defs::Dict) -> return 1.0,
-    "dt"      =>  (defs::Dict) -> return 1.0,
-    "ni"      =>  (defs::Dict) -> error("`ni` is a required parameter."),
-    "nj"      =>  (defs::Dict) -> error("`nj` is a required parameter."),
-    "nsteps"  =>  (defs::Dict) -> error("`nsteps` is a required parameter."),
-    "col_f"   =>  (defs::Dict) -> error("`col_f` is a required parameter."),
-    "sbounds" =>  (defs::Dict) -> [[1, defs["ni"], 1, defs["nj"]]],
-    "cbounds" =>  (defs::Dict) -> [[1, defs["ni"], 1, defs["nj"]]],
-    "bcs"     =>  (defs::Dict) -> Array(Function, 0),
-    "callbacks" =>  (defs::Dict) -> Array(Function, 0),
-    "finally" =>  (defs::Dict) -> Array(Function, 0)
+    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
+    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
+    "dx"      =>  (defs::Dict) -> begin; return 1.0; end,
+    "dt"      =>  (defs::Dict) -> begin; return 1.0; end,
+    "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
+    "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
+    "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
+    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
+    "sbounds" =>  (defs::Dict) -> begin; [[1, defs["ni"], 1, defs["nj"]]]; end,
+    "cbounds" =>  (defs::Dict) -> begin; [[1, defs["ni"], 1, defs["nj"]]]; end,
+    "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
+    "callbacks" =>  (defs::Dict) -> begin; Array(Function, 0); end,
+    "finally" =>  (defs::Dict) -> begin; Array(Function, 0); end
   };
 
   if args["verbose"]; info("setting defaults."); end
   # set defaults
-  for (k, f) in DEFAULTS
+  for (k, f) in DEF_DEFAULTS
     if !haskey(defs, k)
       defs[k] = f(defs);
     end
@@ -112,7 +112,7 @@ function parse_and_run(infile::String, args::Dict)
 
   # syntactic sugar for backing up simulation on program exit
   if haskey(defs, "backup_on_exit") && defs["backup_on_exit"]
-    defs["finally"][end] = write_backup_file_callback(defs["datadir"], 1);
+    defs["finally"][end] = write_jld_file_callback(defs["datadir"], 1);
   end
 
   if args["verbose"]; println("$infile definitions:"); println(defs); end
@@ -145,12 +145,13 @@ function parse_and_run(infile::String, args::Dict)
       is_init = true;
     end
   end
+
   if !is_init
     # construct objects
     k = 0; # this is so every simulation can start from "k+1"
     lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
-    if defs["simtype"] == "default"; sim = Sim(lat, msm); end
+    if defs["simtype"] == "default"; sim = Sim(lat, msm)
     elseif defs["simtype"] == "free_surface"
       if haskey(defs, "states")
         sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rhog"]);
@@ -174,8 +175,8 @@ function parse_and_run(infile::String, args::Dict)
       tic();
 
       if !haskey(defs, "test_for_term")
-      # this simulate should be more memory and computationally efficient
-      @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
+        # this simulate should be more memory and computationally efficient
+        @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
               defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
               defs["nsteps"], defs["callbacks"], k); end);
       else
@@ -212,24 +213,53 @@ function parse_and_run(infile::String, args::Dict)
         readline(STDIN);
       end
     end
+  else
+    error("Debugging mode is not yet available");
+  end
 
-    # TODO: is `debugging` mode actually useful?
+  #=
+  # TODO: is `debugging` mode actually useful?
   else # debugging on, run simulation without exception catching
-    tic();
-
-    if !haskey(defs, "test_for_term")
-      # this simulate should be more memory and computationally efficient
-      @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
-              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-              defs["nsteps"], defs["callbacks"], k); end);
-    else
-      @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
-              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-              defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); end);
+    display_help = true
+    println("======================");
+    println("DEBUGGING MODE... REPL");
+    println("======================");
+    warn("debugging mode is still experimental and not yet working smoothly");
+    warn("... having trouble with variable and function scoping");
+    simulate!(nsteps) = simulate!(sim, defs["sbounds"], defs["col_f"],
+                                  defs["cbounds"], defs["bcs"], nsteps,
+                                  defs["callbacks"], k);
+    while true
+      # bring in everything from the global scope
+      # TODO: find a better solution...
+      global simulate!
+      global display_help
+      global sim
+      global msm
+      if display_help
+        println("Binding input file definitions to `simulate!` function...");
+        println("In interactive debugging mode...");
+        println("`simulate!(<nsteps>)` will run the simulation with input ",
+                "file defintions for <nsteps> number of time steps.");
+        println("`exit()` will end the REPL");
+        println("to suppress this message, `display_help = false`");
+      end
+      print(">> ");
+      command = readline(STDIN);
+      try
+        # bring in everything from the global scope
+        # TODO: find a better solution...
+        global simulate!
+        global display_help
+        global sim
+        global msm
+        eval(parse(command));
+      catch e
+        showerror(STDERR, e);
+        Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+        println();
+      end
     end
-    
-    println("$infile:\tSteps simulated: $nsim");
-    toc();
 
     if args["profile"]; Profile.print(args["profile-io"], cols=args["profile-cols"]); end
       if args["profile-file"] != nothing; 
@@ -245,4 +275,5 @@ function parse_and_run(infile::String, args::Dict)
         readline(STDIN);
       end
     end
+    =#
 end

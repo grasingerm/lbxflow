@@ -1,3 +1,13 @@
+#! Create callback for pausing the simulation
+function pause_sim_callback(step::Int)
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % step == 0
+      println("Press ENTER to continue...");
+      readline(STDIN);
+    end
+  end
+end
+
 #! Create callback for reporting step
 function print_step_callback(step::Int)
   return (sim::AbstractSim, k::Int) -> begin

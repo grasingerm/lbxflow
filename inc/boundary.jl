@@ -340,7 +340,7 @@ end
 function south_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
                       i_end::Int, j::Int)
   for i=i_begin:i_end
-    jy = u * ( ( lat.f[0,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
+    jy = u * ( ( lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
              2.0 * (lat.f[4,i,j] + lat.f[7,i,j] + lat.f[8,i,j]) ) 
              / (1.0 - u) );
     second_term = 1/6 * jy;

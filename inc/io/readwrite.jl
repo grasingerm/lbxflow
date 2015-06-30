@@ -1,5 +1,5 @@
 #! Dump simulation to JLD file
-function dumpsim_jld(datadir::String, sim::Sim, step::Int,
+function dumpsim_jld(datadir::String, sim::AbstractSim, step::Int,
   append_step_to_name::Bool = false)
   
   const jldpath = (append_step_to_name) ? joinpath(datadir, "bak_$step.jld") :
@@ -193,7 +193,7 @@ end
 function write_jld_file_callback(datadir::String,
                                  append_step_to_name::Bool = false)
  
-  return (sim::Sim, k::Int) -> begin
+  return (sim::AbstractSim, k::Int) -> begin
     dumpsim_jld(datadir, sim, k, append_step_to_name);
   end;
 end
@@ -202,7 +202,7 @@ end
 function write_jld_file_callback(datadir::String, stepout::Int,
                                  append_step_to_name::Bool = false)
 
-  return (sim::Sim, k::Int) -> begin
+  return (sim::AbstractSim, k::Int) -> begin
     if k % stepout == 0
       dumpsim_jld(datadir, sim, k, append_step_to_name);
     end

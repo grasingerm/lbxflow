@@ -1,18 +1,17 @@
-const __collision_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__collision_root__, "..", "debug.jl")));
-require(abspath(joinpath(__collision_root__, "equilibrium.jl")));
-require(abspath(joinpath(__collision_root__, "freecol.jl")));
-require(abspath(joinpath(__collision_root__, "..", "lattice.jl")));
-require(abspath(joinpath(__collision_root__, "mrt_matrices.jl")));
-require(abspath(joinpath(__collision_root__, "..", "multiscale.jl")));
-require(abspath(joinpath(__collision_root__, "..", "numerics.jl")));
+const __freecol_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__freecol_root__, "..", "debug.jl")));
+require(abspath(joinpath(__freecol_root__, "equilibrium.jl")));
+require(abspath(joinpath(__freecol_root__, "..", "lattice.jl")));
+require(abspath(joinpath(__freecol_root__, "mrt_matrices.jl")));
+require(abspath(joinpath(__freecol_root__, "..", "multiscale.jl")));
+require(abspath(joinpath(__freecol_root__, "..", "numerics.jl")));
 require(abspath(joinpath(__freecol_root__, "..", "sim", "simtypes.jl")));
 
 #! Single relaxation time collision function for incompressible Newtonian flow
 #!
 #! \param sim Simulation object
 #! \param bounds Boundaries that define active parts of the lattice
-function col_srt! (sim::Sim, bounds::Matrix{Int64})
+function col_srt! (sim::FreeSurfSim, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const ni, nj = size(msm.rho);
@@ -20,7 +19,8 @@ function col_srt! (sim::Sim, bounds::Matrix{Int64})
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
-    for j = j_min:j_max, i = i_min:i_max, k = 1:lat.n 
+    for j = j_min:j_max, i = i_min:i_max, k = 1:lat.n
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
       feq = feq_incomp(lat, rhoij, uij, k);
@@ -35,7 +35,7 @@ end
 #! \param sim Simulation object
 #! \param F Body force vector
 #! \param bounds Boundaries that define active parts of the lattice
-function col_srt_sukop! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
+function col_srt_sukop! (sim::FreeSurfSim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const ni, nj = size(msm.rho);
@@ -44,6 +44,7 @@ function col_srt_sukop! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max, k = 1:lat.n 
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
       omegaij = msm.omega[i,j];
@@ -60,7 +61,7 @@ end
 #! \param sim Simulation object
 #! \param F Body force vector
 #! \param bounds Boundaries that define active parts of the lattice
-function col_srt_guo! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
+function col_srt_guo! (sim::FreeSurfSim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const ni, nj = size(msm.rho);
@@ -69,6 +70,7 @@ function col_srt_guo! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max, k = 1:lat.n
+      if sim.tracker.state[i,j] == GAS; continue; end
       wk = lat.w[k];
       ck = lat.c[:,k];
       rhoij = msm.rho[i,j];
@@ -90,7 +92,7 @@ function col_srt_guo! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
 #! \param M Transmation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
-function col_mrt! (sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
+function col_mrt! (sim::FreeSurfSim, M::Matrix{Float64}, S::SparseMatrixCSC,
                    bounds::Array{Int64,2})
   lat = sim.lat;
   msm = sim.msm;
@@ -106,6 +108,7 @@ function col_mrt! (sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max 
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
 
@@ -120,27 +123,12 @@ function col_mrt! (sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
   end
 end
 
-#! Initializes the default multiple relaxation time transformation matrix
-macro DEFAULT_MRT_M()
-  return :([
-             1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0;
-            -1.0   -1.0   -1.0   -1.0    2.0    2.0    2.0    2.0   -4.0;
-            -2.0   -2.0   -2.0   -2.0    1.0    1.0    1.0    1.0    4.0;
-             1.0    0.0   -1.0    0.0    1.0   -1.0   -1.0    1.0    0.0;
-            -2.0    0.0    2.0    0.0    1.0   -1.0   -1.0    1.0    0.0;
-             0.0    1.0    0.0   -1.0    1.0    1.0   -1.0   -1.0    0.0;
-             0.0   -2.0    0.0    2.0    1.0    1.0   -1.0   -1.0    0.0;
-             1.0   -1.0    1.0   -1.0    0.0    0.0    0.0    0.0    0.0;
-             0.0    0.0    0.0    0.0    1.0   -1.0    1.0   -1.0    0.0;
-           ]);
-end
-
 #! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param sim Simulation object
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
-function col_mrt! (sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
+function col_mrt! (sim::FreeSurfSim, S::SparseMatrixCSC, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();
@@ -156,6 +144,7 @@ function col_mrt! (sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max 
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
 
@@ -176,7 +165,7 @@ end
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param F Body force vector
-function col_mrt! (sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
+function col_mrt! (sim::FreeSurfSim, S::SparseMatrixCSC, F::Vector{Float64},
                    bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
@@ -194,6 +183,7 @@ function col_mrt! (sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max 
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
       omegaij = msm.omega[i,j];
@@ -215,17 +205,6 @@ function col_mrt! (sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
   end
 end
 
-#! Fallah relaxation coefficient for s77, s88
-#!
-#! \param mu Dynamic viscosity
-#! \param rho Local density
-#! \param c_ssq Lattice speed of sound squared
-#! \param dt Change in time
-#! \return Fallah relaxation coefficient for s77 and s88
-macro fallah_8(mu, rho, cssq, dt)
-  return :(1.0/($mu / ($rho * $cssq * $dt) + 0.5));
-end
-
 #! Multiple relaxation time collision function for incompressible flow
 #!
 #! \param sim Simulation object
@@ -236,7 +215,7 @@ end
 #! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor for updating apparent viscosity
-function col_mrt_bingham_explicit! (sim::Sim, S::Function, mu_p::Number,
+function col_mrt_bingham_explicit! (sim::FreeSurfSim, S::Function, mu_p::Number,
                                     tau_y::Number, m::Number,
                                     gamma_min::FloatingPoint,
                                     bounds::Matrix{Int64}, relax::Number = 1.0)
@@ -254,6 +233,7 @@ function col_mrt_bingham_explicit! (sim::Sim, S::Function, mu_p::Number,
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
 
@@ -298,7 +278,7 @@ end
 #! \param f Body force vector
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor for updating apparent viscosity
-function col_mrt_bingham_explicit! (sim::Sim, S::Function, mu_p::Number,
+function col_mrt_bingham_explicit! (sim::FreeSurfSim, S::Function, mu_p::Number,
                                     tau_y::Number, m::Number,
                                     gamma_min::FloatingPoint,
                                     F::Vector{Float64}, bounds::Matrix{Int64},
@@ -317,6 +297,7 @@ function col_mrt_bingham_explicit! (sim::Sim, S::Function, mu_p::Number,
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
 
@@ -373,7 +354,7 @@ end
 #! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor for updating apparent viscosity
-function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
+function col_mrt_bingham_implicit! (sim::FreeSurfSim, S::Function, mu_p::Number,
                                     tau_y::Number, m::Number, max_iters::Int,
                                     tol::FloatingPoint,
                                     gamma_min::FloatingPoint,
@@ -392,6 +373,7 @@ function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j];
 
@@ -458,7 +440,7 @@ end
 #! \param f Body force
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor
-function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
+function col_mrt_bingham_implicit! (sim::FreeSurfSim, S::Function, mu_p::Number,
                                     tau_y::Number, m::Number, max_iters::Int,
                                     tol::FloatingPoint,
                                     gamma_min::FloatingPoint,
@@ -477,6 +459,7 @@ function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
+      if sim.tracker.state[i,j] == GAS; continue; end
       rhoij = msm.rho[i,j];
       uij = msm.u[:,i,j] + lat.dt / 2.0 * F;
 
@@ -537,27 +520,4 @@ function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
       msm.omega[i,j] = omegaij;
     end
   end
-end
-
-#! Fallah relaxation matrix
-#!
-#! \param mu Dynamic viscosity
-#! \param rho Local density
-#! \param c_ssq Lattice speed of sound squared
-#! \param dt Change in time
-#! \return Fallah relaxation matix
-function S_fallah(mu::Number, rho::Number, cssq::Number,
-	                dt::Number)
-	const s_8 = @fallah_8(mu, rho, cssq, dt);
-	return spdiagm([1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8; 0.0]);
-end
-
-#! Chen relaxation matrix
-#!
-#! \param omega Collision frequency
-#! \return Chen relaxation matix
-function S_chen(mu::Number, rho::Number, cssq::Number,
-	              dt::Number)
-  omega = @omega(mu, cssq, dt);
-  return spdiagm([1.1; 1.0; 0.0; 1.2; 0.0; 1.2; omega; omega; 0.0]);
 end
