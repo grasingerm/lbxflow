@@ -23,6 +23,8 @@ preamble: >
   const nsteps = 20000;
   const id = "poise-chen-e-000004";
   const datadir = joinpath("data","poise","chen","explicit","000004");
+  const constit_rel_f = init_constit_srt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
+  const forcing_kf = init_korner_Fk(F);
 
 datadir:    { value: datadir,   expr: true    }
 
@@ -38,13 +40,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f: >
-      begin;
-        binded_col_f!(lat, msm, bounds) = col_mrt_bingham_explicit!(lat,
-          msm, S_fallah, mu_p, tau_y, m, 1.0e-11, F, bounds,
-          relax);
-        return binded_col_f!;
-      end
+col_f:      init_col_srt!(constit_rel_f, forcing_kf)
 
 # boundaries
 sbounds:

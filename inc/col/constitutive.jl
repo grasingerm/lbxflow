@@ -19,7 +19,7 @@ end
 #! \return Constitutive relation function
 function init_constit_const_local()
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    return sim.msm.omega[i,j];
+    return @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
   end
 end
 
@@ -33,7 +33,7 @@ end
 #! \return Constitutive relation function
 function init_constit_srt_bingham_explicit(mu_p::FloatingPoint,
                                            tau_y::FloatingPoint,
-                                           m::FloatingPoint,
+                                           m::Number,
                                            gamma_min::FloatingPoint,
                                            relax::Number = 1.0)
 
@@ -46,7 +46,7 @@ function init_constit_srt_bingham_explicit(mu_p::FloatingPoint,
 
     # update relaxation matrix
     gamma = gamma < gamma_min ? gamma_min : gamma;
-    muij = @nu(omegaij, lat.cssq, lat.dt);
+    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
     muij = (
              (1 - relax) * muij
               + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
@@ -67,10 +67,10 @@ end
 #! \return Constitutive relation function
 function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
                                            tau_y::FloatingPoint,
-                                           m::FloatingPoint,
+                                           m::Number,
                                            gamma_min::FloatingPoint,
                                            max_iters::Int,
-                                           tol::FloatingPoint = 1e-6,
+                                           tol::FloatingPoint,
                                            relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
@@ -80,11 +80,12 @@ function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
     omegaij = msm.omega[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    const muo = @nu(omegaij, lat.cssq, lat.dt);
+    const muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
 
     # iteratively determine mu
     iters = 0;
     mu_prev = muo;
+    muij = muo;
 
     while true
       iters += 1;
@@ -98,7 +99,7 @@ function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
                (1 - relax) * muij
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
-      omegaij = @omega(muij, lat.cssq, lat.dt);
+      omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol
@@ -129,7 +130,7 @@ function init_constit_srt_bingham_explicit(mu_p::FloatingPoint,
                                            tau_y::FloatingPoint,
                                            rt_min::FloatingPoint,
                                            rt_max::FloatingPoint,
-                                           m::FloatingPoint,
+                                           m::Number,
                                            gamma_min::FloatingPoint,
                                            relax::Number = 1.0)
 
@@ -164,8 +165,10 @@ function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
                                            tau_y::FloatingPoint,
                                            rt_min::FloatingPoint,
                                            rt_max::FloatingPoint,
-                                           m::FloatingPoint,
+                                           m::Number,
                                            gamma_min::FloatingPoint,
+                                           max_iters::Int,
+                                           tol::FloatingPoint,
                                            relax::Number = 1.0)
 
   const inner_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, gamma_min, 
@@ -195,7 +198,7 @@ end
 #! \return Constitutive relation function
 function init_constit_mrt_bingham_explicit(mu_p::FloatingPoint,
                                            tau_y::FloatingPoint,
-                                           m::FloatingPoint,
+                                           m::Number,
                                            gamma_min::FloatingPoint,
                                            relax::Number = 1.0)
 
@@ -233,7 +236,7 @@ end
 #! \return Constitutive relation function
 function init_constit_mrt_bingham_implicit(mu_p::FloatingPoint,
                                            tau_y::FloatingPoint,
-                                           m::FloatingPoint,
+                                           m::Number,
                                            gamma_min::FloatingPoint,
                                            max_iters::Int,
                                            tol::FloatingPoint = 1e-6,

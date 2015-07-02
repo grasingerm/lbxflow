@@ -1,4 +1,6 @@
 const __run_tests_root__ = dirname(@__FILE__);
+require(abspath(joinpath(__run_tests_root__, "test_multiscale.jl")));
+require(abspath(joinpath(__run_tests_root__, "test_constitutive.jl")));
 require(abspath(joinpath(__run_tests_root__, "test_tracking.jl")));
 
 const main = abspath(joinpath(__run_tests_root__, "..", "lbxflow.jl"));
