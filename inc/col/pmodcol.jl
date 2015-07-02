@@ -1,4 +1,4 @@
-const __modcol_root__ = dirname(@__FILE__);
+const __pmodcol_root__ = dirname(@__FILE__);
 require(abspath(joinpath(__modcol_root__, "constitutive.jl")));
 require(abspath(joinpath(__modcol_root__, "forcing.jl")));
 require(abspath(joinpath(__modcol_root__, "equilibrium.jl")));
@@ -13,7 +13,7 @@ require(abspath(joinpath(__modcol_root__, "..", "sim", "simtypes.jl")));
 #! \param sim Simulation object
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
-function init_col_srt! (constit_relation_f::Function)
+function init_pcol_srt! (constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -22,22 +22,25 @@ function init_col_srt! (constit_relation_f::Function)
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
-      for j = j_min:j_max, i = i_min:i_max
-        rhoij = msm.rho[i,j];
-        uij = msm.u[:,i,j];
-        feq = Array(Float64, lat.n); 
-        fneq = Array(Float64, lat.n); 
-        for k = 1:lat.n 
-          feq[k] = feq_incomp(lat, rhoij, uij, k);
-          fneq[k] = lat.f[k,i,j] - feq[k];
-        end
-        const mu = constit_relation_f(sim, fneq, i, j);
-        const omega = @omega(mu, lat.cssq, lat.dt);
-        for k = 1:lat.n
-          lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]);
-        end
-        msm.omega[i,j] = omega;
-      end
+      lat.f[:,i_min:i_max,j_min:j_max], msm.omega[i_min:i_max, j_min, j_max] = (
+        pmap((i,j) -> begin
+          rhoij = msm.rho[i,j];
+          uij = msm.u[:,i,j];
+          f = Array(Float64, lat.n);
+          feq = Array(Float64, lat.n); 
+          fneq = Array(Float64, lat.n); 
+          for k = 1:lat.n 
+            feq[k] = feq_incomp(lat, rhoij, uij, k);
+            fneq[k] = lat.f[k,i,j] - feq[k];
+          end
+          const mu = constit_relation_f(sim, fneq, i, j);
+          const omega = @omega(mu, lat.cssq, lat.dt);
+          for k = 1:lat.n
+            f[k] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]);
+          end
+          return f, omega;
+        end, [(i,j) for i=i_min:i_max, j=j_min:j_max])
+      );
     end
   end
 end
@@ -48,9 +51,8 @@ end
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
-function init_col_srt! (constit_relation_f::Function,
+function init_pcol_srt!(constit_relation_f::Function,
                         forcing_kf::(Function, Function))
-  const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -59,23 +61,26 @@ function init_col_srt! (constit_relation_f::Function,
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
-      for j = j_min:j_max, i = i_min:i_max
-        rhoij = msm.rho[i,j];
-        uij = uf(lat, msm.u[:,i,j]);
-        feq = Array(Float64, lat.n); 
-        fneq = Array(Float64, lat.n); 
-        for k = 1:lat.n 
-          feq[k] = feq_incomp(lat, rhoij, uij, k);
-          fneq[k] = lat.f[k,i,j] - feq[k];
-        end
-        const mu = constit_relation_f(sim, fneq, i, j);
-        const omega = @omega(mu, lat.cssq, lat.dt);
-        for k = 1:lat.n
-          lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]
-                          + colf(lat, omega, uij, k));
-        end
-        msm.omega[i,j] = omega;
-      end
+      lat.f[:,i_min:i_max,j_min:j_max], msm.omega[i_min:i_max, j_min, j_max] = (
+        pmap((i,j) -> begin
+          rhoij = msm.rho[i,j];
+          uij = uf(lat, msm.u[:,i,j]);
+          f = Array(Float64, lat.n);
+          feq = Array(Float64, lat.n); 
+          fneq = Array(Float64, lat.n); 
+          for k = 1:lat.n 
+            feq[k] = feq_incomp(lat, rhoij, uij, k);
+            fneq[k] = lat.f[k,i,j] - feq[k];
+          end
+          const mu = constit_relation_f(sim, fneq, i, j);
+          const omega = @omega(mu, lat.cssq, lat.dt);
+          for k = 1:lat.n
+            f[k] = ((omega * feq[k] + (1.0 - omega) * lat.f[k,i,j])
+                    + colf(lat, omega, uij, k));
+          end
+          return f, omega;
+        end, [(i,j) for i=i_min:i_max, j=j_min:j_max])
+      );
     end
   end
 end
@@ -86,7 +91,8 @@ end
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
 #! \param feq_f Equilibrium particle distribution function
-function init_col_srt! (constit_relation_f::Function, feq_f::Function)
+function init_pcol_srt! (constit_relation_f::Function, feq_f::Function)
+  error("Not yet implemented.");
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -122,8 +128,9 @@ end
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
 #! \param feq_f Equilibrium particle distribution function
-function init_col_srt! (constit_relation_f::Function,
+function init_pcol_srt! (constit_relation_f::Function,
                         forcing_kf::(Function, Function), feq_f::Function)
+  error("Not yet implemented.");
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -160,7 +167,8 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
-function init_col_mrt!(constit_relation_f::Function)
+function init_pcol_mrt!(constit_relation_f::Function)
+  error("Not yet implemented.");
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -205,8 +213,9 @@ end
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
-function init_col_mrt!(constit_relation_f::Function,
+function init_pcol_mrt!(constit_relation_f::Function,
                        forcing_kf::(Function, Function))
+  error("Not yet implemented.");
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -256,7 +265,8 @@ end
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
 #! \param feq_f Equilibrium particle distribution function
-function init_col_mrt!(constit_relation_f::Function, feq_f::Function)
+function init_pcol_mrt!(constit_relation_f::Function, feq_f::Function)
+  error("Not yet implemented.");
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -302,8 +312,9 @@ end
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
 #! \param feq_f Equilibrium particle distribution function
-function init_col_mrt!(constit_relation_f::Function,
+function init_pcol_mrt!(constit_relation_f::Function,
                        forcing_kf::(Function, Function), feq_f::Function)
+  error("Not yet implemented.");
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;

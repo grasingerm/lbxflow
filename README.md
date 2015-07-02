@@ -20,6 +20,7 @@ to approximate hydrodynamics.
 * [ ] create alt. stream/collide methods using grids of obstacle flags
 * [ ] write user documentation
 * [ ] parallelize streaming and collision steps, multiscale mapping, and BCs
+* [ ] wrap simulation code in a module
 * [ ] profile simulation steps to identify bottlenecks
 * [ ] write some tests?
 * [x] verify Newtonian Poiseuille flow
