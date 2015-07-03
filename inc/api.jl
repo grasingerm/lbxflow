@@ -9,7 +9,13 @@ require(abspath(joinpath(api_root, "multiscale.jl")));
 require(abspath(joinpath(api_root, "profile.jl")));
 require(abspath(joinpath(api_root, "sim", "simulate.jl")));
 
-using ProfileView
+try; using ProfileView;
+catch e
+  warn("Unable to load `ProfileView`");
+  showerror(STDERR, e);
+  println();
+end
+
 using PyCall
 @pyimport yaml
 
