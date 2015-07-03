@@ -2,10 +2,10 @@
 preamble: >
   const id = "bn010";
   const datadir = joinpath("data","lid", id);
-  const ni = 200;
-  const nj = 200;
+  const ni = 256;
+  const nj = 256;
   const U = 0.01;
-  const mu_p = 0.02;
+  const mu_p = 0.0256;
   const tau_y = 0.0000001;
   const m = 1.0e8;
   const max_iters = 10;
@@ -15,6 +15,7 @@ preamble: >
   const Bn = tau_y * ni / (mu_p * U);
   info("Re = $Re, Bn = $Bn");
   using PyPlot;
+  const constit_rel_f = init_constit_srt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -32,13 +33,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 40000,   expr: false }
-col_f: >
-      begin;
-        binded_col_f!(lat, msm, bounds) = col_mrt_bingham_implicit!(lat,
-          msm, S_fallah, mu_p, tau_y, m, max_iters, tol,
-          1.0e-11, bounds, relax);
-        return binded_col_f!;
-      end
+col_f:      init_col_srt!(constit_rel_f)
 
 # boundaries
 sbounds:
@@ -78,4 +73,4 @@ finally:
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(msm.u[:,round(nj/2),2])], ",");
     end
   - write_jld_file_callback(datadir)
-  - plot_streamlines_callback(1, joinpath(datadir, "sl.png", 0.0)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
