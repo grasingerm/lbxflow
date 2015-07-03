@@ -31,8 +31,9 @@ function feq_incomp_HL(lat::LatticeD2Q9, rho::FloatingPoint,
   const cssq = 1/3;
   const ckdotu = dot(lat.c[:,k], u);
 
-  return w * (rho + rho_0 * (ckdotu/(cssq) + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
-              - 0.5 * dot(u, u) / (cssq)));
+  return (lat.w[k] * (rho + rho_0 * (ckdotu/(cssq)
+              + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
+              - 0.5 * dot(u, u) / (cssq))));
 end
 
 #! Binds rho_0 to an HL equilibrium function

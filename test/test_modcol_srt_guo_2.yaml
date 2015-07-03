@@ -5,7 +5,7 @@ preamble: >
   using Base.Test;
   const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
-  const datadir = "data/modcol_guo";
+  const datadir = "data";
   const ni = 60;
   const nj = 40;
   const mu = 3.0;
@@ -26,7 +26,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: 1.0,     expr: false }
-nu:       { value: 1/6,     expr: true  }
+nu:       { value: mu,     expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }
