@@ -32,7 +32,7 @@ immutable Tracker
   function Tracker(msm::MultiscaleMap,
                    state::Matrix{Union(Gas, Interface, Fluid)})
     const ni, nj = size(state);
-    lst = DoublyLinkedList{(Int64,Int64)};
+    lst = DoublyLinkedList{(Int64,Int64)}();
     M = Array(Float64, (ni, nj));
     for j=1:nj, i=1:ni
       if state[i,j] == GAS
@@ -58,8 +58,12 @@ immutable FreeSurfSim <: AbstractSim
   lat::Lattice
   msm::MultiscaleMap
   tracker::Tracker
+  rhog::FloatingPoint
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker)
-    return new(lat, msm, tracker);
+    return new(lat, msm, tracker, 1.0);
   end
+
+  FreeSurfSim(lat::Lattice, msm::MultiscaleMap, t::Tracker,
+              rhog::FloatingPoint) = new(lat, msm, t, rhog);
 end

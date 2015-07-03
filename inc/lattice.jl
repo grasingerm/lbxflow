@@ -8,13 +8,12 @@ type LatticeD2Q9 <: Lattice
   cs::FloatingPoint
   cssq::FloatingPoint
   f::Array{Float64, 3}
-  c::Matrix{Float64}
+  c::Matrix{Int64}
   w::Vector{Float64}
   n::Int
 
   # Default lattice speed vectors and associated weights
-  const cdef = [1.0 0.0; 0.0 1.0; -1.0 0.0; 0.0 -1.0; 1.0 1.0; -1.0 1.0;
-                -1.0 -1.0; 1.0 -1.0; 0.0 0.0]';
+  const cdef = [1 0; 0 1; -1 0; 0 -1; 1 1; -1 1; -1 -1; 1 -1; 0 0]';
   const wdef = [1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/36.0; 1.0/36.0;
                 1.0/36.0; 1.0/36.0; 4.0/9.0];
   const n = length(wdef);
@@ -49,12 +48,12 @@ type LatticeD2Q4 <: Lattice
   cs::FloatingPoint
   cssq::FloatingPoint
   f::Array{Float64, 3}
-  c::Matrix{Float64}
+  c::Matrix{Int64}
   w::Vector{Float64} 
   n::Int
 
   # Default lattice speed vectors and associated weights
-  const cdef = [1.0 0.0; -1.0 0.0; 0.0 1.0; 0.0 -1.0]';
+  const cdef = [1 0; -1 0; 0 1; 0 -1]';
   const n = size(cdef, 2);
   const wdef = fill(1.0/4.0, n);
 
