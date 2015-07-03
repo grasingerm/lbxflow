@@ -20,10 +20,11 @@ preamble: >
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
-  const relax = 0.8;
+  const relax = 1.0;
   const nsteps = 20000;
   const id = "poise-wang-e-0000";
   const datadir = joinpath("data","poise","wang","explicit","0000");
+  const constit_rel_f = init_constit_srt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
 
 datadir:    { value: datadir,   expr: true    }
 
@@ -39,7 +40,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f: col_srt!
+col_f:      init_col_srt!(constit_rel_f)
 
 # boundaries
 sbounds:

@@ -24,6 +24,7 @@ preamble: >
   const nsteps = 20000;
   const id = "poise-wang-e-0005";
   const datadir = joinpath("data","poise","wang","explicit","0005");
+  const constit_rel_f = init_constit_srt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
 
 datadir:    { value: datadir,   expr: true    }
 
@@ -39,12 +40,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f: >
-      begin;
-        binded_col_f!(lat, msm, bounds) = mrt_bingham_explicit_col_f!(lat,
-          msm, vikhansky_relax_matrix, mu_p, tau_y, m, 1.0e-11, bounds, relax);
-        return binded_col_f!;
-      end
+col_f:      init_col_srt!(constit_rel_f)
 
 # boundaries
 sbounds:

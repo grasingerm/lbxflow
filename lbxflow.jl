@@ -39,10 +39,6 @@ s = ArgParseSettings();
   "--noexe", "-X"
     help = "do not execute input file(s)"
     action = :store_true
-  "--processes", "-N"
-    help = "number of processes to run on"
-    arg_type = Int
-    default = 1
   "--profile", "-P"
     help = "profile `simulate` function"
     action = :store_true
@@ -63,14 +59,6 @@ s = ArgParseSettings();
 end
 
 pa = parse_args(s);
-
-# add processes
-const nprocs = pa["processes"];
-if nprocs > 1
-  addprocs(nprocs-1);
-elseif nprocs < 1
-  warn("Number of processes, ", nprocs, " is invalid. Ignoring argument.");
-end
 
 # organize profiling args
 if pa["profile-file"] != nothing

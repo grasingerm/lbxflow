@@ -1,15 +1,20 @@
-const api_root = dirname(@__FILE__);
+const __api_root__ = dirname(@__FILE__);
 
-require(abspath(joinpath(api_root, "boundary.jl")));
-require(abspath(joinpath(api_root, "col", "collision.jl")));
-require(abspath(joinpath(api_root, "convergence.jl")));
-require(abspath(joinpath(api_root, "lattice.jl")));
-require(abspath(joinpath(api_root, "lbxio.jl")));
-require(abspath(joinpath(api_root, "multiscale.jl")));
-require(abspath(joinpath(api_root, "profile.jl")));
-require(abspath(joinpath(api_root, "sim", "simulate.jl")));
+require(abspath(joinpath(__api_root__, "boundary.jl")));
+require(abspath(joinpath(__api_root__, "col", "collision.jl")));
+require(abspath(joinpath(__api_root__, "convergence.jl")));
+require(abspath(joinpath(__api_root__, "lattice.jl")));
+require(abspath(joinpath(__api_root__, "lbxio.jl")));
+require(abspath(joinpath(__api_root__, "multiscale.jl")));
+require(abspath(joinpath(__api_root__, "profile.jl")));
+require(abspath(joinpath(__api_root__, "sim", "simulate.jl")));
 
-using ProfileView
+try; using ProfileView;
+catch e
+  warn("Unable to load `ProfileView`");
+  showerror(STDERR, e);
+  println();
+end
 using PyCall
 @pyimport yaml
 
