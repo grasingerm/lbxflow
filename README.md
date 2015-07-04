@@ -23,6 +23,7 @@ to approximate hydrodynamics.
 * [ ] wrap simulation code in a module
 * [ ] profile simulation steps to identify bottlenecks
 * [ ] write some tests?
+* [ ] write mrt collision functions with "hard coded" default inverse transformation matrix
 * [x] verify Newtonian Poiseuille flow
 * [x] debug BCs at inlet/outlet (bounceback, periodic)
 * [x] implement MRT scheme for Bingham plastic flow

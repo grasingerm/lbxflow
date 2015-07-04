@@ -7,7 +7,7 @@ require(abspath(joinpath(__constitutive_root__, "..", "sim", "simtypes.jl")));
 #!
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
-function init_constit_const(mu::FloatingPoint)
+function init_constit_srt_const(mu::FloatingPoint)
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     return mu;
   end
@@ -17,7 +17,7 @@ end
 #!
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
-function init_constit_const_local()
+function init_constit_srt_const_local()
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     return @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
   end
@@ -172,7 +172,7 @@ function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
                                            relax::Number = 1.0)
 
   const inner_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, gamma_min, 
-                                                    relax);
+                                                    max_iters, tol, relax);
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     const mu_min = @nu(1.0/rt_min, sim.lat.cssq, sim.lat.dt);
@@ -185,6 +185,28 @@ function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
     else 
       return mu;
     end
+  end
+end
+
+#! Initialize a constant constitutive relationship
+#!
+#! \param mu Dynamic viscosity
+#! \return Constitutive relation function
+function init_constit_mrt_const(mu::FloatingPoint)
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
+    return mu;
+  end
+end
+
+#! Initialize a constant constitutive relationship
+#!
+#! \param mu Dynamic viscosity
+#! \return Constitutive relation function
+function init_constit_mrt_const_local()
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
+    return @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
   end
 end
 
@@ -202,9 +224,8 @@ function init_constit_mrt_bingham_explicit(mu_p::FloatingPoint,
                                            gamma_min::FloatingPoint,
                                            relax::Number = 1.0)
 
-  return (sim::AbstractSim, S::Function, M::Matrix{Float64}, iM::Matrix{Float64},
-          f::Vector{Float64}, feq::Vector{Float64}, fneq::Vector{Float64}, 
-          mij::Vector{Float64}, meq::Vector{Float64}, i::Int, j::Int) -> begin
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
     const rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
@@ -242,9 +263,8 @@ function init_constit_mrt_bingham_implicit(mu_p::FloatingPoint,
                                            tol::FloatingPoint = 1e-6,
                                            relax::Number = 1.0)
 
-  return (sim::AbstractSim, S::Function, M::Matrix{Float64}, iM::Matrix{Float64},
-          f::Vector{Float64}, feq::Vector{Float64}, fneq::Vector{Float64}, 
-          mij::Vector{Float64}, meq::Vector{Float64}, i::Int, j::Int) -> begin
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const rhoij = sim.msm.rho[i,j];

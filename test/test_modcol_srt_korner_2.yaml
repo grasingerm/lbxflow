@@ -9,7 +9,7 @@ preamble: >
   const ni = 40;
   const nj = 20;
   const mu = 2/6;
-  const constit_rel_f = init_constit_const(mu);
+  const constit_rel_f = init_constit_srt_const(mu);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj - 1)/2.0;
   analytic_soln(xs) = begin;
@@ -36,7 +36,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_srt!(constit_rel_f, forcing_kf);
+col_f:    init_col_srt(constit_rel_f, forcing_kf);
 
 # boundaries
 sbounds:

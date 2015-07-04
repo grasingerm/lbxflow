@@ -9,12 +9,6 @@ require(abspath(joinpath(__api_root__, "multiscale.jl")));
 require(abspath(joinpath(__api_root__, "profile.jl")));
 require(abspath(joinpath(__api_root__, "sim", "simulate.jl")));
 
-try; using ProfileView;
-catch e
-  warn("Unable to load `ProfileView`");
-  showerror(STDERR, e);
-  println();
-end
 using PyCall
 @pyimport yaml
 
@@ -212,7 +206,7 @@ function parse_and_run(infile::String, args::Dict)
           write(file, "bt", bt);
           write(file, "lidict", lidict);
         end
-      elseif args["profile"]
+      elseif args["profile"] && args["profile-view"]
         ProfileView.view();
         println("Press enter to continue...");
         readline(STDIN);
@@ -274,7 +268,7 @@ function parse_and_run(infile::String, args::Dict)
           write(file, "bt", bt);
           write(file, "lidict", lidict);
         end
-      elseif args["profile"]
+      elseif args["profile"] && args["profile-view"]
         ProfileView.view();
         println("Press enter to continue...");
         readline(STDIN);

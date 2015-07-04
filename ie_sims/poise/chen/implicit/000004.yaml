@@ -13,16 +13,19 @@ preamble: >
   const ni = 128;
   const nj = 64;
   const pgrad = -5.6e-6;
-  const f = [-pgrad; 0.0];
+  const F = [-pgrad; 0.0];
   const mu_p = 0.2;
   const tau_y = 4.0e-5;
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
-  const relax = 0.8;
   const nsteps = 20000;
-  const id = "poise-chen-i-000004";
-  const datadir = joinpath("data","poise","chen","implicit","000004");
+  const id = "poise-chen-e-000004";
+  const datadir = joinpath("data","poise","chen","explicit","000004");
+  const feq_f = init_feq_incomp_HL(1.0);
+  const constit_rel_f = init_constit_srt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
+  const forcing_kf = init_guo_Fk(F);
+  using PyPlot;
 
 datadir:    { value: datadir,   expr: true    }
 
@@ -38,13 +41,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f: >
-      begin;
-        binded_col_f!(lat, msm, bounds) = col_mrt_bingham_implicit!(lat,
-          msm, S_fallah, mu_p, tau_y, m, max_iters, 1.0e-11, f, bounds,
-          relax);
-        return binded_col_f!;
-      end
+col_f:      init_col_srt!(constit_rel_f, forcing_kf, feq_f)
 
 # boundaries
 sbounds:
@@ -65,6 +62,7 @@ bcs:
 callbacks:
   - print_step_callback(100, id)
   - write_jld_file_callback(datadir, convert(Int64, round(nsteps/20)))
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
 
 # clean-up, backup, write out
 finally:

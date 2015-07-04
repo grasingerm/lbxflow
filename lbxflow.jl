@@ -45,6 +45,9 @@ s = ArgParseSettings();
   "--profile-file", "-p"
     help = "file for profiler to print to"
     arg_type = String
+  "--profile-view", "-V"
+    help = "load and use the ProfileView package"
+    action = :store_true
   "--profile-delay", "-D"
     help = "time delay between calls to sampler"
     arg_type = Number
@@ -67,6 +70,8 @@ if pa["profile-file"] != nothing
 elseif pa["profile"]
   pa["profile-io"] = STDOUT;
 end
+
+if pa["profile-view"]; using ProfileView; end
 
 # run input file
 if pa["file"] != nothing
