@@ -28,7 +28,7 @@ to approximate hydrodynamics.
 ### Overview
 
 Input files are created according to the [YAML](http://yaml.org/) format. If you
-need to check if your YAML is wellformed, checkout this 
+need to check if your YAML is wellformed, check out this 
 [online parser](http://yaml-online-parser.appspot.com/) with helpful error
 reporting.
 
