@@ -91,12 +91,12 @@ the number of nodes in the y-direction.
     col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
 
 `nsteps` specifies the number of steps to simulate. `col_f` is a function
-that performas LBM collisions. Collision functions can be initialize using
-the the building blocks contained in `col/constitutive.jl`, `col/forcing.jl`,
-and `col/mrt_matrices.jl` and the constructors contained in `col/modcol.jl`.
+that performes LBM collisions. Collision functions can be initialized using
+the building blocks contained in `col/constitutive.jl`, `col/forcing.jl`,
+and `col/mrt_matrices.jl`, and the constructors contained in `col/modcol.jl`.
 Or, paramters can be bound to collision functions defined in `col/stdcol.jl`.
 Note: collision functions must have the interface:
-`(sim::Sim, bounds::Matrix{Int64})`
+`(sim::AbstractSim, bounds::Matrix{Int64})`
 
 ### boundaries
     # boundaries
