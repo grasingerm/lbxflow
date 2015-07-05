@@ -17,11 +17,11 @@ to approximate hydrodynamics.
 * matplotlib   (python library)
 
 ## Quick Start
-`git clone https://github.com/grasingerm/lbxflow.git`
-`cd lbxflow`
-`julia scripts/install_dependencies.jl`
-`julia lbxflow.jl --help`
-`julia lbxflow.jl -vf ie_sims/ex/ex1.yaml`
+    git clone https://github.com/grasingerm/lbxflow.git
+    cd lbxflow
+    julia scripts/install_dependencies.jl
+    julia lbxflow.jl --help
+    julia lbxflow.jl -vf ie_sims/ex/ex1.yaml
 
 ## Input Files
 
@@ -131,7 +131,8 @@ functions can be found in `inc/boundary.jl`
 
 A list of callback functions. The interface of these function is
 `(sim::AbstractSim, k::Int)` where `k` is the frequency (in time steps) in
-which the callback is performed.
+which the callback is performed. Useful callback functions can be found in
+the `inc/io` directory.
 
 
 ### finally
