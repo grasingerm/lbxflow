@@ -40,8 +40,8 @@ passes = pmap(run_test, test_input_files);
 # print results
 for (file, passed) in zip(test_input_files, passes)
   if passed
-    println(file, ":\t passed.");
+    print_with_color(:green, file, ": passed.\n");
   else
-    println(file, ":\t failed.");
+    print_with_color(:red, file, ": failed.\n");
   end
 end
