@@ -173,7 +173,7 @@ function init_col_mrt(constit_relation_f::Function, S::Function)
       i_min, i_max, j_min, j_max = bounds[:,r];
       for j = j_min:j_max, i = i_min:i_max
         rhoij = msm.rho[i,j];
-        uij = uf(lat, msm.u[:,i,j]);
+        uij = msm.u[:,i,j];
 
         for k=1:lat.n; feq[k] = feq_incomp(lat, rhoij, uij, k); end
 
@@ -183,7 +183,7 @@ function init_col_mrt(constit_relation_f::Function, S::Function)
         muij = constit_relation_f(sim, fneq, S, M, iM, i, j);
         Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
-        lat.f[:,i,j] = fij - iM * Sij * M * fneq + fdl; # perform collision
+        lat.f[:,i,j] = fij - iM * Sij * M * fneq; # perform collision
 
         # update collision frequency matrix
         msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
@@ -264,7 +264,7 @@ function init_col_mrt(constit_relation_f::Function, feq_f::Function,
       i_min, i_max, j_min, j_max = bounds[:,r];
       for j = j_min:j_max, i = i_min:i_max
         rhoij = msm.rho[i,j];
-        uij = uf(lat, msm.u[:,i,j]);
+        uij = msm.u[:,i,j];
 
         for k=1:lat.n; feq[k] = feq_f(lat, rhoij, uij, k); end
 
@@ -274,7 +274,7 @@ function init_col_mrt(constit_relation_f::Function, feq_f::Function,
         muij = constit_relation_f(sim, fneq, S, M, iM, i, j);
         Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
-        lat.f[:,i,j] = fij - iM * Sij * M * fneq + fdl; # perform collision
+        lat.f[:,i,j] = fij - iM * Sij * M * fneq; # perform collision
 
         # update collision frequency matrix
         msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
@@ -291,8 +291,8 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \return collision_function!(sim, bounds)
 function init_col_mrt(constit_relation_f::Function,
-                       forcing_kf::(Function, Function), feq_f::Function,
-                       S::Function)
+                      forcing_kf::(Function, Function), feq_f::Function,
+                      S::Function)
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
