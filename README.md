@@ -259,12 +259,3 @@ Examples can be found in `inc/convergence.jl`
 * [ ] implement HB-Bingham constitutive model used in Fluent
 * [ ] consider "DSL" for mapping particle to macroscale and vice versa
 * [ ] implement Jonas Latt BCs
-
-## Acknowledgements
-
-* University of Pittsbrugh -- where I have been studying for my Ph.d. while all this code has been developed
-* Dr. John Brigham -- for being my adivsor and mentor; and teaching me the nuances of computational mechanics
-* Dr. Julie Vandenbossche -- for invaluable insite into cement material science
-* Dr. Iannacchione -- for helping me learn and grow what it means to be active in research
-* My fellow students -- for your immeasurable support in review for writing, code, and theory: Zichang Li; Alex Vutto; Mohammad Ahmadpoor; Jing  Xu; Robert Zupan
-* Micheal Sypolt -- for review in my writing and coding. And for supporting me as a friend and colleague for many years.
