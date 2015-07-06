@@ -28,7 +28,7 @@ to approximate hydrodynamics.
 ### Overview
 
 Input files are created according to the [YAML](http://yaml.org/) format. If you
-need to check if your YAML is wellformed, checkout this 
+need to check if your YAML is wellformed, check out this 
 [online parser](http://yaml-online-parser.appspot.com/) with helpful error
 reporting.
 
@@ -91,12 +91,12 @@ the number of nodes in the y-direction.
     col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
 
 `nsteps` specifies the number of steps to simulate. `col_f` is a function
-that performas LBM collisions. Collision functions can be initialize using
-the the building blocks contained in `col/constitutive.jl`, `col/forcing.jl`,
-and `col/mrt_matrices.jl` and the constructors contained in `col/modcol.jl`.
+that performes LBM collisions. Collision functions can be initialized using
+the building blocks contained in `col/constitutive.jl`, `col/forcing.jl`,
+and `col/mrt_matrices.jl`, and the constructors contained in `col/modcol.jl`.
 Or, paramters can be bound to collision functions defined in `col/stdcol.jl`.
 Note: collision functions must have the interface:
-`(sim::Sim, bounds::Matrix{Int64})`
+`(sim::AbstractSim, bounds::Matrix{Int64})`
 
 ### boundaries
     # boundaries
@@ -259,12 +259,3 @@ Examples can be found in `inc/convergence.jl`
 * [ ] implement HB-Bingham constitutive model used in Fluent
 * [ ] consider "DSL" for mapping particle to macroscale and vice versa
 * [ ] implement Jonas Latt BCs
-
-## Acknowledgements
-
-* University of Pittsbrugh -- where I have been studying for my Ph.d. while all this code has been developed
-* Dr. John Brigham -- for being my adivsor and mentor; and teaching me the nuances of computational mechanics
-* Dr. Julie Vandenbossche -- for invaluable insite into cement material science
-* Dr. Iannacchione -- for helping me learn and grow what it means to be active in research
-* My fellow students -- for your immeasurable support in review for writing, code, and theory: Zichang Li; Alex Vutto; Mohammad Ahmadpoor; Jing  Xu; Robert Zupan
-* Micheal Sypolt -- for review in my writing and coding. And for supporting me as a friend and colleague for many years.
