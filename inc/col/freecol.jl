@@ -61,6 +61,32 @@ end
 #! \param sim Simulation object
 #! \param F Body force vector
 #! \param bounds Boundaries that define active parts of the lattice
+function col_srt_korner! (sim::FreeSurfSim, F::Vector{Float64}, bounds::Matrix{Int64})
+  lat = sim.lat;
+  msm = sim.msm;
+  const ni, nj = size(msm.rho);
+  const nbounds = size(bounds, 2);
+
+  for r = 1:nbounds
+    i_min, i_max, j_min, j_max = bounds[:,r];
+    for j = j_min:j_max, i = i_min:i_max, k = 1:lat.n 
+      if sim.tracker.state[i,j] == GAS; continue; end
+      rhoij = msm.rho[i,j];
+      uij = msm.u[:,i,j];
+      omegaij = msm.omega[i,j];
+      feq = feq_incomp(lat, rhoij, uij, k);
+      lat.f[k,i,j] = (omegaij * feq
+                      + (1.0 - omegaij) * lat.f[k,i,j]
+                      + lat.w[k] * lat.dt / lat.cssq * dot(F, lat.c[:,k]));
+    end # body force is incorporated with w*dt/c_ssq * dot(f,c)
+  end        
+end
+
+#! Single relaxation time collision function for incompressible Newtonian flow
+#!
+#! \param sim Simulation object
+#! \param F Body force vector
+#! \param bounds Boundaries that define active parts of the lattice
 function col_srt_guo! (sim::FreeSurfSim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;

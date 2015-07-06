@@ -44,7 +44,7 @@ function init_korner_Fk(F::Vector{Float64})
       return u;
     end,
     (lat::Lattice, omega::FloatingPoint, u::Vector{Float64}, k::Int) -> begin
-      return lat.w[k] / lat.cssq * dot(lat.c[:,k], F);
+      return lat.w[k] * lat.dt / lat.cssq * dot(lat.c[:,k], F);
     end
     );
 end

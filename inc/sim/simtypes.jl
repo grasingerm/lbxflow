@@ -21,11 +21,12 @@ immutable Fluid; end;       const FLUID = Fluid();
 immutable Tracker
   state::Matrix{Union(Gas, Interface, Fluid)};
   M::Matrix{Float64};
+  eps::Matrix{Float64};
   interfacels::DoublyLinkedList{(Int64, Int64)};
 
   function Tracker(state::Union(Gas, Interface, Fluid) = Gas()) 
     const ni, nj = size(state);
-    return new(fill(state, (ni, nj)), zeros(ni, nj),
+    return new(fill(state, (ni, nj)), zeros(ni, nj), zeros(ni, nj),
                DoublyLinkedList{(Int64, Int64)});
   end
 
@@ -34,19 +35,23 @@ immutable Tracker
     const ni, nj = size(state);
     lst = DoublyLinkedList{(Int64,Int64)}();
     M = Array(Float64, (ni, nj));
+    eps = Array(Float64, (ni, nj));
     for j=1:nj, i=1:ni
       if state[i,j] == GAS
         M[i,j] = 0.0;
+        eps[i,j] = 0.0; 
       elseif state[i,j] == INTERFACE
         M[i,j] = 0.5 * msm.rho[i,j];
+        eps[i,j] = 0.5;
         push!(lst, (i,j));
       elseif state[i,j] == FLUID
         M[i,j] = msm.rho[i,j];
+        eps[i,j] = 1.0;
       else
-        @assert false && "state not understood or invalid";
+        error("state not understood or invalid");
       end
     end
-    return new(copy(state), M, lst);
+    return new(copy(state), M, eps, lst);
   end
 end
 
