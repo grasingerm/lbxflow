@@ -170,7 +170,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       sleep(pause);
     end
   end
@@ -184,7 +184,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M));
       sleep(pause);
     end
   end
@@ -294,7 +294,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -309,7 +309,7 @@ function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M));
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -423,7 +423,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       text(xy[1], xy[2], "step: $k");
       sleep(pause);
     end
@@ -439,7 +439,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M));
       text(xy[1], xy[2], "step: $k");
       sleep(pause);
     end
@@ -559,7 +559,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       text(xy[1], xy[2], "step: $k");
       savefig(fname*"_step-$k.png");
       sleep(pause);
@@ -577,7 +577,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contour(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M));
       text(xy[1], xy[2], "step: $k");
       savefig(fname*"_step-$k.png");
       sleep(pause);
