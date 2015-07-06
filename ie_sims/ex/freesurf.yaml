@@ -2,10 +2,10 @@ version: 0.2.1
 
 preamble: >
   using PyPlot;
-  const u = 0.05;
   const datadir = joinpath("data","freesurf");
-  const ni = 30;
-  const nj = 150;
+  const F = [0.0; -5.6e-6];
+  const ni = 50;
+  const nj = 50;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
@@ -22,7 +22,12 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      col_srt!
+col_f: >    
+            begin;
+              bind_col_srt!(sim::FreeSurfSim, bounds::Matrix{Int64}) = (
+                col_srt_korner!(sim, F, bounds));
+              return bind_col_srt!;
+            end
 nsteps:     15000
 
 # boundaries
@@ -38,8 +43,8 @@ cbounds:
 bcs:
   - west_bounce_back!
   - east_bounce_back!
-  - bind_south_inlet!(lat) = south_inlet!(lat, u);
-  - bind_open_north!(lat) = north_pressure!(lat, 1.0);
+  - south_bounce_back!
+  - north_bounce_back!
 
 # free surface conditions
 rhog: 1.0
@@ -49,9 +54,11 @@ states:
     begin;
       s = Array(Union(Gas, Interface, Fluid), ni, nj);
       fill!(s, GAS);
-      for i=1:ni
-        s[i,1] = FLUID;
-        s[i,2] = INTERFACE;
+      for j=1:nj
+        for i=1:(int(ni/2))
+          s[i,j] = FLUID;
+        end
+        s[(int(ni/2))+1,j] = INTERFACE;
       end
       return s;
     end
@@ -60,7 +67,7 @@ states:
 # callback functions
 #  - plot_mass_contours_callback(10, "mass", 0.0)
 callbacks:
-  - plot_mass_contours_callback(10)
+  - plot_mass_contours_callback(1)
   - print_step_callback(1, "free-surf")
   - >
     (sim::FreeSurfSim, k::Int) -> begin;
@@ -69,7 +76,7 @@ callbacks:
       end
     end;
   - pause_sim_callback(1)
-    #  - write_jld_file_callback(datadir, 300)
+  - write_jld_file_callback(datadir, 300)
 
 # clean-up, backup, write out
 #finally:

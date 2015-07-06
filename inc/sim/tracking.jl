@@ -34,19 +34,21 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
     for k=1:lat.n
       i_nbr = i + lat.c[1,k];
       j_nbr = j + lat.c[2,k];
+      println("i,j: ", i, ",", j, "; i_nbr,j_nbr: ", i_nbr, ",", j_nbr);
       if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr,j_nbr] == GAS
         continue;
       elseif t.state[i_nbr,j_nbr] == FLUID
         opk = opp_lat_vec(lat, k);
-        t.M[i,j] += lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j] # m in - m out
+        println("M_in: ", lat.f[opk,i_nbr,j_nbr], "; M_out: ", lat.f[k,i,j], "; dM: ", lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]);
+        t.M[i,j] += lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]; # m in - m out
       elseif t.state[i_nbr,j_nbr] == INTERFACE
         opk = opp_lat_vec(lat, k);
-        epsx = t.M[i,j] / msm.rho[i,j];
-        epsxe = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
-        @assert epsx > -0.5 && epsx <= 1.5 && epsxe > -0.5 && epsxe <= 1.5
-        t.M[i,j] += (epsx + epsxe) / 2 * lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j];
+        println("Mnbr: ", t.M[i_nbr,j_nbr], "; rhonbr: ", msm.rho[i_nbr,j_nbr], "; Mij: ", t.M[i,j], "; rhoij: ", msm.rho[i,j]);
+        println("epsx: ", t.eps[i,j], "; epsxe: ", t.eps[i_nbr,j_nbr]);
+        println("dM: ", (t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 * (lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]));
+        t.M[i,j] += (t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 * (lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]);
       else
-        @assert false && "state not understood or invalid";
+        error("state not understood or invalid");
       end
     end
   end
@@ -66,7 +68,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
     if !inbounds(i, j, sbounds)
       continue;
     end
-    
+
     if t.M[i,j] < -threshold
       println("node $i,$j is becoming a gas cell");
       t.M[i,j] = 0;
@@ -78,6 +80,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j_nbr,sbounds); continue; end
         if t.state[i_nbr,j_nbr] == FLUID
           t.state[i_nbr,j_nbr] = INTERFACE;
+          t.eps[i_nbr,j_nbr] = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
           println("node $i_nbr,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr,j_nbr)); # push into interface list
         end
@@ -87,6 +90,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j,sbounds); continue; end
         if t.state[i_nbr,j] == FLUID
           t.state[i_nbr,j] = INTERFACE;
+          t.eps[i_nbr,j] = t.M[i_nbr,j] / msm.rho[i_nbr,j];
           println("node $i_nbr,$j is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr, j)); # push into interface list
         end
@@ -96,6 +100,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i,j_nbr,sbounds); continue; end
         if t.state[i,j_nbr] == FLUID
           t.state[i,j_nbr] = INTERFACE;
+          t.eps[i,j_nbr] = t.M[i,j_nbr] / msm.rho[i,j_nbr];
           println("node $i,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i, j_nbr)); # push into interface list
         end
@@ -111,6 +116,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j_nbr,sbounds); continue; end
         if t.state[i_nbr,j_nbr] == GAS
           t.state[i_nbr,j_nbr] = INTERFACE;
+          t.eps[i_nbr,j_nbr] = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
           println("node $i_nbr,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr,j_nbr)); # push into interface list
         end
@@ -120,6 +126,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j,sbounds); continue; end
         if t.state[i_nbr,j] == GAS
           t.state[i_nbr,j] = INTERFACE;
+          t.eps[i_nbr,j] = t.M[i_nbr,j] / msm.rho[i_nbr,j];
           println("node $i_nbr,$j is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr, j)); # push into interface list
         end
@@ -129,11 +136,13 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i,j_nbr,sbounds); continue; end
         if t.state[i,j_nbr] == GAS
           t.state[i,j_nbr] = INTERFACE;
+          t.eps[i,j_nbr] = t.M[i,j_nbr] / msm.rho[i,j_nbr];
           println("node $i,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i, j_nbr)); # push into interface list
         end
       end
     end
+    t.eps[i,j] = t.M[i,j] / msm.rho[i,j]; # update fluid fraction
   end
 end
 
