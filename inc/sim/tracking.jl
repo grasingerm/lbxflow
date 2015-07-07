@@ -26,6 +26,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
 
+  # NOTE: This is mass transfer calculated AFTER streaming and f reconstructor
   for node in t.interfacels
     i, j = node.val;
     if !inbounds(i, j, sbounds)
@@ -34,19 +35,15 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
     for k=1:lat.n
       i_nbr = i + lat.c[1,k];
       j_nbr = j + lat.c[2,k];
-      println("i,j: ", i, ",", j, "; i_nbr,j_nbr: ", i_nbr, ",", j_nbr);
       if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr,j_nbr] == GAS
         continue;
       elseif t.state[i_nbr,j_nbr] == FLUID
         opk = opp_lat_vec(lat, k);
-        println("M_in: ", lat.f[opk,i_nbr,j_nbr], "; M_out: ", lat.f[k,i,j], "; dM: ", lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]);
-        t.M[i,j] += lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]; # m in - m out
+        t.M[i,j] += -lat.f[k,i_nbr,j_nbr] + lat.f[opk,i,j]; # m in - m out
       elseif t.state[i_nbr,j_nbr] == INTERFACE
         opk = opp_lat_vec(lat, k);
-        println("Mnbr: ", t.M[i_nbr,j_nbr], "; rhonbr: ", msm.rho[i_nbr,j_nbr], "; Mij: ", t.M[i,j], "; rhoij: ", msm.rho[i,j]);
-        println("epsx: ", t.eps[i,j], "; epsxe: ", t.eps[i_nbr,j_nbr]);
-        println("dM: ", (t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 * (lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]));
-        t.M[i,j] += (t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 * (lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]);
+        t.M[i,j] += ((t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 
+                     * (-lat.f[k,i_nbr,j_nbr] + lat.f[opk,i,j]));
       else
         error("state not understood or invalid");
       end

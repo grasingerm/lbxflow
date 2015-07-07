@@ -184,7 +184,9 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contourf(transpose(sim.tracker.M));
+      cs = contourf(transpose(sim.tracker.M),
+               levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
+      colorbar(cs);
       sleep(pause);
     end
   end
@@ -309,7 +311,7 @@ function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contourf(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M), levels=[0.0; 0.25; 0.50; 0.75; 1.0]);
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -439,7 +441,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contourf(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M), levels=[0.0; 0.25; 0.50; 0.75; 1.0]);
       text(xy[1], xy[2], "step: $k");
       sleep(pause);
     end
@@ -577,7 +579,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       clf();
-      contourf(transpose(sim.tracker.M));
+      contourf(transpose(sim.tracker.M), levels=[0.0; 0.25; 0.50; 0.75; 1.0]);
       text(xy[1], xy[2], "step: $k");
       savefig(fname*"_step-$k.png");
       sleep(pause);
