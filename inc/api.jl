@@ -94,8 +94,8 @@ function parse_and_run(infile::String, args::Dict)
     "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
     "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
     "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
-    "sbounds" =>  (defs::Dict) -> begin; [[1, defs["ni"], 1, defs["nj"]]]; end,
-    "cbounds" =>  (defs::Dict) -> begin; [[1, defs["ni"], 1, defs["nj"]]]; end,
+    "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
+    "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
     "callbacks" =>  (defs::Dict) -> begin; Array(Function, 0); end,
     "finally" =>  (defs::Dict) -> begin; Array(Function, 0); end

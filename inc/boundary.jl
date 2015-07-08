@@ -30,7 +30,7 @@ function south_bounce_back!(lat::Lattice)
   south_bounce_back!(lat, 1, size(lat.f, 2), 1);
 end
 
-#! Bounceback boundary condition for west boundary
+#! Bounceback boundary condition for east boundary
 function east_bounce_back!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
   for j=j_begin:j_end
     lat.f[3,i,j] = lat.f[1,i,j];
@@ -39,7 +39,7 @@ function east_bounce_back!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
   end
 end
 
-#! Bounceback boundary condition for west boundary of domain
+#! Bounceback boundary condition for east boundary of domain
 function east_bounce_back!(lat::Lattice)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_bounce_back!(lat, ni, 1, nj);

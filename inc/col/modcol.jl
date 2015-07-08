@@ -161,7 +161,7 @@ function init_col_mrt(constit_relation_f::Function, S::Function)
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
+    const iM = @DEFAULT_MRT_IM();
     const ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
@@ -205,7 +205,7 @@ function init_col_mrt(constit_relation_f::Function,
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
+    const iM = @DEFAULT_MRT_IM();
     const ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
@@ -252,7 +252,7 @@ function init_col_mrt(constit_relation_f::Function, feq_f::Function,
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
+    const iM = @DEFAULT_MRT_IM();
     const ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
@@ -298,7 +298,7 @@ function init_col_mrt(constit_relation_f::Function,
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
+    const iM = @DEFAULT_MRT_IM();
     const ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))

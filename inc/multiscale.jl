@@ -99,7 +99,7 @@ end
 #! \param msm Multiscale map
 #! \return Velocity magnitudes
 function u_mag(msm::MultiscaleMap)
-  const ni, nj = size(msm.u);
+  const ni, nj = size(msm.u, 2), size(msm.u, 3);
   u_mag_res = Array(Float64, (ni, nj));
 
   for j = 1:nj, i = 1:ni

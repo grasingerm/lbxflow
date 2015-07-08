@@ -13,6 +13,11 @@ macro DEFAULT_MRT_M()
            ]);
 end
 
+#! Initializes the inverse default multiple relaxation time transformation matrix
+macro DEFAULT_MRT_IM()
+  return :(inv(eval(@DEFAULT_MRT_M())));
+end
+
 #! Fallah relaxation coefficient for s77, s88
 #!
 #! \param mu Dynamic viscosity
