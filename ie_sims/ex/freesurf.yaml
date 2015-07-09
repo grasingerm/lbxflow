@@ -3,7 +3,7 @@ version: 0.2.1
 preamble: >
   using PyPlot;
   const datadir = joinpath("data","freesurf");
-  const F = [0.0; -2.0e-7];
+  const F = [0.0; -2.0e-2];
   const ni = 50;
   const nj = 50;
 

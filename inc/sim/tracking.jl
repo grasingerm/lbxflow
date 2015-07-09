@@ -160,17 +160,15 @@ function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::(Int64, Int64),
   for k = 1:lat.n
     c = lat.c[:,k]; # TODO: consider using an ArrayView here
     if dot(n, c) >= 0
-      opk = opp_lat_vec(lat, k);
-      rhoij = msm.rho[i,j];
-      uij = msm.u[:,i,j]; # TODO: consider using an ArrayView here
-      lat.f[k,i,j] = (feq_incomp(lat, rhog, uij, k) -
-                  feq_incomp(lat, rhog, uij, opk) -
-                  lat.f[opk,i,j]);
-    else
       i_new = i - c[1];
       j_new = j - c[2];
       if !inbounds(i_new, j_new, sbounds); continue; end
-      lat.f[k,i,j] = lat.f[k,i_new,j_new];
+      opk = opp_lat_vec(lat, k);
+      rhoij = msm.rho[i,j];
+      uij = msm.u[:,i,j]; # TODO: consider using an ArrayView here
+      lat.f[k,i_new,j_new] = (feq_incomp(lat, rhog, uij, k) +
+                              feq_incomp(lat, rhog, uij, opk) -
+                              lat.f[opk,i,j]);
     end
   end
 end

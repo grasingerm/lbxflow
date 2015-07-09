@@ -86,11 +86,9 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   stream!(lat, temp_f, sbounds, t);
   # Reconstruct missing distribution functions at the interface
-  #=
   for node in t.interfacels
     f_reconst!(sim, t, node.val, sbounds, sim.rhog);
   end
-  =#
   masstransfer!(sim, sbounds); # Calculate mass transfer across interface
   collision_f!(sim, cbounds);
   update!(sim, sbounds); # Update the state of cells
@@ -105,7 +103,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   if abs(init_mass - sum(t.M))/init_mass > 1e-3
     error("Mass was not conserved. Initial mass: ", init_mass,
           " Final mass: ", sum(t.M));
-  end 
+  end
 end
 
 #! Run simulation
