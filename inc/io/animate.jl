@@ -149,12 +149,13 @@ function plot_streamlines_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho, 2), size(sim.msm.rho, 3);
+      const ni, nj = size(sim.msm.rho);
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y, transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       sleep(pause);
@@ -272,12 +273,13 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::String,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho, 2), size(sim.msm.rho, 3);
+      const ni, nj = size(sim.msm.rho);
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y, transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       savefig(fname*"_step-$k.png");
@@ -405,7 +407,8 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y,transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       text(xy[1], xy[2], "step: $k");
@@ -534,12 +537,13 @@ function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho, 2), size(sim.msm.rho, 3);
+      const ni, nj = size(sim.msm.rho);
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
       clf();
-      streamplot(x, y,transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
       ylim(0.0, 1.0);
       xlim(0.0, 1.0);
       text(xy[1], xy[2], "step: $k");
