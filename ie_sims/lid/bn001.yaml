@@ -64,7 +64,7 @@ callbacks:
 finally:
   - >
     (sim::Sim, k::Int) -> begin
-      const ni, nj = size(sim.msm.u);
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
       const xs = linspace(0, 1.0, ni);
       const ys = linspace(0, 1.0, nj);
       writedlm(joinpath(datadir, "u.dsv"), transpose(sim.msm.u[1,:,:]), ",");
