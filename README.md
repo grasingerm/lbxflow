@@ -32,7 +32,7 @@ need to check if your YAML is wellformed, check out this
 [online parser](http://yaml-online-parser.appspot.com/) with helpful error
 reporting.
 
-### Preamble
+### preamble
     preamble: >
     const ni = 128;
     const nj = 64;
@@ -87,6 +87,7 @@ the number of nodes in the y-direction.
 
 ### simulation parameters
     # simulation parameters
+    simtype:    default
     nsteps:     { value: nsteps,    expr: true    }
     col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
 
@@ -172,6 +173,8 @@ Examples can be found in `inc/convergence.jl`
     #   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
     #   relaxation-time latice Boltzmann model. Yield stress is 4e-5.
 
+    version: 0.2.1
+
     preamble: >
       const ni = 128;
       const nj = 64;
@@ -201,6 +204,7 @@ Examples can be found in `inc/convergence.jl`
     nj:         { value: nj,        expr: true    }
 
     # simulation parameters
+    simtype:    default
     nsteps:     { value: nsteps,    expr: true    }
     col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
 
@@ -239,14 +243,15 @@ Examples can be found in `inc/convergence.jl`
 
 ## TODO list
 * [ ] implement free surface flow
-* [ ] break collision functions down into forcing method, constitutive eqn, etc.
+* [x] break collision functions down into forcing method, constitutive eqn, etc.
+* [ ] derive and implement more general velocity and pressure boundary conditions 
 * [ ] create alt. stream/collide methods using grids of obstacle flags
-* [ ] write user documentation
+* [x] write user documentation
 * [ ] parallelize streaming and collision steps, multiscale mapping, and BCs
 * [ ] wrap simulation code in a module
 * [ ] profile simulation steps to identify bottlenecks
-* [ ] write some tests?
-* [ ] write mrt collision functions with "hard coded" default inverse transformation matrix
+* [x] write some tests?
+* [x] write mrt collision functions with "hard coded" default inverse transformation matrix
 * [x] verify Newtonian Poiseuille flow
 * [x] debug BCs at inlet/outlet (bounceback, periodic)
 * [x] implement MRT scheme for Bingham plastic flow
@@ -258,4 +263,3 @@ Examples can be found in `inc/convergence.jl`
 * [x] develop post processing and animations
 * [ ] implement HB-Bingham constitutive model used in Fluent
 * [ ] consider "DSL" for mapping particle to macroscale and vice versa
-* [ ] implement Jonas Latt BCs

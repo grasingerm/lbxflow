@@ -315,8 +315,8 @@ end
 # ============================ velocity BCs ================================= #
 # =========================================================================== #
 
-#! North inlet boundary condition
-function north_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end::Int,
+#! North velocity boundary condition
+function north_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end::Int,
                       j::Int)
   for i=i_begin:i_end
     const rhon = (lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
@@ -330,14 +330,14 @@ function north_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end::I
   end
 end
 
-#! North inlet boundary condition
-function north_inlet!(lat::Lattice, u::FloatingPoint)
+#! North velocity boundary condition
+function north_velocity!(lat::Lattice, u::FloatingPoint)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  north_inlet!(lat, u, 1, ni, nj);
+  north_velocity!(lat, u, 1, ni, nj);
 end
 
-#! South inlet boundary condition
-function south_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
+#! South velocity boundary condition
+function south_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
                       i_end::Int, j::Int)
   for i=i_begin:i_end
     jy = u * ( ( lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
@@ -351,29 +351,51 @@ function south_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
   end
 end
 
-#! South inlet boundary condition
-function south_inlet!(lat::Lattice, u::FloatingPoint)
+#! South velocity boundary condition
+function south_velocity!(lat::Lattice, u::FloatingPoint)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  south_inlet!(lat, u, 1, ni, 1);
+  south_velocity!(lat, u, 1, ni, 1);
 end
-#! West inlet boundary condition
-function west_inlet!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
+
+#! East velocity boundary condition
+function east_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
+                     j_end::Int)
+
+  for j=j_begin:j_end
+    rhoe = (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
+            2.0 * (lat.f[1,i,j] + lat.f[5,i,j] + lat.f[8,i,j])) / (1.0 + u);
+    lat.f[3,i,j] = lat.f[1,i,j] - 2.0 * rhoe * u / 3.0;
+    second_term = rhoe * u / 6.0;
+    third_term = 0.5 * (lat.f[2,i,j] - lat.f[4,i,j]);
+    lat.f[7,i,j] = lat.f[5,i,j] - second_term + third_term;
+    lat.f[6,i,j] = lat.f[6,i,j] - second_term - third_term;
+  end
+end
+
+#! East velocity boundary condition
+function east_velocity!(lat::Lattice, u::FloatingPoint)
+  east_velocity!(lat, u, size(lat.f, 2), 1, size(lat.f, 3));
+end
+
+#! West velocity boundary condition
+function west_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
   j_end::Int)
 
   for j=j_begin:j_end
     rhow = (lat.f[9,i,j] + lat.f[2,i,j] + lat.f[4,i,j] +
             2.0 * (lat.f[3,i,j] + lat.f[6,i,j] + lat.f[7,i,j])) / (1.0 - u);
     lat.f[1,i,j] = lat.f[3,i,j] + 2.0 * rhow * u / 3.0;
-    lat.f[5,i,j] = lat.f[7,i,j] + rhow * u / 6.0;
-    lat.f[8,i,j] = lat.f[6,i,j] + rhow * u / 6.0;
+    second_term = rhow * u / 6.0;
+    third_term = 0.5 * (lat.f[2,i,j] - lat.f[4,i,j]);
+    lat.f[5,i,j] = lat.f[7,i,j] + second_term - third_term;
+    lat.f[8,i,j] = lat.f[6,i,j] + second_term + third_term;
   end
 end
 
-#! West inlet boundary condition
-function west_inlet!(lat::Lattice, u::FloatingPoint)
-  west_inlet!(lat, u, 1, 1, size(lat.f, 3));
+#! West velocity boundary condition
+function west_velocity!(lat::Lattice, u::FloatingPoint)
+  west_velocity!(lat, u, 1, 1, size(lat.f, 3));
 end
-
 
 #! Lid driven flow
 function lid_driven!(lat::LatticeD2Q9, u::FloatingPoint)

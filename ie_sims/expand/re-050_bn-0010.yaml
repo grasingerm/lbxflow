@@ -2,22 +2,21 @@
 #  name:         Matthew Grasinger
 #  email:        grasingerm at gmail dot com
 #
-# date-created:   2015-07-07
+# date-created:   2015-07-12
 #
 # description: >
 #   Flow out of a channel expansion
 
 preamble: >
-  const ni = 200;
-  const nj = 50;
-  const u = 0.05;
-  const rho_out = 1.0;
-  const mu_p = 1/6;
-  const tau_y = 5.0e-5;
+  const ni = 500;
+  const nj = 100;
+  const u = 1.0;
+  const mu_p = 2.0;
+  const tau_y = 0.2;
   const m = 1.0e8;
   const nsteps = 20000;
-  const id = "expand-50-000005";
-  const datadir = joinpath("data","expand","50","000005");
+  const id = "re-050_bn-0010";
+  const datadir = joinpath("data","expand",id);
   const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
   using PyPlot;
 
@@ -58,8 +57,8 @@ bcs:
   - begin; bind_south_bounce_back2!(lat) = south_bounce_back!(lat, nj, ni, 1); end
   - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, nj, int(nj*3/4), nj); end 
   - begin; bind_west_bounce_back2!(lat) = west_bounce_back!(lat, nj, 1, int(nj/4)); end
-  - begin; bind_west_inlet!(lat) = west_inlet!(lat, u, 1, int(nj/4), int(nj*3/4)); end
-  - begin; bind_east_outlet!(lat) = east_pressure!(lat, rho_out); end
+  - begin; bind_west_velocity!(lat) = west_velocity!(lat, u, 1, int(nj/4), int(nj*3/4)); end
+  - begin; bind_east_velocity!(lat) = east_velocity!(lat, u/2); end
 
 # callback functions
 callbacks:
@@ -70,6 +69,7 @@ callbacks:
 finally:
   - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
   - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
+  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), 0.0)
   - write_jld_file_callback(datadir)
 
 # test for conditions to end simulation
