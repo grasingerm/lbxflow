@@ -2,11 +2,6 @@ ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
 const LBX_VERSION = v"0.2.2";
 const root = dirname(@__FILE__);
 
-println();
-println(readall(abspath(joinpath(root, "banner.txt"))));
-println("version:  $LBX_VERSION");
-println();
-
 # load dependencies
 require(abspath(joinpath(root, "inc", "api.jl")));
 using ArgParse;
@@ -55,13 +50,24 @@ s = ArgParseSettings();
   "--profile-cols"
     help = "number of columns in Profile.print"
     arg_type = Int
-    default = term_cols 
+    default = term_cols
+  "--version"
+    help = "display information about the program"
+    action = :store_true
   "--debug"
     help = "turns on debugging mode"
     action = :store_true
 end
 
 pa = parse_args(s);
+
+if pa["version"]
+  println();
+  println(readall(abspath(joinpath(root, "banner.txt"))));
+  println("version:  $LBX_VERSION");
+  println();
+  exit(0);
+end
 
 # organize profiling args
 if pa["profile-file"] != nothing
