@@ -18,6 +18,7 @@ preamble: >
   const id = "re-100_bn-0010";
   const datadir = joinpath("data", "notch", id);
   const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
+  const obsl = 25;
   using PyPlot;
 
 datadir:    { value: datadir,   expr: true    }
