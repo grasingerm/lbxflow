@@ -105,10 +105,11 @@ end
 # run input files from directory in parallel
 if pa["dir"] != nothing
 
-  if pa["recursive"] != nothing
+  if pa["recursive"]
     files = recursively_search_for_input_files(pa["dir"], pa["ext"]);
   else
-    files = filter((x)->endswith(".$(pa["ext"])"), readdir(pa["dir"]));
+    files = filter((x)->endswith(x, ".$(pa["ext"])"), readdir(pa["dir"]));
+    map!((x)->joinpath(pa["dir"],x), files);
   end
   
   for file in files
