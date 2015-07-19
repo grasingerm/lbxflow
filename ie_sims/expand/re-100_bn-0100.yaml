@@ -8,8 +8,8 @@
 #   Flow out of a channel expansion
 
 preamble: >
-  const ni = 500;
-  const nj = 100;
+  const ni = 250;
+  const ni = 50;
   const u = 1.0;
   const mu_p = 1.0;
   const tau_y = 1.0;
@@ -58,7 +58,7 @@ bcs:
   - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, nj, int(nj*3/4), nj); end 
   - begin; bind_west_bounce_back2!(lat) = west_bounce_back!(lat, nj, 1, int(nj/4)); end
   - begin; bind_west_velocity!(lat) = west_velocity!(lat, u, 1, int(nj/4), int(nj*3/4)); end
-  - begin; bind_east_velocity!(lat) = east_velocity!(lat, u/2); end
+  - begin; bind_east_pressure!(lat) = east_pressure!(lat, 1.25); end
 
 # callback functions
 callbacks:

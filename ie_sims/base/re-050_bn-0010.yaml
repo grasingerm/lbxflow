@@ -8,8 +8,8 @@
 #   Non-newtonian flow in a 2D channel
 
 preamble: >
-  const ni = 500;
-  const nj = 100;
+  const ni = 250;
+  const ni = 50;
   const u = 1.0;
   const mu_p = 2.0;
   const tau_y = 0.2;
@@ -50,7 +50,7 @@ bcs:
   - north_bounce_back!
   - south_bounce_back!
   - begin; bind_west_velocity!(lat) = west_velocity!(lat, u/2); end
-  - begin; bind_east_velocity!(lat) = east_velocity!(lat, u/2); end
+  - begin; bind_east_pressure!(lat) = east_pressure!(lat, 1.25); end
 
 # callback functions
 callbacks:
