@@ -14,7 +14,7 @@ preamble: >
   const mu_p = 0.2;
   const tau_y = 0.02;
   const m = 1.0e8;
-  const gamma_min = gamma_min;
+  const gamma_min = 1.0e-9;
   const nsteps = 20000;
   const id = "re-050_bn-0010";
   const datadir = joinpath("data","expand",id);
