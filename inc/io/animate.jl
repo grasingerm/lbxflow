@@ -205,8 +205,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::FloatingPoint = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
       for j=1:nj, i=1:ni
         Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
@@ -362,8 +362,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::FloatingPoint = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
       for j=1:nj, i=1:ni
         Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
@@ -379,7 +379,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       clf();
       cs = contourf(transpose(sr));
       colorbar(cs);
-      savefig(fname*"_step-$k.png");
+      savefig(fname*"_step-$k_iter.png");
       sleep(pause);
     end
   end
@@ -389,11 +389,12 @@ end
 #! Plot mass matrix for the domain
 function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
                                                fname::String,
+                                               gamma_min::FloatingPoint,
                                                pause::FloatingPoint = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
       for j=1:nj, i=1:ni
         Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
@@ -404,11 +405,11 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = (@strain_rate(D) > 1e-9) ? 1.0 : 0.0;
+        sr[i,j] = (@strain_rate(D) > gamma_min) ? 1.0 : 0.0;
       end
       clf();
       contourf(transpose(sr), levels=[0.0, 1.0]);
-      savefig(fname*"_step-$k.png");
+      savefig(fname*"_step-$k_iter.png");
       sleep(pause);
     end
   end
@@ -554,8 +555,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::FloatingPoint = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
       for j=1:nj, i=1:ni
         Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
@@ -571,7 +572,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       clf();
       cs = contourf(transpose(sr));
       colorbar(cs);
-      text(xy[1], xy[2], "step: $k");
+      text(xy[1], xy[2], "step: $k_iter");
       sleep(pause);
     end
   end
@@ -726,8 +727,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::FloatingPoint = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
       for j=1:nj, i=1:ni
         Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
@@ -743,8 +744,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       clf();
       cs = contourf(transpose(sr));
       colorbar(cs);
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      text(xy[1], xy[2], "step: $k_iter");
+      savefig(fname*"_step-$k_iter.png");
       sleep(pause);
     end
   end
