@@ -14,6 +14,7 @@ preamble: >
   const mu_p = 2.0;
   const tau_y = 0.2;
   const m = 1.0e8;
+  const gamma_min = 1.0e-9;
   const nsteps = 20000;
   const id = "re-050_bn-0010";
   const datadir = joinpath("data", "base", id);
@@ -61,7 +62,7 @@ callbacks:
 finally:
   - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
   - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
-  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), gamma_min, 0.0)
+  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), gamma_min, gamma_min, 0.0)
   - write_jld_file_callback(datadir)
 
 # test for conditions to end simulation
