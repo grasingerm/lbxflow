@@ -9,15 +9,16 @@
 
 preamble: >
   const ni = 250;
-  const ni = 50;
-  const u = 1.0;
-  const mu_p = 1.0;
-  const tau_y = 0.01;
+  const nj = 50;
+  const u = 0.1;
+  const mu_p = 0.1;
+  const tau_y = 0.001;
   const m = 1.0e8;
+  const gamma_min = 1.0e-9;
   const nsteps = 20000;
   const id = "re-100_bn-0001";
   const datadir = joinpath("data", "base", id);
-  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
+  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, gamma_min, 1.0);
   using PyPlot;
 
 datadir:    { value: datadir,   expr: true    }
@@ -61,7 +62,7 @@ callbacks:
 finally:
   - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
   - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
-  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), 0.0)
+  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), gamma_min, 0.0)
   - write_jld_file_callback(datadir)
 
 # test for conditions to end simulation

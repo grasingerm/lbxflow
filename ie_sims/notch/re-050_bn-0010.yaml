@@ -9,15 +9,15 @@
 
 preamble: >
   const ni = 250;
-  const ni = 50;
-  const u = 1.0;
+  const nj = 50;
+  const u = 0.1;
   const mu_p = 2.0;
   const tau_y = 0.2;
   const m = 1.0e8;
   const nsteps = 20000;
   const id = "re-050_bn-0010";
   const datadir = joinpath("data", "notch", id);
-  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
+  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, gamma_min, 1.0);
   const obsl = 25;
   using PyPlot;
 
@@ -40,26 +40,26 @@ col_f:      init_col_mrt(constit_rel_f, S_luo)
 # boundaries
 sbounds:
   value: >
-         transpose([1         7*obsl           1         nj;
-                    7*obsl    8*obsl           obsl      nj;
-                    8*obsl    ni               1         nj;])
+         transpose([1         4*obsl           1         nj;
+                    4*obsl    5*obsl           obsl      nj;
+                    5*obsl    ni               1         nj;])
   expr: true
 
 cbounds:
   value: >
-         transpose([1           7*obsl           1         nj;
-                    7*obsl+1    8*obsl           obsl      nj;
-                    8*obsl+1    ni               1         nj;])
+         transpose([1           4*obsl           1         nj;
+                    4*obsl+1    5*obsl           obsl      nj;
+                    5*obsl+1    ni               1         nj;])
   expr: true
 
 # boundary conditions
 bcs:
   - north_bounce_back!
-  - begin; bind_south_bounce_back1!(lat) = south_bounce_back!(lat, 7*obsl, 8*obsl, obsl); end
-  - begin; bind_south_bounce_back2!(lat) = south_bounce_back!(lat, 1, 7*obsl, 1); end
-  - begin; bind_south_bounce_back3!(lat) = south_bounce_back!(lat, 8*obsl, ni, 1); end
-  - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, 7*obsl, 1, obsl); end 
-  - begin; bind_east_bounce_back1!(lat) = east_bounce_back!(lat, 8*obsl, 1, obsl); end 
+  - begin; bind_south_bounce_back1!(lat) = south_bounce_back!(lat, 4*obsl, 5*obsl, obsl); end
+  - begin; bind_south_bounce_back2!(lat) = south_bounce_back!(lat, 1, 4*obsl, 1); end
+  - begin; bind_south_bounce_back3!(lat) = south_bounce_back!(lat, 5*obsl, ni, 1); end
+  - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, 4*obsl, 1, obsl); end 
+  - begin; bind_east_bounce_back1!(lat) = east_bounce_back!(lat, 5*obsl, 1, obsl); end 
   - begin; bind_west_velocity!(lat) = west_velocity!(lat, u/2); end
   - begin; bind_east_pressure!(lat) = east_pressure!(lat, 1.25); end
 
@@ -72,7 +72,7 @@ callbacks:
 finally:
   - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
   - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
-  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), 0.0)
+  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), gamma_min, 0.0)
   - write_jld_file_callback(datadir)
 
 # test for conditions to end simulation
