@@ -1,0 +1,76 @@
+# author:         
+#  name:         Matthew Grasinger
+#  email:        grasingerm at gmail dot com
+#
+# date-created:   2015-07-07
+#
+# description: >
+#   Flow out of a channel expansion
+
+preamble: >
+  const ni = 200;
+  const nj = 50;
+  const u = 0.05;
+  const rho_out = 1.0;
+  const mu_p = 1/6;
+  const tau_y = 1.0e-5;
+  const m = 1.0e8;
+  const nsteps = 20000;
+  const id = "expand-25-000001";
+  const datadir = joinpath("data","expand","25","000001");
+  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
+  using PyPlot;
+
+datadir:    { value: datadir,   expr: true    }
+
+# material init
+rho_0:      { value: 1.0,       expr: false   }
+nu:         { value: mu_p,      expr: true    }
+
+# lattice configuration
+dx:         { value: 1.0,       expr: false   }
+dt:         { value: 1.0,       expr: false   }
+ni:         { value: ni,        expr: true    }
+nj:         { value: nj,        expr: true    }
+
+# simulation parameters
+nsteps:     { value: nsteps,    expr: true    }
+col_f:      init_col_mrt(constit_rel_f, S_luo)
+
+# boundaries
+sbounds:
+  value: >
+         transpose([1        nj       int(nj/8)    int(nj*7/8);
+                    nj       ni       1            nj;])
+  expr: true
+
+cbounds:
+  value: >
+         transpose([1        nj        int(nj/8)    int(nj*7/8);
+                    nj+1     ni        1            nj;])
+  expr: true
+
+# boundary conditions
+bcs:
+  - begin; bind_north_bounce_back1!(lat) = north_bounce_back!(lat, 1, nj, int(nj*7/8)); end
+  - begin; bind_north_bounce_back2!(lat) = north_bounce_back!(lat, nj, ni, nj); end
+  - begin; bind_south_bounce_back1!(lat) = south_bounce_back!(lat, 1, nj, int(nj/8)); end
+  - begin; bind_south_bounce_back2!(lat) = south_bounce_back!(lat, nj, ni, 1); end
+  - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, nj, int(nj*7/8), nj); end 
+  - begin; bind_west_bounce_back2!(lat) = west_bounce_back!(lat, nj, 1, int(nj/8)); end
+  - begin; bind_west_inlet!(lat) = west_inlet!(lat, u, 1, int(nj/8), int(nj*7/8)); end
+  - begin; bind_east_outlet!(lat) = east_pressure!(lat, rho_out); end
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, int(round(nsteps/20)))
+
+# clean-up, backup, write out
+finally:
+  - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
+  - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
+  - write_jld_file_callback(datadir)
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x

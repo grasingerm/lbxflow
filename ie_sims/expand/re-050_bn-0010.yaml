@@ -14,7 +14,7 @@ preamble: >
   const mu_p = 0.2;
   const tau_y = 0.02;
   const m = 1.0e8;
-  const gamma_min = gamma_min;
+  const gamma_min = 1.0e-9;
   const nsteps = 20000;
   const id = "re-050_bn-0010";
   const datadir = joinpath("data","expand",id);
@@ -59,7 +59,7 @@ bcs:
   - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, nj, int(nj*3/4), nj); end 
   - begin; bind_west_bounce_back2!(lat) = west_bounce_back!(lat, nj, 1, int(nj/4)); end
   - begin; bind_west_velocity!(lat) = west_velocity!(lat, u, 1, int(nj/4), int(nj*3/4)); end
-  - begin; bind_east_pressure!(lat) = east_pressure!(lat, 1.25); end
+  - east_open!
 
 # callback functions
 callbacks:

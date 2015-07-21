@@ -29,9 +29,9 @@ end
 
 figure();
 plot(x,data0b(:,2),'r-',x,anal(:,1),'r<',x,data1b(:,2),'b--',x,anal(:,2),'b>',x,data2b(:,2),'g:',x,anal(:,3),'g^',x,data3b(:,2),'y-.',x,anal(:,4),'yO');
-legend('lbm, \tau_y = 0.00000','analytical, \tau_y = 0.00000','lbm, \tau_y = 0.00004','analytical, \tau_y = 0.00004','lbm, \tau_y = 0.00008','analytical, \tau_y = 0.00008','lbm, \tau_y = 0.00012','analytical, \tau_y = 0.00012');
+legend('LBM,          \tau_y = 0.00000','Analytical, \tau_y = 0.00000','LBM,          \tau_y = 0.00004','Analytical, \tau_y = 0.00004','LBM,          \tau_y = 0.00008','Analytical, \tau_y = 0.00008','LBM,          \tau_y = 0.00012','Analytical, \tau_y = 0.00012','Location','northeastoutside');
 xlabel('y / H');
-ylabel('u');
+ylabel('u (lat unit / s)');
 
 figure();
 plot(x,data0b(:,2)/max(data0b(:,2)),'r-<',x,data1b(:,2)/max(data1b(:,2)),'b->',x,data2b(:,2)/max(data2b(:,2)),'g-^',x,data3b(:,2)/max(data3b(:,2)),'y-O');

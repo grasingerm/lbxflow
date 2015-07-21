@@ -59,7 +59,7 @@ bcs:
   - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, nj, int(nj*3/4), nj); end 
   - begin; bind_west_bounce_back2!(lat) = west_bounce_back!(lat, nj, 1, int(nj/4)); end
   - begin; bind_west_velocity!(lat) = west_velocity!(lat, u, 1, int(nj/4), int(nj*3/4)); end
-  - begin; bind_east_pressure!(lat) = east_pressure!(lat, 1.25); end
+  - east_open!
 
 # callback functions
 callbacks:
