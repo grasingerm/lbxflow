@@ -1,0 +1,80 @@
+# author:         
+#  name:         Matthew Grasinger
+#  email:        grasingerm at gmail dot com
+#
+# date-created:   2015-07-12
+#
+# description: >
+#   Non-newtonian flow past an obstacle
+
+preamble: >
+  const ni = 250;
+  const nj = 50;
+  const u = 0.01;
+  const mu_p = 0.01;
+  const tau_y = 0.00001;
+  const m = 1.0e8;
+  const gamma_min = 1.0e-9;
+  const nsteps = 15000;
+  const id = "re-050_bn-0005";
+  const datadir = joinpath("data", "notch", id);
+  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, gamma_min, 1.0);
+  const obsl = 15;
+  using PyPlot;
+
+datadir:    { value: datadir,   expr: true    }
+
+# material init
+rho_0:      { value: 1.0,       expr: false   }
+nu:         { value: mu_p,      expr: true    }
+
+# lattice configuration
+dx:         { value: 1.0,       expr: false   }
+dt:         { value: 1.0,       expr: false   }
+ni:         { value: ni,        expr: true    }
+nj:         { value: nj,        expr: true    }
+
+# simulation parameters
+nsteps:     { value: nsteps,    expr: true    }
+col_f:      init_col_mrt(constit_rel_f, S_luo)
+
+# boundaries
+sbounds:
+  value: >
+         transpose([1         4*obsl           1         nj;
+                    4*obsl    5*obsl           obsl      nj;
+                    5*obsl    ni               1         nj;])
+  expr: true
+
+cbounds:
+  value: >
+         transpose([1           4*obsl           1         nj;
+                    4*obsl+1    5*obsl           obsl      nj;
+                    5*obsl+1    ni               1         nj;])
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - begin; bind_south_bounce_back1!(lat) = south_bounce_back!(lat, 4*obsl, 5*obsl, obsl); end
+  - begin; bind_south_bounce_back2!(lat) = south_bounce_back!(lat, 1, 4*obsl, 1); end
+  - begin; bind_south_bounce_back3!(lat) = south_bounce_back!(lat, 5*obsl, ni, 1); end
+  - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, 4*obsl, 1, obsl); end 
+  - begin; bind_east_bounce_back1!(lat) = east_bounce_back!(lat, 5*obsl, 1, obsl); end 
+  - begin; bind_west_velocity!(lat) = west_velocity!(lat, u/2); end
+  - east_open!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, int(round(nsteps/20)))
+
+# clean-up, backup, write out
+finally:
+  - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
+  - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
+  - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), gamma_min, 0.0)
+  - write_jld_file_callback(datadir)
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x
