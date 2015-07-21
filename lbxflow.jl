@@ -38,6 +38,9 @@ s = ArgParseSettings();
   "--noexe", "-X"
     help = "do not execute input file(s)"
     action = :store_true
+  "--post-process", "-G"
+    help = "ONLY post process, don't simulate"
+    action = :store_true
   "--profile", "-P"
     help = "profile `simulate` function"
     action = :store_true

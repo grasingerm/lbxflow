@@ -171,6 +171,11 @@ function parse_and_run(infile::String, args::Dict)
     Profile.init(delay=args["profile-delay"]);
   end
 
+  # Do not simulate, only post process
+  if args["post-process"]
+    defs["test_for_term"] = (msm, prev_msm) -> true;
+  end
+
   nsim = 0;
   if !args["debug"]
 

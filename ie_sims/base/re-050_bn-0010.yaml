@@ -10,9 +10,9 @@
 preamble: >
   const ni = 250;
   const nj = 50;
-  const u = 0.1;
-  const mu_p = 2.0;
-  const tau_y = 0.2;
+  const u = 0.01;
+  const mu_p = 0.2;
+  const tau_y = 0.02;
   const m = 1.0e8;
   const gamma_min = 1.0e-9;
   const nsteps = 20000;

@@ -11,12 +11,12 @@ preamble: >
   const ni = 250;
   const nj = 50;
   const u = 0.1;
-  const mu_p = 0.002;
-  const tau_y = 0.0002;
+  const mu_p = 0.1;
+  const tau_y = 1.0;
   const m = 1.0e8;
   const gamma_min = 1.0e-9;
   const nsteps = 20000;
-  const id = "re-500_bn-0010";
+  const id = "re-100_bn-1000";
   const datadir = joinpath("data","expand",id);
   const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, gamma_min, 1.0);
   using PyPlot;
@@ -40,23 +40,25 @@ col_f:      init_col_mrt(constit_rel_f, S_luo)
 # boundaries
 sbounds:
   value: >
-         transpose([1        nj       int(nj/4)    nj;
+         transpose([1        nj       int(nj/4)    int(nj*3/4);
                     nj       ni       1            nj;])
   expr: true
 
 cbounds:
   value: >
-         transpose([1        nj        int(nj/4)    nj;
+         transpose([1        nj        int(nj/4)    int(nj*3/4);
                     nj+1     ni        1            nj;])
   expr: true
 
 # boundary conditions
 bcs:
-  - north_bounce_back!
+  - begin; bind_north_bounce_back1!(lat) = north_bounce_back!(lat, 1, nj, int(nj*3/4)); end
+  - begin; bind_north_bounce_back2!(lat) = north_bounce_back!(lat, nj, ni, nj); end
   - begin; bind_south_bounce_back1!(lat) = south_bounce_back!(lat, 1, nj, int(nj/4)); end
   - begin; bind_south_bounce_back2!(lat) = south_bounce_back!(lat, nj, ni, 1); end
+  - begin; bind_west_bounce_back1!(lat) = west_bounce_back!(lat, nj, int(nj*3/4), nj); end 
   - begin; bind_west_bounce_back2!(lat) = west_bounce_back!(lat, nj, 1, int(nj/4)); end
-  - begin; bind_west_velocity!(lat) = west_velocity!(lat, u, 1, int(nj/4), nj); end
+  - begin; bind_west_velocity!(lat) = west_velocity!(lat, u, 1, int(nj/4), int(nj*3/4)); end
   - east_open!
 
 # callback functions
