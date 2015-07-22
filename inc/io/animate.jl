@@ -29,7 +29,7 @@ function print_step_callback(step::Int, name::String)
   return (sim::AbstractSim, k::Int) -> begin
     if k % step == 0
       println(name * ":\tstep $k");
-    end
+   end
   end
 end
 
@@ -282,6 +282,43 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
       clf();
       cs = contourf(transpose(u_mag(sim.msm)));
       colorbar(cs);
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+                                    levs::Vector,
+                                    pause::FloatingPoint = 0.025)
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
+      colorbar(cs);
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+                                    levs::Vector, rects::Vector,
+                                    pause::FloatingPoint = 0.025)
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
+      colorbar(cs);
+      for rect in rects
+        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], facecolor="black");
+      end
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end

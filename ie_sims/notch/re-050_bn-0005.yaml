@@ -71,7 +71,7 @@ callbacks:
 
 # clean-up, backup, write out
 finally:
-  - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), 0.0)
+  - plot_umag_contour_callback(1, joinpath(datadir, "u_mag"), linspace(0.0, 0.01, 11), [(0.0,obsl,4*obsl/ni,5*obsl/ni)], 0.0)
   - plot_strain_rate_mrt_contours_callback(1, joinpath(datadir, "gamma"), 0.0)
   - plot_is_yielded_mrt_contours_callback(1, joinpath(datadir, "yield"), gamma_min, 0.0)
   - write_jld_file_callback(datadir)
