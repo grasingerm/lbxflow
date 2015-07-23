@@ -79,6 +79,10 @@ function extract_ubar_prof_callback(i::Int)
 
 end
 
+#############################################################################
+###################### Base plots ###########################################
+#############################################################################
+
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
                                   pause::FloatingPoint = 0.025)
@@ -228,6 +232,10 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
 
 end
 
+#############################################################################
+###################### Plots saved to file ##################################
+#############################################################################
+
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String,
                                   pause::FloatingPoint = 0.025)
@@ -282,43 +290,6 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
       clf();
       cs = contourf(transpose(u_mag(sim.msm)));
       colorbar(cs);
-      savefig(fname*"_step-$k.png");
-      sleep(pause);
-    end
-  end
-
-end
-
-#! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
-                                    levs::Vector,
-                                    pause::FloatingPoint = 0.025)
-
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
-      colorbar(cs);
-      savefig(fname*"_step-$k.png");
-      sleep(pause);
-    end
-  end
-
-end
-
-#! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
-                                    levs::Vector, rects::Vector,
-                                    pause::FloatingPoint = 0.025)
-
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
-      colorbar(cs);
-      for rect in rects
-        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], facecolor="black");
-      end
       savefig(fname*"_step-$k.png");
       sleep(pause);
     end
@@ -453,6 +424,9 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
 
 end
 
+#############################################################################
+###################### Plots  with timestep printed #########################
+#############################################################################
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
@@ -615,6 +589,10 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   end
 
 end
+
+#############################################################################
+############ Plots saved to file with timestep printed ######################
+#############################################################################
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
@@ -783,6 +761,194 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       colorbar(cs);
       text(xy[1], xy[2], "step: $k_iter");
       savefig(fname*"_step-$k_iter.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#############################################################################
+################## Contours with other options ##############################
+#############################################################################
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+                                    levs::Vector,
+                                    pause::FloatingPoint = 0.025)
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
+      colorbar(cs);
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot pressure contours for the domain
+function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
+                                         levs::Vector,
+                                         pause::FloatingPoint = 0.025)
+
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
+                   levels=levs);
+      colorbar(cs);
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot mass matrix for the domain
+function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
+                                     levs::Vector,
+                                     pause::FloatingPoint = 0.025)
+
+  return (sim::FreeSurfSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contour(transpose(sim.tracker.M), levels=levs);
+      colorbar(cs);
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot mass matrix for the domain
+function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
+                                                fname::String,
+                                                levs::Vector,
+                                                pause::FloatingPoint = 0.025)
+  const M = @DEFAULT_MRT_M();
+  const iM = @DEFAULT_MRT_IM();
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
+      sr = Array(Float64, ni, nj);
+      for j=1:nj, i=1:ni
+        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+                  sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
+        feq = Array(Float64, sim.lat.n);
+        for k=1:sim.lat.n
+          feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
+        end
+        D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
+                               sim.lat.f[:,i,j] - feq, M, iM, Sij);
+        sr[i,j] = @strain_rate(D);
+      end
+      clf();
+      cs = contourf(transpose(sr), levels=levs);
+      colorbar(cs);
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot x-component of velocity profile cut parallel to y-axis
+function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+                                    levs::Vector, rects::Vector,
+                                    pause::FloatingPoint = 0.025)
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
+      colorbar(cs);
+      for rect in rects
+        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
+                facecolor="black");
+      end
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot pressure contours for the domain
+function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
+                                         levs::Vector, rects::Vector,
+                                         pause::FloatingPoint = 0.025)
+
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
+                   levels=levs);
+      colorbar(cs);
+      for rect in rects
+        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
+                facecolor="black");
+      end
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot mass matrix for the domain
+function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
+                                     levs::Vector, rects::Vector,
+                                     pause::FloatingPoint = 0.025)
+
+  return (sim::FreeSurfSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      clf();
+      cs = contour(transpose(sim.tracker.M), levels=levs);
+      colorbar(cs);
+      for rect in rects
+        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
+                facecolor="black");
+      end
+      savefig(fname*"_step-$k.png");
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot mass matrix for the domain
+function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
+                                                fname::String,
+                                                levs::Vector, rects::Vector,
+                                                pause::FloatingPoint = 0.025)
+  const M = @DEFAULT_MRT_M();
+  const iM = @DEFAULT_MRT_IM();
+  return (sim::AbstractSim, k_iter::Int) -> begin
+    if k_iter % iters_per_frame == 0
+      sr = Array(Float64, ni, nj);
+      for j=1:nj, i=1:ni
+        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+                    sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
+        feq = Array(Float64, sim.lat.n);
+        for k=1:sim.lat.n
+          feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
+        end
+        D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
+                               sim.lat.f[:,i,j] - feq, M, iM, Sij);
+        sr[i,j] = @strain_rate(D);
+      end
+      clf();
+      cs = contourf(transpose(sr), levels=levs);
+      colorbar(cs);
+      for rect in rects
+        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
+                facecolor="black");
+      end
+      savefig(fname*"_step-$k.png");
       sleep(pause);
     end
   end
