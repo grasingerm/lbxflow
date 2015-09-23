@@ -20,8 +20,8 @@ preamble: >
   const max_iters = 11;
   const tol = 1e-3;
   const nsteps = 20000;
-  const id = "poise-chen-e-000004";
-  const datadir = joinpath("data","poise","chen","explicit","000004");
+  const id = "poise-mrt-000004";
+  const datadir = joinpath("data","poise","mrt","000004");
   const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
   const forcing_kf = init_korner_Fk(F);
 

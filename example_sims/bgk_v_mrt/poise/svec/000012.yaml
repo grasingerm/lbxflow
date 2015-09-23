@@ -22,7 +22,7 @@ preamble: >
   const nsteps = 20000;
   const id = "poise-svec-000012";
   const datadir = joinpath("data","poise","svec","000012");
-  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
+  const constit_rel_f = init_constit_srt_bingham_explicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 1.0);
   const forcing_kf = init_korner_Fk(F);
 
 datadir:    { value: datadir,   expr: true    }
