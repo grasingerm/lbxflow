@@ -16,10 +16,10 @@ s = ArgParseSettings();
 @add_arg_table s begin
   "--file", "-f"
     help = "path to input file"
-    arg_type = String
+    arg_type = AbstractString
   "--dir", "-d"
     help = "directory with input file(s)"
-    arg_type = String
+    arg_type = AbstractString
   "--recursive", "-r"
     help = "recursively search directories for input file(s)"
     action = :store_true
@@ -46,7 +46,7 @@ s = ArgParseSettings();
     action = :store_true
   "--profile-file", "-p"
     help = "file for profiler to print to"
-    arg_type = String
+    arg_type = AbstractString
   "--profile-view", "-V"
     help = "load and use the ProfileView package"
     action = :store_true
@@ -92,9 +92,12 @@ if pa["file"] != nothing
 end
 
 # recursively search directory for input files
-function recursively_search_for_input_files(dir::String, ext::String)
+function recursively_search_for_input_files(dir::AbstractString, 
+                                            ext::AbstractString)
   files = Array(ASCIIString, 0);
-  function recursively_add_input_files!(files::Array{ASCIIString}, dir::String, ext::String)
+  function recursively_add_input_files!(files::Array{ASCIIAbstractString}, 
+                                        dir::AbstractString, 
+                                        ext::AbstractString)
     for f in readdir(dir)
       if isdir(joinpath(dir, f)); recursively_add_input_files!(files, joinpath(dir, f), ext); end
       if isfile(joinpath(dir, f)) && endswith(f, ext); push!(files, joinpath(dir, f)); end

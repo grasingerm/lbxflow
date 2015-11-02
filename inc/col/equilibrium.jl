@@ -13,7 +13,7 @@ require(abspath(joinpath(__equilibrium_root__, "..", "multiscale.jl")));
 #! \param u Macroscopic flow at lattice site
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp(lat::LatticeD2Q9, rho::FloatingPoint, u::Vector{Float64},
+function feq_incomp(lat::LatticeD2Q9, rho::AbstractFloat, u::Vector{Float64},
                     k::Int)
   const cssq = 1/3;
   const ckdotu = dot(lat.c[:,k], u);
@@ -30,8 +30,8 @@ end
 #! \param u Macroscopic flow at lattice site
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp_HL(lat::LatticeD2Q9, rho::FloatingPoint,
-                       rho_0::FloatingPoint, u::Vector{Float64}, k::Int)
+function feq_incomp_HL(lat::LatticeD2Q9, rho::AbstractFloat,
+                       rho_0::AbstractFloat, u::Vector{Float64}, k::Int)
   const cssq = 1/3;
   const ckdotu = dot(lat.c[:,k], u);
 
@@ -41,8 +41,8 @@ function feq_incomp_HL(lat::LatticeD2Q9, rho::FloatingPoint,
 end
 
 #! Binds rho_0 to an HL equilibrium function
-function init_feq_incomp_HL(rho_0::FloatingPoint)
-  return ((lat::Lattice, rho::FloatingPoint, u::Vector{Float64},
+function init_feq_incomp_HL(rho_0::AbstractFloat)
+  return ((lat::Lattice, rho::AbstractFloat, u::Vector{Float64},
           k::Int) -> feq_incomp_HL(lat, rho, rho_0, u, k));
 end
 
@@ -52,7 +52,7 @@ end
 #! \param rho Macroscopic density at lattice site
 #! \param u Macroscopic flow at lattice site
 #! \return Equilibrium frequency
-function feq_incomp(lat::LatticeD2Q4, rho::FloatingPoint, u::Vector{Float64},
+function feq_incomp(lat::LatticeD2Q4, rho::AbstractFloat, u::Vector{Float64},
                     k::Int)
   const cssq = 1/2;
   const ckdotu = dot(lat.c[:,k], u);
@@ -68,8 +68,8 @@ end
 #! \param u Macroscopic flow at lattice site
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp_HL(lat::LatticeD2Q4, rho::FloatingPoint,
-                       rho_0::FloatingPoint, u::Vector{Float64}, k::Int)
+function feq_incomp_HL(lat::LatticeD2Q4, rho::AbstractFloat,
+                       rho_0::AbstractFloat, u::Vector{Float64}, k::Int)
   const cssq = 1/2;
   const ckdotu = dot(lat.c[:,k], u);
 

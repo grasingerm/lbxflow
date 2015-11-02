@@ -16,20 +16,25 @@ require(abspath(joinpath(__api_root__, "sim", "simulate.jl")));
 using PyCall
 @pyimport yaml
 
-function parse_and_run(infile::String, args::Dict)
+function parse_and_run(infile::AbstractString, args::Dict)
 
   if !isfile(infile)
     warn(infile * " not found. Please use valid path to input file.");
     return nothing;
   end
 
-  const DEF_EXPR_ATTRS = {
-    "col_f"         =>  { :store => true,  :array => false, :type => Function },
-    "bcs"           =>  { :store => true,  :array => true,  :type => Function },
-    "callbacks"     =>  { :store => true,  :array => true,  :type => Function },
-    "finally"       =>  { :store => true,  :array => true,  :type => Function },
-    "test_for_term" =>  { :store => true,  :array => false, :type => Function }
-  };
+  const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
+    "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
+                                           :type => Function ),
+    "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
+                                           :type => Function ),
+    "callbacks"     =>  Dict{Symbol, Any}( :store => true,  :array => true,  
+                                           :type => Function ),
+    "finally"       =>  Dict{Symbol, Any}( :store => true,  :array => true,  
+                                           :type => Function ),
+    "test_for_term" =>  Dict{Symbol, Any}( :store => true,  :array => false, 
+                                           :type => Function )
+  );
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
@@ -86,24 +91,24 @@ function parse_and_run(infile::String, args::Dict)
 
   end
 
-  const DEF_DEFAULTS = {
+  const DEF_DEFAULTS = Dict{AbstractString, Any}(
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
     "rhog"    =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
-    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
-    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
+    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a usingd parameter."); end,
+    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a usingd parameter."); end,
     "dx"      =>  (defs::Dict) -> begin; return 1.0; end,
     "dt"      =>  (defs::Dict) -> begin; return 1.0; end,
-    "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
-    "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
-    "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
-    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
+    "ni"      =>  (defs::Dict) -> begin; error("`ni` is a usingd parameter."); end,
+    "nj"      =>  (defs::Dict) -> begin; error("`nj` is a usingd parameter."); end,
+    "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a usingd parameter."); end,
+    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a usingd parameter."); end,
     "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
     "callbacks" =>  (defs::Dict) -> begin; Array(Function, 0); end,
     "finally" =>  (defs::Dict) -> begin; Array(Function, 0); end
-  };
+  );
 
   if args["verbose"]; info("setting defaults."); end
   # set defaults
@@ -184,13 +189,14 @@ function parse_and_run(infile::String, args::Dict)
 
       if !haskey(defs, "test_for_term")
         # this simulate should be more memory and computationally efficient
-        @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
-              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-              defs["nsteps"], defs["callbacks"], k); end);
-      else
-        @profif(args["profile"], begin; global nsim; nsim = simulate!(sim,
+        @profif(args["profile"], begin; nsim = simulate!(sim,
                 defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-                defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); end);
+                defs["nsteps"], defs["callbacks"], k); end);
+      else
+        @profif(args["profile"], begin; nsim = simulate!(sim,
+                defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+                defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); 
+                end);
       end
 
     catch e
@@ -207,7 +213,10 @@ function parse_and_run(infile::String, args::Dict)
       println("$infile:\tSteps simulated: $nsim");
       toc();
 
-      if args["profile"]; Profile.print(args["profile-io"], cols=args["profile-cols"]); end
+      if args["profile"]
+        Profile.print(args["profile-io"], cols=args["profile-cols"]);
+      end
+
       if args["profile-file"] != nothing; 
         close(args["profile-io"]);
         bt, lidict = Profile.retrieve();

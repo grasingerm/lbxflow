@@ -11,7 +11,7 @@ require(abspath(joinpath(__constitutive_root__, "..", "sim", "simtypes.jl")));
 #!
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
-function init_constit_srt_const(mu::FloatingPoint)
+function init_constit_srt_const(mu::AbstractFloat)
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     return mu;
   end
@@ -35,10 +35,10 @@ end
 #! \param gamma_min Minimum allowable strain rate
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_bingham_explicit(mu_p::FloatingPoint,
-                                           tau_y::FloatingPoint,
+function init_constit_srt_bingham_explicit(mu_p::AbstractFloat,
+                                           tau_y::AbstractFloat,
                                            m::Number,
-                                           gamma_min::FloatingPoint,
+                                           gamma_min::AbstractFloat,
                                            relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
@@ -69,12 +69,12 @@ end
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
-                                           tau_y::FloatingPoint,
+function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
+                                           tau_y::AbstractFloat,
                                            m::Number,
-                                           gamma_min::FloatingPoint,
+                                           gamma_min::AbstractFloat,
                                            max_iters::Int,
-                                           tol::FloatingPoint,
+                                           tol::AbstractFloat,
                                            relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
@@ -130,12 +130,12 @@ end
 #! \param gamma_min Minimum allowable strain rate
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_bingham_explicit(mu_p::FloatingPoint,
-                                           tau_y::FloatingPoint,
-                                           rt_min::FloatingPoint,
-                                           rt_max::FloatingPoint,
+function init_constit_srt_bingham_explicit(mu_p::AbstractFloat,
+                                           tau_y::AbstractFloat,
+                                           rt_min::AbstractFloat,
+                                           rt_max::AbstractFloat,
                                            m::Number,
-                                           gamma_min::FloatingPoint,
+                                           gamma_min::AbstractFloat,
                                            relax::Number = 1.0)
 
   const inner_f = init_constit_srt_bingham_explicit(mu_p, tau_y, m, gamma_min, 
@@ -165,14 +165,14 @@ end
 #! \param gamma_min Minimum allowable strain rate
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_bingham_implicit(mu_p::FloatingPoint,
-                                           tau_y::FloatingPoint,
-                                           rt_min::FloatingPoint,
-                                           rt_max::FloatingPoint,
+function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
+                                           tau_y::AbstractFloat,
+                                           rt_min::AbstractFloat,
+                                           rt_max::AbstractFloat,
                                            m::Number,
-                                           gamma_min::FloatingPoint,
+                                           gamma_min::AbstractFloat,
                                            max_iters::Int,
-                                           tol::FloatingPoint,
+                                           tol::AbstractFloat,
                                            relax::Number = 1.0)
 
   const inner_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, gamma_min, 
@@ -196,7 +196,7 @@ end
 #!
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
-function init_constit_mrt_const(mu::FloatingPoint)
+function init_constit_mrt_const(mu::AbstractFloat)
   return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
           M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
     return mu;
@@ -222,10 +222,10 @@ end
 #! \param gamma_min Minimum allowable strain rate
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_mrt_bingham_explicit(mu_p::FloatingPoint,
-                                           tau_y::FloatingPoint,
+function init_constit_mrt_bingham_explicit(mu_p::AbstractFloat,
+                                           tau_y::AbstractFloat,
                                            m::Number,
-                                           gamma_min::FloatingPoint,
+                                           gamma_min::AbstractFloat,
                                            relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
@@ -259,12 +259,12 @@ end
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_mrt_bingham_implicit(mu_p::FloatingPoint,
-                                           tau_y::FloatingPoint,
+function init_constit_mrt_bingham_implicit(mu_p::AbstractFloat,
+                                           tau_y::AbstractFloat,
                                            m::Number,
-                                           gamma_min::FloatingPoint,
+                                           gamma_min::AbstractFloat,
                                            max_iters::Int,
-                                           tol::FloatingPoint = 1e-6,
+                                           tol::AbstractFloat = 1e-6,
                                            relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 

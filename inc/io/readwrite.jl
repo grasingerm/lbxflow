@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #! Dump simulation to JLD file
-function dumpsim_jld(datadir::String, sim::AbstractSim, step::Int,
+function dumpsim_jld(datadir::AbstractString, sim::AbstractSim, step::Int,
   append_step_to_name::Bool = false)
   
   const jldpath = (append_step_to_name) ? joinpath(datadir, "bak_$step.jld") :
@@ -15,7 +15,7 @@ function dumpsim_jld(datadir::String, sim::AbstractSim, step::Int,
 end
 
 #! Load simulation from JLD file
-function loadsim_jld(path::String)
+function loadsim_jld(path::AbstractString)
   d = JLD.jldopen(path, "r") do file
     read(file);
   end
@@ -23,7 +23,7 @@ function loadsim_jld(path::String)
 end
 
 #! Dump simulation to a text file
-function dumpsim(datadir::String, sim::Sim, step::Int)
+function dumpsim(datadir::AbstractString, sim::Sim, step::Int)
   const dumpdir = joinpath(datadir, "bak_$step");
   if !isdir(dumpdir)
     mkdir(dumpdir);
@@ -58,7 +58,7 @@ function dumpsim(datadir::String, sim::Sim, step::Int)
 end
 
 #! Find the latest backup directory 
-function latest_backup_dir(datadir::String)
+function latest_backup_dir(datadir::AbstractString)
   step = 0;
   dir = "";
 
@@ -77,7 +77,7 @@ function latest_backup_dir(datadir::String)
 end
 
 #! Load backup directory
-function load_backup_dir(backup_dir::String)
+function load_backup_dir(backup_dir::AbstractString)
   latdefs = Dict();
   msmdefs = Dict();
 
@@ -130,7 +130,7 @@ function load_backup_dir(backup_dir::String)
 end
 
 #! Search data directory for latest backup information
-function load_latest_backup(datadir::String)
+function load_latest_backup(datadir::AbstractString)
   if isfile(joinpath(datadir, "bak.jld"))
     return loadsim_jld(joinpath(datadir, "bak.jld"))
   end
@@ -161,7 +161,7 @@ function load_latest_backup(datadir::String)
 end
 
 #! Search data directory for latest backup information
-function load_latest_jld(datadir::String)
+function load_latest_jld(datadir::AbstractString)
   if isfile(joinpath(datadir, "bak.jld"))
     return loadsim_jld(joinpath(datadir, "bak.jld"))
   end
@@ -183,7 +183,7 @@ function load_latest_jld(datadir::String)
 end
 
 #! Recursively remove files and directories
-function rrm(path::String)
+function rrm(path::AbstractString)
   if isdir(path)
     for f in readdir(path); rrm(joinpath(path, f)); end
   end
@@ -194,7 +194,7 @@ end
 # ===========================================================================
 
 #! Create a callback function for writing a jld backup file
-function write_jld_file_callback(datadir::String,
+function write_jld_file_callback(datadir::AbstractString,
                                  append_step_to_name::Bool = false)
  
   return (sim::AbstractSim, k::Int) -> begin
@@ -203,7 +203,7 @@ function write_jld_file_callback(datadir::String,
 end
 
 #! Create a callback function for writing a jld backup file
-function write_jld_file_callback(datadir::String, stepout::Int,
+function write_jld_file_callback(datadir::AbstractString, stepout::Int,
                                  append_step_to_name::Bool = false)
 
   return (sim::AbstractSim, k::Int) -> begin
@@ -213,14 +213,14 @@ function write_jld_file_callback(datadir::String, stepout::Int,
   end;
 end
 #! Create a callback function for writing a backup file
-function write_backup_file_callback(datadir::String)
+function write_backup_file_callback(datadir::AbstractString)
   return (sim::Sim, k::Int) -> begin
     dumpsim(datadir, sim, k);
   end;
 end
 
 #! Create a callback function for writing a backup file
-function write_backup_file_callback(datadir::String, stepout::Int)
+function write_backup_file_callback(datadir::AbstractString, stepout::Int)
   return (sim::Sim, k::Int) -> begin
     if k % stepout == 0
       dumpsim(datadir, sim, k);
@@ -234,7 +234,7 @@ end
 #! \param stepout Number of steps in between writing
 #! \param A Function for extracting a 2D array from the sim
 #! \param delim Delimiter to separate values with
-function write_datafile_callback (pre::String, stepout::Int, A::Function,
+function write_datafile_callback(pre::AbstractString, stepout::Int, A::Function,
   dir=".", delim=',')
 
   return (sim::Sim, k::Int) -> begin

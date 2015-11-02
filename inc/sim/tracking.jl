@@ -61,7 +61,7 @@ end
 #! \param sim FreeSurfSim object
 #! \param sbounds Bounds where fluid can be streaming
 function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
-                 threshold::FloatingPoint=1.0e-3)
+                 threshold::AbstractFloat=1.0e-3)
   t = sim.tracker;
   msm = sim.msm;
 
@@ -148,8 +148,8 @@ end
 #! \param ij tuple of i and j indices on grid
 #! \param sbounds Bounds where fluid can be streaming
 #! \param rhog Atmospheric pressure
-function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::(Int64, Int64),
-                    sbounds::Matrix{Int64}, rhog::FloatingPoint)
+function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
+                    sbounds::Matrix{Int64}, rhog::AbstractFloat)
   const n = unit_normal(t, ij);
   const i, j = ij;
   lat = sim.lat;
@@ -177,7 +177,7 @@ end
 #!
 #! \param t Mass tracker
 #! \param ij i and j indices of grid cell
-function unit_normal(t::Tracker, ij::(Int64, Int64))
+function unit_normal(t::Tracker, ij::Tuple{Int64, Int64})
   const ni, nj = size(t.state);
   const i, j = ij;
 

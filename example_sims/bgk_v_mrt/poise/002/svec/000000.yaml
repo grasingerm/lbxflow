@@ -7,7 +7,7 @@
 # description: >
 #   Poiseuille bingham plastic flow for collision operator comparison. Based on parameters from
 #   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
-#   relaxation-time latice Boltzmann model. Yield stress is 12e-5.
+#   relaxation-time latice Boltzmann model. Yield stress is 0e-5.
 
 preamble: >
   const ni = 128;
@@ -15,14 +15,14 @@ preamble: >
   const pgrad = -5.6e-6;
   const F = [-pgrad; 0.0];
   const mu_p = 0.2;
-  const tau_y = 12.0e-5;
+  const tau_y = 0.0;
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
   const nsteps = 20000;
-  const id = "poise-mrt-000012";
-  const datadir = joinpath("data","poise","mrt","000012");
-  const constit_rel_f = init_constit_mrt_bingham_explicit(mu_p, tau_y, m, 1.0e-9, 1.0);
+  const id = "poise-svec-000000";
+  const datadir = joinpath("data","poise","svec","000000");
+  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, 0.501, 8.0, m, 1e-9, 15, 1e-5);
   const forcing_kf = init_korner_Fk(F);
 
 datadir:    { value: datadir,   expr: true    }
@@ -39,7 +39,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
+col_f:      init_col_srt(constit_rel_f, forcing_kf)
 
 # boundaries
 sbounds:

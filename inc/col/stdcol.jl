@@ -16,7 +16,7 @@ require(abspath(joinpath(__stdcol_root__, "..", "sim", "simtypes.jl")));
 #!
 #! \param sim Simulation object
 #! \param bounds Boundaries that define active parts of the lattice
-function col_srt! (sim::Sim, bounds::Matrix{Int64})
+function col_srt!(sim::Sim, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const ni, nj = size(msm.rho);
@@ -39,7 +39,7 @@ end
 #! \param sim Simulation object
 #! \param F Body force vector
 #! \param bounds Boundaries that define active parts of the lattice
-function col_srt_sukop! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
+function col_srt_sukop!(sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const ni, nj = size(msm.rho);
@@ -64,7 +64,7 @@ end
 #! \param sim Simulation object
 #! \param F Body force vector
 #! \param bounds Boundaries that define active parts of the lattice
-function col_srt_guo! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
+function col_srt_guo!(sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const ni, nj = size(msm.rho);
@@ -94,8 +94,8 @@ function col_srt_guo! (sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
 #! \param M Transmation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
-function col_mrt! (sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
-                   bounds::Array{Int64,2})
+function col_mrt!(sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
+                  bounds::Array{Int64,2})
   lat = sim.lat;
   msm = sim.msm;
   const iM = inv(M);
@@ -129,7 +129,7 @@ end
 #! \param sim Simulation object
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
-function col_mrt! (sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
+function col_mrt!(sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();
@@ -165,8 +165,8 @@ end
 #! \param S (Sparse) diagonal relaxation matrix
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param F Body force vector
-function col_mrt! (sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
-                   bounds::Matrix{Int64})
+function col_mrt!(sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
+                  bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();
@@ -214,10 +214,10 @@ end
 #! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor for updating apparent viscosity
-function col_mrt_bingham_explicit! (sim::Sim, S::Function, mu_p::Number,
-                                    tau_y::Number, m::Number,
-                                    gamma_min::FloatingPoint,
-                                    bounds::Matrix{Int64}, relax::Number = 1.0)
+function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
+                                   tau_y::Number, m::Number,
+                                   gamma_min::AbstractFloat,
+                                   bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();
@@ -276,11 +276,11 @@ end
 #! \param f Body force vector
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor for updating apparent viscosity
-function col_mrt_bingham_explicit! (sim::Sim, S::Function, mu_p::Number,
-                                    tau_y::Number, m::Number,
-                                    gamma_min::FloatingPoint,
-                                    F::Vector{Float64}, bounds::Matrix{Int64},
-                                    relax::Number = 1.0)
+function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
+                                   tau_y::Number, m::Number,
+                                   gamma_min::AbstractFloat,
+                                   F::Vector{Float64}, bounds::Matrix{Int64},
+                                   relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();
@@ -351,11 +351,11 @@ end
 #! \param gamma_min Minimum strain rate to use in apparent viscosity calculation
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor for updating apparent viscosity
-function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
-                                    tau_y::Number, m::Number, max_iters::Int,
-                                    tol::FloatingPoint,
-                                    gamma_min::FloatingPoint,
-                                    bounds::Matrix{Int64}, relax::Number = 1.0)
+function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
+                                   tau_y::Number, m::Number, max_iters::Int,
+                                   tol::AbstractFloat,
+                                   gamma_min::AbstractFloat,
+                                   bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();
@@ -436,12 +436,12 @@ end
 #! \param f Body force
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param relax Relaxation factor
-function col_mrt_bingham_implicit! (sim::Sim, S::Function, mu_p::Number,
-                                    tau_y::Number, m::Number, max_iters::Int,
-                                    tol::FloatingPoint,
-                                    gamma_min::FloatingPoint,
-                                    F::Vector{Float64},
-                                    bounds::Matrix{Int64}, relax::Number = 1.0)
+function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
+                                   tau_y::Number, m::Number, max_iters::Int,
+                                   tol::AbstractFloat,
+                                   gamma_min::AbstractFloat,
+                                   F::Vector{Float64},
+                                   bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
   const M = @DEFAULT_MRT_M();

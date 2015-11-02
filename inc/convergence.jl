@@ -12,7 +12,7 @@ require(abspath(joinpath(__convergence_root__, "multiscale.jl")));
 #! \param tol Threshold for determining steady state
 #! \return Flag for sim termination
 function is_steadystate(msm::MultiscaleMap, prev_msm::MultiscaleMap,
-  tol::FloatingPoint = 5.0e-7)
+  tol::AbstractFloat = 5.0e-7)
 
   sum_diff = 0.0;
   sum_u = 0.0;
@@ -37,7 +37,7 @@ end
 #! \param tol Threshold for determining steady state
 #! \return Flag for sim termination
 function is_steadystate_x(msm::MultiscaleMap, prev_msm::MultiscaleMap,
-  tol::FloatingPoint = 5.0e-7)
+  tol::AbstractFloat = 5.0e-7)
 
   sum_diff = 0.0;
   sum_u = 0.0;
@@ -62,7 +62,7 @@ end
 #! \param tol Threshold for determining steady state
 #! \return Flag for sim termination
 function is_steadystate_y(msm::MultiscaleMap, prev_msm::MultiscaleMap,
-  tol::FloatingPoint = 5.0e-7)
+  tol::AbstractFloat = 5.0e-7)
 
   sum_diff = 0.0;
   sum_u = 0.0;

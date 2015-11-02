@@ -25,7 +25,7 @@ function print_step_callback(step::Int)
 end
 
 #! Create callback for reporting step
-function print_step_callback(step::Int, name::String)
+function print_step_callback(step::Int, name::AbstractString)
   return (sim::AbstractSim, k::Int) -> begin
     if k % step == 0
       println(name * ":\tstep $k");
@@ -85,7 +85,7 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
-                                  pause::FloatingPoint = 0.025)
+                                  pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -106,7 +106,7 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
-                                    pause::FloatingPoint = 0.025)
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -128,7 +128,7 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_umag_contour_callback(iters_per_frame::Int,
-                                    pause::FloatingPoint = 0.025)
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -143,7 +143,7 @@ end
 
 #! Plot velocity vectors for the domain
 function plot_uvecs_callback(iters_per_frame::Int,
-                             pause::FloatingPoint = 0.025)
+                             pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -157,7 +157,7 @@ end
 
 #! Plot streamlines for the domain
 function plot_streamlines_callback(iters_per_frame::Int,
-                                   pause::FloatingPoint = 0.025)
+                                   pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -178,7 +178,7 @@ end
 
 #! Plot pressure contours for the domain
 function plot_pressure_contours_callback(iters_per_frame::Int,
-                                         pause::FloatingPoint = 0.025)
+                                         pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -192,7 +192,7 @@ end
 
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
-                                     pause::FloatingPoint = 0.025)
+                                     pause::AbstractFloat = 0.025)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -206,7 +206,7 @@ end
 
 #! Plot mass matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
-                                                pause::FloatingPoint = 0.025)
+                                                pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
@@ -237,8 +237,9 @@ end
 #############################################################################
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String,
-                                  pause::FloatingPoint = 0.025)
+function plot_ux_profile_callback(i::Int, iters_per_frame::Int, 
+                                  fname::AbstractString,
+                                  pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -259,8 +260,9 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int, fname::String,
 end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
-function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, fname::String,
-                                    pause::FloatingPoint = 0.025)
+function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, 
+                                    fname::AbstractString,
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -282,8 +284,8 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int, fname::String,
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
-                                    pause::FloatingPoint = 0.025)
+function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -298,8 +300,8 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot velocity vectors for the domain
-function plot_uvecs_callback(iters_per_frame::Int, fname::String,
-                             pause::FloatingPoint = 0.025)
+function plot_uvecs_callback(iters_per_frame::Int, fname::AbstractString,
+                             pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -313,8 +315,8 @@ function plot_uvecs_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot streamlines for the domain
-function plot_streamlines_callback(iters_per_frame::Int, fname::String,
-                                   pause::FloatingPoint = 0.025)
+function plot_streamlines_callback(iters_per_frame::Int, fname::AbstractString,
+                                   pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -335,8 +337,9 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot pressure contours for the domain
-function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
-                                         pause::FloatingPoint = 0.025)
+function plot_pressure_contours_callback(iters_per_frame::Int, 
+                                         fname::AbstractString,
+                                         pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -350,8 +353,9 @@ function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot mass matrix for the domain
-function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
-                                     pause::FloatingPoint = 0.025)
+function plot_mass_contours_callback(iters_per_frame::Int, 
+                                     fname::AbstractString,
+                                     pause::AbstractFloat = 0.025)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -366,8 +370,8 @@ end
 
 #! Plot mass matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
-                                                fname::String,
-                                                pause::FloatingPoint = 0.025)
+                                                fname::AbstractString,
+                                                pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
@@ -396,9 +400,9 @@ end
 
 #! Plot mass matrix for the domain
 function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
-                                               fname::String,
-                                               gamma_min::FloatingPoint,
-                                               pause::FloatingPoint = 0.025)
+                                               fname::AbstractString,
+                                               gamma_min::AbstractFloat,
+                                               pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
@@ -430,8 +434,8 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
-                                  xy::(Number,Number),
-                                  pause::FloatingPoint = 0.025)
+                                  xy::Tuple{Number,Number},
+                                  pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -453,8 +457,8 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
-                                    xy::(Number,Number),
-                                    pause::FloatingPoint = 0.025)
+                                    xy::Tuple{Number,Number},
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -476,8 +480,9 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
-                                    pause::FloatingPoint = 0.025)
+function plot_umag_contour_callback(iters_per_frame::Int, 
+                                    xy::Tuple{Number,Number},
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -492,8 +497,8 @@ function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
 end
 
 #! Plot velocity vectors for the domain
-function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
-                             pause::FloatingPoint = 0.025)
+function plot_uvecs_callback(iters_per_frame::Int, xy::Tuple{Number,Number},
+                             pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -507,8 +512,9 @@ function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
 end
 
 #! Plot streamlines for the domain
-function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
-                                   pause::FloatingPoint = 0.025)
+function plot_streamlines_callback(iters_per_frame::Int, 
+                                   xy::Tuple{Number,Number},
+                                   pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -530,8 +536,8 @@ end
 
 #! Plot pressure contours for the domain
 function plot_pressure_contours_callback(iters_per_frame::Int,
-                                         xy::(Number, Number),
-                                         pause::FloatingPoint = 0.025)
+                                         xy::Tuple{Number, Number},
+                                         pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -546,8 +552,8 @@ end
 
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
-                                     xy::(Number, Number),
-                                     pause::FloatingPoint = 0.025)
+                                     xy::Tuple{Number, Number},
+                                     pause::AbstractFloat = 0.025)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -562,8 +568,8 @@ end
 
 #! Plot mass matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
-                                                xy::(Number, Number),
-                                                pause::FloatingPoint = 0.025)
+                                                xy::Tuple{Number, Number},
+                                                pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
@@ -596,8 +602,9 @@ end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
 function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
-                                  xy::(Number,Number), fname::String,
-                                  pause::FloatingPoint = 0.025)
+                                  xy::Tuple{Number, Number},
+                                  fname::AbstractString,
+                                  pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -620,8 +627,9 @@ end
 
 #! Plot nondimensional x-component of velocity profile cut parallel to y-axis
 function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
-                                    xy::(Number,Number), fname::String,
-                                    pause::FloatingPoint = 0.025)
+                                    xy::Tuple{Number, Number},
+                                    fname::AbstractString,
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -644,8 +652,10 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
-                                    fname::String, pause::FloatingPoint = 0.025)
+function plot_umag_contour_callback(iters_per_frame::Int,
+                                    xy::Tuple{Number, Number},
+                                    fname::AbstractString, 
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -661,8 +671,10 @@ function plot_umag_contour_callback(iters_per_frame::Int, xy::(Number,Number),
 end
 
 #! Plot velocity vectors for the domain
-function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
-                             fname::String, pause::FloatingPoint = 0.025)
+function plot_uvecs_callback(iters_per_frame::Int,
+                             xy::Tuple{Number, Number},
+                             fname::AbstractString, 
+                             pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -677,8 +689,10 @@ function plot_uvecs_callback(iters_per_frame::Int, xy::(Number,Number),
 end
 
 #! Plot streamlines for the domain
-function plot_streamlines_callback(iters_per_frame::Int, xy::(Number,Number),
-                                   fname::String, pause::FloatingPoint = 0.025)
+function plot_streamlines_callback(iters_per_frame::Int,
+                                   xy::Tuple{Number, Number},
+                                   fname::AbstractString,
+                                   pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -701,9 +715,9 @@ end
 
 #! Plot pressure contours for the domain
 function plot_pressure_contours_callback(iters_per_frame::Int,
-                                         xy::(Number, Number),
-                                         fname::String,
-                                         pause::FloatingPoint = 0.025)
+                                         xy::Tuple{Number, Number},
+                                         fname::AbstractString,
+                                         pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -719,9 +733,9 @@ end
 
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
-                                     xy::(Number, Number),
-                                     fname::String,
-                                     pause::FloatingPoint = 0.025)
+                                     xy::Tuple{Number, Number},
+                                     fname::AbstractString,
+                                     pause::AbstractFloat = 0.025)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -737,9 +751,9 @@ end
 
 #! Plot mass matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
-                                                xy::(Number, Number),
-                                                fname::String,
-                                                pause::FloatingPoint = 0.025)
+                                                xy::Tuple{Number, Number},
+                                                fname::AbstractString,
+                                                pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
@@ -772,9 +786,9 @@ end
 #############################################################################
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
                                     levs::Vector,
-                                    pause::FloatingPoint = 0.025)
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -789,9 +803,10 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot pressure contours for the domain
-function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
+function plot_pressure_contours_callback(iters_per_frame::Int, 
+                                         fname::AbstractString,
                                          levs::Vector,
-                                         pause::FloatingPoint = 0.025)
+                                         pause::AbstractFloat = 0.025)
 
 
   return (sim::AbstractSim, k::Int) -> begin
@@ -808,9 +823,10 @@ function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot mass matrix for the domain
-function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
+function plot_mass_contours_callback(iters_per_frame::Int, 
+                                     fname::AbstractString,
                                      levs::Vector,
-                                     pause::FloatingPoint = 0.025)
+                                     pause::AbstractFloat = 0.025)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -826,9 +842,9 @@ end
 
 #! Plot mass matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
-                                                fname::String,
+                                                fname::AbstractString,
                                                 levs::Vector,
-                                                pause::FloatingPoint = 0.025)
+                                                pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
@@ -856,9 +872,9 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
 end
 
 #! Plot x-component of velocity profile cut parallel to y-axis
-function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
+function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
                                     levs::Vector, rects::Vector,
-                                    pause::FloatingPoint = 0.025)
+                                    pause::AbstractFloat = 0.025)
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -877,9 +893,10 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot pressure contours for the domain
-function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
+function plot_pressure_contours_callback(iters_per_frame::Int, 
+                                         fname::AbstractString,
                                          levs::Vector, rects::Vector,
-                                         pause::FloatingPoint = 0.025)
+                                         pause::AbstractFloat = 0.025)
 
 
   return (sim::AbstractSim, k::Int) -> begin
@@ -900,9 +917,10 @@ function plot_pressure_contours_callback(iters_per_frame::Int, fname::String,
 end
 
 #! Plot mass matrix for the domain
-function plot_mass_contours_callback(iters_per_frame::Int, fname::String,
+function plot_mass_contours_callback(iters_per_frame::Int, 
+                                     fname::AbstractString,
                                      levs::Vector, rects::Vector,
-                                     pause::FloatingPoint = 0.025)
+                                     pause::AbstractFloat = 0.025)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
@@ -922,9 +940,9 @@ end
 
 #! Plot mass matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
-                                                fname::String,
+                                                fname::AbstractString,
                                                 levs::Vector, rects::Vector,
-                                                pause::FloatingPoint = 0.025)
+                                                pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
   const iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin

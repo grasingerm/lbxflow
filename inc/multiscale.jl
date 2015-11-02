@@ -45,19 +45,19 @@ end
 #! Multiscale map for resolving macroscopic parameters
 immutable MultiscaleMap
   lat::Lattice;
-  rho_0::FloatingPoint;
+  rho_0::AbstractFloat;
   omega::Matrix{Float64};
   u::Array{Float64,3};
   rho::Matrix{Float64};
 
-  function MultiscaleMap(nu::FloatingPoint, lat::Lattice, rho::FloatingPoint = 1.0)
+  function MultiscaleMap(nu::AbstractFloat, lat::Lattice, rho::AbstractFloat = 1.0)
     const ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 
     new(lat, rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
         zeros(Float64, (2, ni, nj)), fill(rho, (ni, nj)));
   end
   
-  MultiscaleMap(lat::Lattice, rho_0::FloatingPoint, omega::Matrix{Float64},
+  MultiscaleMap(lat::Lattice, rho_0::AbstractFloat, omega::Matrix{Float64},
                 u::Array{Float64,3}, rho::Matrix{Float64}) =
     new(lat, rho_0, omega, u, rho);
 

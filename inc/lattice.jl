@@ -6,11 +6,11 @@ abstract Lattice
 
 #! D2Q9 lattice
 type LatticeD2Q9 <: Lattice
-  dx::FloatingPoint
-  dt::FloatingPoint
-  cc::FloatingPoint
-  cs::FloatingPoint
-  cssq::FloatingPoint
+  dx::AbstractFloat
+  dt::AbstractFloat
+  cc::AbstractFloat
+  cs::AbstractFloat
+  cssq::AbstractFloat
   f::Array{Float64, 3}
   c::Matrix{Int64}
   w::Vector{Float64}
@@ -27,15 +27,15 @@ type LatticeD2Q9 <: Lattice
   csf(dx, dt)   = cf(dx, dt) / sqrt(3);
   cssqf(dx, dt) = csf(dx, dt) * csf(dx, dt);
 
-  LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
+  LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
         zeros(Float64, (n, ni, nj)), cdef, wdef, n);
 
-  LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
+  LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, f::Array{Float64, 3}) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
 
-  function LatticeD2Q9(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
-                       rho::FloatingPoint)
+  function LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int,
+                       rho::AbstractFloat)
     f = zeros(Float64, (n, ni, nj));
     for k=1:n
       f[k,:,:] = fill(rho * wdef[k], (ni, nj));
@@ -46,11 +46,11 @@ end
 
 #! D2Q4 lattice
 type LatticeD2Q4 <: Lattice
-  dx::FloatingPoint
-  dt::FloatingPoint
-  cc::FloatingPoint
-  cs::FloatingPoint
-  cssq::FloatingPoint
+  dx::AbstractFloat
+  dt::AbstractFloat
+  cc::AbstractFloat
+  cs::AbstractFloat
+  cssq::AbstractFloat
   f::Array{Float64, 3}
   c::Matrix{Int64}
   w::Vector{Float64} 
@@ -66,14 +66,14 @@ type LatticeD2Q4 <: Lattice
   csf(dx, dt)   = cf(dx, dt) / sqrt(2);
   cssqf(dx, dt) = csf(dx, dt) * csf(dx, dt);
 
-  LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int) =
+  LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
         zeros(Float64, (n, ni, nj)), cdef, wdef, n);
 
-  LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, f::Array{Float64, 3}) =
+  LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, f::Array{Float64, 3}) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
 
-  function LatticeD2Q4(dx::FloatingPoint, dt::FloatingPoint, ni::Int, nj::Int,
+  function LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int,
                    rho::Float64)
     f = zeros(Float64, (n, ni, nj));
     for k=1:n

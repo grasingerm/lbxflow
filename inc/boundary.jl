@@ -320,7 +320,7 @@ end
 # =========================================================================== #
 
 #! North velocity boundary condition
-function north_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end::Int,
+function north_velocity!(lat::LatticeD2Q9, u::AbstractFloat, i_begin::Int, i_end::Int,
                       j::Int)
   for i=i_begin:i_end
     const rhon = (lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
@@ -335,13 +335,13 @@ function north_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int, i_end
 end
 
 #! North velocity boundary condition
-function north_velocity!(lat::Lattice, u::FloatingPoint)
+function north_velocity!(lat::Lattice, u::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_velocity!(lat, u, 1, ni, nj);
 end
 
 #! South velocity boundary condition
-function south_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
+function south_velocity!(lat::LatticeD2Q9, u::AbstractFloat, i_begin::Int,
                       i_end::Int, j::Int)
   for i=i_begin:i_end
     jy = u * ( ( lat.f[9,i,j] + lat.f[1,i,j] + lat.f[3,i,j] +
@@ -356,13 +356,13 @@ function south_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i_begin::Int,
 end
 
 #! South velocity boundary condition
-function south_velocity!(lat::Lattice, u::FloatingPoint)
+function south_velocity!(lat::Lattice, u::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_velocity!(lat, u, 1, ni, 1);
 end
 
 #! East velocity boundary condition
-function east_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
+function east_velocity!(lat::LatticeD2Q9, u::AbstractFloat, i::Int, j_begin::Int,
                      j_end::Int)
 
   for j=j_begin:j_end
@@ -377,12 +377,12 @@ function east_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int
 end
 
 #! East velocity boundary condition
-function east_velocity!(lat::Lattice, u::FloatingPoint)
+function east_velocity!(lat::Lattice, u::AbstractFloat)
   east_velocity!(lat, u, size(lat.f, 2), 1, size(lat.f, 3));
 end
 
 #! West velocity boundary condition
-function west_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int,
+function west_velocity!(lat::LatticeD2Q9, u::AbstractFloat, i::Int, j_begin::Int,
   j_end::Int)
 
   for j=j_begin:j_end
@@ -397,12 +397,12 @@ function west_velocity!(lat::LatticeD2Q9, u::FloatingPoint, i::Int, j_begin::Int
 end
 
 #! West velocity boundary condition
-function west_velocity!(lat::Lattice, u::FloatingPoint)
+function west_velocity!(lat::Lattice, u::AbstractFloat)
   west_velocity!(lat, u, 1, 1, size(lat.f, 3));
 end
 
 #! Lid driven flow
-function lid_driven!(lat::LatticeD2Q9, u::FloatingPoint)
+function lid_driven!(lat::LatticeD2Q9, u::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
@@ -419,7 +419,7 @@ end
 # =========================================================================== #
 
 #! Pressure north direction
-function north_pressure!(lat::LatticeD2Q9, rhoo::FloatingPoint)
+function north_pressure!(lat::LatticeD2Q9, rhoo::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   warn("Check implementation details of north pressure BC.");
@@ -437,13 +437,13 @@ function north_pressure!(lat::LatticeD2Q9, rhoo::FloatingPoint)
 end
 
 #! Pressure north direction
-function north_pressure!(lat::Lattice, rho::FloatingPoint)
+function north_pressure!(lat::Lattice, rho::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_pressure!(lat, rho, 1, ni, nj);
 end
 
 #! Pressure south direction
-function south_pressure!(lat::LatticeD2Q9, rhoo::FloatingPoint)
+function south_pressure!(lat::LatticeD2Q9, rhoo::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   warn("Check implementation details of south pressure BC.");
@@ -461,13 +461,13 @@ function south_pressure!(lat::LatticeD2Q9, rhoo::FloatingPoint)
 end
 
 #! Pressure north direction
-function south_pressure!(lat::Lattice, rho::FloatingPoint)
+function south_pressure!(lat::Lattice, rho::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_pressure!(lat, rho, 1, ni, 1);
 end
 
 #! Pressure east direction
-function east_pressure!(lat::LatticeD2Q9, rho_out::FloatingPoint, i::Int,
+function east_pressure!(lat::LatticeD2Q9, rho_out::AbstractFloat, i::Int,
   j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
@@ -484,7 +484,7 @@ function east_pressure!(lat::LatticeD2Q9, rho_out::FloatingPoint, i::Int,
 end
 
 #! Pressure east direction
-function east_pressure!(lat::LatticeD2Q9, rho_out::FloatingPoint)
+function east_pressure!(lat::LatticeD2Q9, rho_out::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   # middle of inlet
@@ -510,7 +510,7 @@ function east_pressure!(lat::LatticeD2Q9, rho_out::FloatingPoint)
 end
 
 #! Pressure west direction
-function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint, i::Int,
+function west_pressure!(lat::LatticeD2Q9, rho_in::AbstractFloat, i::Int,
   j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
@@ -527,7 +527,7 @@ function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint, i::Int,
 end
 
 #! Pressure west direction
-function west_pressure!(lat::LatticeD2Q9, rho_in::FloatingPoint)
+function west_pressure!(lat::LatticeD2Q9, rho_in::AbstractFloat)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   # middle

@@ -52,7 +52,7 @@ end
 #! \param forcing_kf Forcing functions
 #! \return collision_function!(sim, bounds)
 function init_col_srt(constit_relation_f::Function,
-                      forcing_kf::(Function, Function))
+                      forcing_kf::Tuple{Function, Function})
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -124,7 +124,7 @@ end
 #! \param feq_f Equilibrium particle distribution function
 #! \return collision_function!(sim, bounds)
 function init_col_srt(constit_relation_f::Function,
-                      forcing_kf::(Function, Function), feq_f::Function)
+                      forcing_kf::Tuple{Function, Function}, feq_f::Function)
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -203,7 +203,7 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \return collision_function!(sim, bounds)
 function init_col_mrt(constit_relation_f::Function,
-                      forcing_kf::(Function, Function), S::Function)
+                      forcing_kf::Tuple{Function, Function}, S::Function)
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -295,7 +295,7 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \return collision_function!(sim, bounds)
 function init_col_mrt(constit_relation_f::Function,
-                      forcing_kf::(Function, Function), feq_f::Function,
+                      forcing_kf::Tuple{Function, Function}, feq_f::Function,
                       S::Function)
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
