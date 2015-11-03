@@ -14,15 +14,15 @@ preamble: >
   const nj = 64;
   const pgrad = -5.6e-6;
   const F = [-pgrad; 0.0];
-  const mu_p = 0.2;
-  const tau_y = 0.0;
+  const mu_p = 0.001;
+  const tau_y = 0.000005;
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
   const nsteps = 20000;
-  const id = "poise-svec-000000";
-  const datadir = joinpath("data","poise","svec","000000");
-  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, 0.501, 8.0, m, 1e-9, 15, 1e-5);
+  const id = "re-500_bn-0025";
+  const datadir = joinpath("data","poise","002","svec",id);
+  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, 0.501, 8.0, m, 1.0e-9, 15, 1.e-5, 1.0);
   const forcing_kf = init_korner_Fk(F);
 
 datadir:    { value: datadir,   expr: true    }
