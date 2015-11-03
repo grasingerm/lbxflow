@@ -39,7 +39,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f:      init_col_srt(constit_rel_f, forcing_kf)
+col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
 
 # boundaries
 sbounds:
