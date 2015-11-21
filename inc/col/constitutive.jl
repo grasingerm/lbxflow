@@ -163,6 +163,8 @@ end
 #! \param rt_max Maximum relaxation time
 #! \param m Papanstasiou exponent
 #! \param gamma_min Minimum allowable strain rate
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
 function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
@@ -191,6 +193,87 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
     end
   end
 end
+
+#! Initialize an explicit power law constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_power_law_explicit(k::AbstractFloat, n::AbstractFloat,
+                                             relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    const rhoij = sim.msm.rho[i,j];
+    const omegaij = sim.msm.omega[i,j];
+
+    D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
+    gamma = @strain_rate(D);
+
+    # update relaxation matrix
+    muij = (
+             (1 - relax) * muij
+              + relax * k * gamma^(n-1);
+           );
+    return muij;
+  end
+end
+
+#! Initialize an explicit power law constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_power_law_implicit(n::AbstractFloat, k::AbstractFloat,
+                                             max_iters::Int, tol::AbstractFloat,
+                                             relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    lat = sim.lat;
+    msm = sim.msm;
+    const rhoij = sim.msm.rho[i,j];
+    omegaij = msm.omega[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    const muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+    muij = muo;
+
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      muij = (
+               (1 - relax) * muij
+                + relax * k * gamma^(n-1);
+             );
+      omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol
+        break;
+      end
+
+      if iters > max_iters
+        break;
+      end
+
+      mu_prev = muij;
+    end
+    return muij;
+  end
+end
+
+
 
 #! Initialize a constant constitutive relationship
 #!
@@ -310,3 +393,89 @@ function init_constit_mrt_bingham_implicit(mu_p::AbstractFloat,
     return muij;
   end
 end
+
+#! Initialize an explicit power law constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_mrt_power_law_explicit(k::AbstractFloat, n::AbstractFloat,
+                                             relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
+    const rhoij = sim.msm.rho[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    muij = @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
+    Sij = S(muij, rhoij, sim.lat.cssq, sim.lat.dt);
+    
+    D = strain_rate_tensor(sim.lat, rhoij, fneq, M, iM, Sij);
+    gamma = @strain_rate(D);
+
+    # update relaxation matrix
+    muij = (
+             (1 - relax) * muij
+              + relax * k * gamma^(n-1);
+           );
+    return muij;
+  end
+end
+
+#! Initialize an implicit power law constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::AbstractFloat,
+                                             max_iters::Int, 
+                                             tol::AbstractFloat = 1e-6,
+                                             relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
+    lat = sim.lat;
+    msm = sim.msm;
+    const rhoij = sim.msm.rho[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    const muo = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+    muij = muo;
+    Sij = S(muij, rhoij, lat.cssq, lat.dt);
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      muij = (
+               (1 - relax) * muij
+                + relax * k * gamma^(n-1);
+             );
+      Sij = S(muij, rhoij, lat.cssq, lat.dt);
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol
+        break;
+      end
+
+      if iters > max_iters
+        break;
+      end
+
+      mu_prev = muij;
+    end
+    return muij;
+  end
+end
+
