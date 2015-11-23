@@ -2,7 +2,7 @@ version: 0.2.4
 
 # code to execute before parsing
 preamble: >
-  using PyPlot;
+  @init_plot_env();
   using Base.Test;
   const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
@@ -70,7 +70,7 @@ finally:
         xs[i] = (i - nj/2 - 0.5);
       end
       us = analytic_soln(xs);
-      i = round(ni/2);
+      i = convert(Int64, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3

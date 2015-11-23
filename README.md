@@ -242,6 +242,8 @@ Examples can be found in `inc/convergence.jl`
     test_for_term: is_steadystate_x
 
 ## TODO list
+* [ ] try using "FastAnonymous" module
+* [ ] add animations and plots using gnuplot and Gadfly
 * [ ] implement free surface flow
 * [x] break collision functions down into forcing method, constitutive eqn, etc.
 * [ ] derive and implement more general velocity and pressure boundary conditions 

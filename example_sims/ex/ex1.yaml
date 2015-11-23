@@ -1,10 +1,8 @@
-version: 0.2.1
+version: 0.2.4
 
 # code to execute before parsing
 preamble: >
-  using PyCall;
-  @pyimport matplotlib.pyplot as PyPlot;
-  PyPlot.ion();
+  @init_plot_env(); 
   const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
   const constit_rel_f = init_constit_srt_const(1/6);

@@ -79,6 +79,14 @@ function extract_ubar_prof_callback(i::Int)
 
 end
 
+#! Initialize plotting environment
+macro init_plot_env()
+  return quote
+    import PyPlot;
+    PyPlot.ion();
+  end
+end
+
 #############################################################################
 ###################### Base plots ###########################################
 #############################################################################
@@ -98,7 +106,8 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.plot(x,y);
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux (lat / sec)");
-      PyPlot.show();
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -117,10 +126,12 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux / u_max");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux / u_max");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -133,9 +144,11 @@ function plot_umag_contour_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)));
-      colorbar(cs);
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
+      PyPlot.colorbar(cs);
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -148,8 +161,10 @@ function plot_uvecs_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      PyPlot.clf();
+      PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -166,11 +181,13 @@ function plot_streamlines_callback(iters_per_frame::Int,
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
-      clf();
-      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
-      ylim(0.0, 1.0);
-      xlim(0.0, 1.0);
+      PyPlot.clf();
+      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.ylim(0.0, 1.0);
+      PyPlot.xlim(0.0, 1.0);
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -183,8 +200,10 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.clf();
+      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -197,8 +216,10 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(sim.tracker.M));
+      PyPlot.clf();
+      PyPlot.contour(transpose(sim.tracker.M));
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -215,7 +236,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       sr = Array(Float64, ni, nj);
       for j=1:nj, i=1:ni
         Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
-                  sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
+                    sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
         feq = Array(Float64, sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
@@ -224,9 +245,11 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = @strain_rate(D);
       end
-      clf();
-      cs = contourf(transpose(sr));
-      colorbar(cs);
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(sr));
+      PyPlot.colorbar(cs);
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -249,11 +272,13 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux (lat / sec)");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux (lat / sec)");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -273,11 +298,13 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux / u_max");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux / u_max");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -290,10 +317,12 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)));
-      colorbar(cs);
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -306,9 +335,11 @@ function plot_uvecs_callback(iters_per_frame::Int, fname::AbstractString,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -325,12 +356,14 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::AbstractString,
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
-      clf();
-      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
-      ylim(0.0, 1.0);
-      xlim(0.0, 1.0);
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.ylim(0.0, 1.0);
+      PyPlot.xlim(0.0, 1.0);
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -344,9 +377,11 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -360,9 +395,11 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(sim.tracker.M));
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.contour(transpose(sim.tracker.M));
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -389,10 +426,12 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = @strain_rate(D);
       end
-      clf();
-      cs = contourf(transpose(sr));
-      colorbar(cs);
-      savefig(fname*"_step-$k_iter.png");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(sr));
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(fname*"_step-$k_iter.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -420,9 +459,11 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = (@strain_rate(D) > gamma_min) ? 1.0 : 0.0;
       end
-      clf();
-      contourf(transpose(sr), levels=[0.0, 1.0]);
-      savefig(fname*"_step-$k_iter.png");
+      PyPlot.clf();
+      PyPlot.contourf(transpose(sr), levels=[0.0, 1.0]);
+      PyPlot.savefig(fname*"_step-$k_iter.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -445,11 +486,13 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux (lat / sec)");
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux (lat / sec)");
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -469,11 +512,13 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux / u_max");
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux / u_max");
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -487,10 +532,12 @@ function plot_umag_contour_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)));
-      colorbar(cs);
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
+      PyPlot.colorbar(cs);
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -503,9 +550,11 @@ function plot_uvecs_callback(iters_per_frame::Int, xy::Tuple{Number,Number},
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -523,12 +572,14 @@ function plot_streamlines_callback(iters_per_frame::Int,
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
-      clf();
-      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
-      ylim(0.0, 1.0);
-      xlim(0.0, 1.0);
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.ylim(0.0, 1.0);
+      PyPlot.xlim(0.0, 1.0);
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -542,9 +593,11 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -558,9 +611,11 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(sim.tracker.M));
-      text(xy[1], xy[2], "step: $k");
+      PyPlot.clf();
+      PyPlot.contour(transpose(sim.tracker.M));
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -587,10 +642,12 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = @strain_rate(D);
       end
-      clf();
-      cs = contourf(transpose(sr));
-      colorbar(cs);
-      text(xy[1], xy[2], "step: $k_iter");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(sr));
+      PyPlot.colorbar(cs);
+      PyPlot.text(xy[1], xy[2], "step: $k_iter");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -614,12 +671,14 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux (lat / sec)");
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux (lat / sec)");
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -640,12 +699,14 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux / u_max");
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux / u_max");
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -660,11 +721,13 @@ function plot_umag_contour_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)));
-      colorbar(cs);
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
+      PyPlot.colorbar(cs);
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -679,10 +742,12 @@ function plot_uvecs_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -701,13 +766,15 @@ function plot_streamlines_callback(iters_per_frame::Int,
       x = linspace(0.0, 1.0, ni);
       y = linspace(0.0, 1.0, nj);
 
-      clf();
-      streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                 reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
-      ylim(0.0, 1.0);
-      xlim(0.0, 1.0);
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
+                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.ylim(0.0, 1.0);
+      PyPlot.xlim(0.0, 1.0);
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -722,10 +789,12 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -740,10 +809,12 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      contour(transpose(sim.tracker.M));
-      text(xy[1], xy[2], "step: $k");
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      PyPlot.contour(transpose(sim.tracker.M));
+      PyPlot.text(xy[1], xy[2], "step: $k");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -771,11 +842,13 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = @strain_rate(D);
       end
-      clf();
-      cs = contourf(transpose(sr));
-      colorbar(cs);
-      text(xy[1], xy[2], "step: $k_iter");
-      savefig(fname*"_step-$k_iter.png");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(sr));
+      PyPlot.colorbar(cs);
+      PyPlot.text(xy[1], xy[2], "step: $k_iter");
+      PyPlot.savefig(fname*"_step-$k_iter.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -793,10 +866,12 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
-      colorbar(cs);
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(u_mag(sim.msm)), levels=levs);
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -812,11 +887,13 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
-                   levels=levs);
-      colorbar(cs);
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      cs = PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
+                          levels=levs);
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -831,10 +908,12 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contour(transpose(sim.tracker.M), levels=levs);
-      colorbar(cs);
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -862,10 +941,12 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = @strain_rate(D);
       end
-      clf();
-      cs = contourf(transpose(sr), levels=levs);
-      colorbar(cs);
-      savefig(fname*"_step-$k.png");
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(sr), levels=levs);
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -879,14 +960,16 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contourf(transpose(u_mag(sim.msm)), levels=levs);
-      colorbar(cs);
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(u_mag(sim.msm)), levels=levs);
+      PyPlot.colorbar(cs);
       for rect in rects
-        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
-                facecolor="black");
+        PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
+                       facecolor="black");
       end
-      savefig(fname*"_step-$k.png");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -902,15 +985,17 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
-                   levels=levs);
-      colorbar(cs);
+      PyPlot.clf();
+      cs = PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
+                          levels=levs);
+      PyPlot.colorbar(cs);
       for rect in rects
-        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
-                facecolor="black");
+        PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
+                       facecolor="black");
       end
-      savefig(fname*"_step-$k.png");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -925,14 +1010,16 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      clf();
-      cs = contour(transpose(sim.tracker.M), levels=levs);
-      colorbar(cs);
+      PyPlot.clf();
+      cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
+      PyPlot.colorbar(cs);
       for rect in rects
-        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
-                facecolor="black");
+        PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
+                       facecolor="black");
       end
-      savefig(fname*"_step-$k.png");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end
@@ -960,14 +1047,16 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
         sr[i,j] = @strain_rate(D);
       end
-      clf();
-      cs = contourf(transpose(sr), levels=levs);
-      colorbar(cs);
+      PyPlot.clf();
+      cs = PyPlot.contourf(transpose(sr), levels=levs);
+      PyPlot.colorbar(cs);
       for rect in rects
-        axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
-                facecolor="black");
+        PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
+                       facecolor="black");
       end
-      savefig(fname*"_step-$k.png");
+      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.draw();
+      PyPlot.pause(0.001);
       sleep(pause);
     end
   end

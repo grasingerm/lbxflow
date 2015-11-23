@@ -211,11 +211,15 @@ function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
     gamma = @strain_rate(D);
 
+    @show rhoij, omegaij, muij, D, gamma;
+
     # update relaxation matrix
-    muij = (
+    @show muij = (
              (1 - relax) * muij
               + relax * k * gamma^(n-1);
            );
+    println("PAUSED");
+    readline(STDIN);
     return muij;
   end
 end
