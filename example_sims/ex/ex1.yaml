@@ -2,9 +2,13 @@ version: 0.2.1
 
 # code to execute before parsing
 preamble: >
-  using PyPlot;
+  using PyCall;
+  @pyimport matplotlib.pyplot as PyPlot;
+  PyPlot.ion();
   const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
+  const constit_rel_f = init_constit_srt_const(1/6);
+  const forcing_kf = init_guo_Fk(F);
   const datadir = "data/sukop";
   const ni = 20;
   const nj = 12;
@@ -25,11 +29,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f: >
-  begin;
-    bind_col!(lat, msm, bounds) = col_srt_sukop!(lat, msm, F, bounds);
-    return bind_col!;
-  end;
+col_f:    init_col_srt(constit_rel_f, forcing_kf);
 
 # boundaries
 sbounds:

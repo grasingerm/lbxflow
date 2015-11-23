@@ -200,12 +200,13 @@ end
 #! \param n Power law index
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_power_law_explicit(k::AbstractFloat, n::AbstractFloat,
+function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
                                              relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     const rhoij = sim.msm.rho[i,j];
     const omegaij = sim.msm.omega[i,j];
+    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
 
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
     gamma = @strain_rate(D);
@@ -227,7 +228,7 @@ end
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_power_law_implicit(n::AbstractFloat, k::AbstractFloat,
+function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
                                              max_iters::Int, tol::AbstractFloat,
                                              relax::Number = 1.0)
 
@@ -400,7 +401,7 @@ end
 #! \param n Power law index
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_mrt_power_law_explicit(k::AbstractFloat, n::AbstractFloat,
+function init_constit_mrt_power_law_explicit(k::AbstractFloat, n::Number,
                                              relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
@@ -431,7 +432,7 @@ end
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::AbstractFloat,
+function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
                                              max_iters::Int, 
                                              tol::AbstractFloat = 1e-6,
                                              relax::Number = 1.0)

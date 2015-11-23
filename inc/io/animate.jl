@@ -94,10 +94,11 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
 
-      clf();
-      plot(x,y);
-      xlabel("x / width");
-      ylabel("ux (lat / sec)");
+      PyPlot.clf();
+      PyPlot.plot(x,y);
+      PyPlot.xlabel("x / width");
+      PyPlot.ylabel("ux (lat / sec)");
+      PyPlot.show();
       sleep(pause);
     end
   end
