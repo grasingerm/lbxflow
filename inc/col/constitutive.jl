@@ -201,6 +201,7 @@ end
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
 function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
+                                             gamma_min::AbstractFloat,
                                              relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
@@ -210,16 +211,13 @@ function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
 
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
     gamma = @strain_rate(D);
-
-    @show rhoij, omegaij, muij, D, gamma;
+    gamma = gamma < gamma_min ? gamma_min : gamma;
 
     # update relaxation matrix
-    @show muij = (
+    muij = (
              (1 - relax) * muij
               + relax * k * gamma^(n-1);
            );
-    println("PAUSED");
-    readline(STDIN);
     return muij;
   end
 end
@@ -233,6 +231,7 @@ end
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
 function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
+                                             gamma_min::AbstractFloat,
                                              max_iters::Int, tol::AbstractFloat,
                                              relax::Number = 1.0)
 
@@ -255,6 +254,7 @@ function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
 
       D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
       gamma = @strain_rate(D);
+      gamma = gamma < gamma_min ? gamma_min : gamma;
 
       # update relaxation matrix
       muij = (
