@@ -9,17 +9,18 @@ preamble: >
   const datadir = "data";
   const ni = 40;
   const nj = 14;
-  const mu = 1/6;
-  const n = 0.7;
-  const constit_rel_f = init_constit_srt_power_law_explicit(mu, n, 1e-9);
+  const mu = 2/6;
+  const n = 0.95;
+  const constit_rel_f = init_constit_srt_power_law_implicit(mu, n, 1e-9, 100, 1e-4, 1.0);
   const forcing_kf = init_sukop_Fk(F);
   const h = (nj - 1)/2.0;
   const n_rat = convert(Float64, (n + 1.0) / n);
   analytic_soln(xs) = begin;
     result = zeros(length(xs));
     for (i, x) in enumerate(xs)
-      result[i] = (1.0 / n_rat * (-pgrad / (2.0*mu))^(1.0/n) * 
-                   (h^n_rat - abs(x)^n_rat));
+      l_n = 1.0 / n_rat * (-pgrad / mu)^n_rat;
+      result[i] = l_n * (h^n_rat - abs(x)^n_rat);
+      @show result[i], -1.0 / (2.0 * mu) * pgrad * (h^2 - x^2);
     end
     return result;
   end;
@@ -72,11 +73,11 @@ finally:
       us = analytic_soln(xs);
       i = convert(Int64, round(ni/2));
       ys = reshape(sim.msm.u[1,i,:], length(xs), 1);
-      @show length(xs), length(ys), length(us);
       PyPlot.clf();
       PyPlot.plot(xs, us, "r-", xs, ys, "b^");
       PyPlot.legend(["analytical","LBM"]);
       PyPlot.show();
+      println("Press Enter to continue");
       readline(STDIN);
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 

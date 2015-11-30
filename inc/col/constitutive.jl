@@ -230,7 +230,7 @@ end
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
-function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
+function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
                                              gamma_min::AbstractFloat,
                                              max_iters::Int, tol::AbstractFloat,
                                              relax::Number = 1.0)
@@ -252,7 +252,7 @@ function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
     while true
       iters += 1;
 
-      D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
+      D = strain_rate_tensor(lat, rhoij, fneq, omegaij);
       gamma = @strain_rate(D);
       gamma = gamma < gamma_min ? gamma_min : gamma;
 
@@ -261,7 +261,7 @@ function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
                (1 - relax) * muij
                 + relax * k * gamma^(n-1);
              );
-      omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
+      omegaij = @omega(muij, lat.cssq, lat.dt);
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol
@@ -269,6 +269,7 @@ function init_constit_srt_power_law_implicit(n::AbstractFloat, k::Number,
       end
 
       if iters > max_iters
+        warn("Constitutive solution did not converge");
         break;
       end
 
