@@ -4,13 +4,13 @@ version: 0.2.4
 preamble: >
   @init_plot_env();
   using Base.Test;
-  const pgrad = -1.102e-3;
+  const pgrad = -0.25e-4;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
-  const nj = 14;
-  const mu = 2/6;
-  const n = 0.95;
+  const nj = 24;
+  const mu = 0.5;
+  const n = 2.0;
   const constit_rel_f = init_constit_srt_power_law_implicit(mu, n, 1e-9, 100, 1e-4, 1.0);
   const forcing_kf = init_sukop_Fk(F);
   const h = (nj - 1)/2.0;
@@ -18,7 +18,7 @@ preamble: >
   analytic_soln(xs) = begin;
     result = zeros(length(xs));
     for (i, x) in enumerate(xs)
-      l_n = 1.0 / n_rat * (-pgrad / mu)^n_rat;
+      l_n = 1.0 / n_rat * (-pgrad / mu)^(1.0 / n);
       result[i] = l_n * (h^n_rat - abs(x)^n_rat);
       @show result[i], -1.0 / (2.0 * mu) * pgrad * (h^2 - x^2);
     end
