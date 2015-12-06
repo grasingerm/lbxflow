@@ -111,6 +111,8 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
       end
 
       if iters > max_iters
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
         break;
       end
 
@@ -194,6 +196,103 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
   end
 end
 
+#! Initialize an explicit herschel-bulkley constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param tau_y Yield stress
+#! \param m Papanstasiou exponent
+#! \param gamma_min Minimum allowable strain rate
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_hb_explicit(k::AbstractFloat, n::Number,
+                                      tau_y::AbstractFloat,
+                                      m::Number,
+                                      gamma_min::AbstractFloat,
+                                      relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    const rhoij = sim.msm.rho[i,j];
+    const omegaij = sim.msm.omega[i,j];
+
+    D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
+    gamma = @strain_rate(D);
+
+    # update relaxation matrix
+    gamma = gamma < gamma_min ? gamma_min : gamma;
+    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muij = (
+             (1 - relax) * muij
+              + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+           );
+    return muij;
+  end
+end
+
+#! Initialize an implicit herschel-bulkley constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param tau_y Yield stress
+#! \param m Papanstasiou exponent
+#! \param gamma_min Minimum allowable strain rate
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_hb_implicit(k::AbstractFloat, n::Number,
+                                      tau_y::AbstractFloat,
+                                      m::Number,
+                                      gamma_min::AbstractFloat,
+                                      max_iters::Int,
+                                      tol::AbstractFloat,
+                                      relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    lat = sim.lat;
+    msm = sim.msm;
+    const rhoij = sim.msm.rho[i,j];
+    omegaij = msm.omega[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    const muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+    muij = muo;
+
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      gamma = gamma < gamma_min ? gamma_min : gamma;
+      muij = (
+               (1 - relax) * muij
+                + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+             );
+      omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol
+        break;
+      end
+
+      if iters > max_iters
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
+        break;
+      end
+
+      mu_prev = muij;
+    end
+    return muij;
+  end
+end
+
 #! Initialize an explicit power law constitutive relationship
 #!
 #! \param k Flow consistency index
@@ -269,7 +368,8 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
       end
 
       if iters > max_iters
-        warn("Constitutive solution did not converge");
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
         break;
       end
 
@@ -278,8 +378,6 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
     return muij;
   end
 end
-
-
 
 #! Initialize a constant constitutive relationship
 #!
@@ -391,6 +489,109 @@ function init_constit_mrt_bingham_implicit(mu_p::AbstractFloat,
       end
 
       if iters > max_iters
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
+        break;
+      end
+
+      mu_prev = muij;
+    end
+    return muij;
+  end
+end
+
+#! Initialize an explicit herschel-bulkley constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param tau_y Yield stress
+#! \param m Papanstasiou exponent
+#! \param gamma_min Minimum allowable strain rate
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_mrt_hb_explicit(k::AbstractFloat, n::Number,
+                                      tau_y::AbstractFloat,
+                                      m::Number,
+                                      gamma_min::AbstractFloat,
+                                      relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
+    const rhoij = sim.msm.rho[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    muij = @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
+    Sij = S(muij, rhoij, sim.lat.cssq, sim.lat.dt);
+    
+    D = strain_rate_tensor(sim.lat, rhoij, fneq, M, iM, Sij);
+    gamma = @strain_rate(D);
+
+    # update relaxation matrix
+    gamma = gamma < gamma_min ? gamma_min : gamma;
+    muij = (
+             (1 - relax) * muij
+              + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+           );
+    return muij;
+  end
+end
+
+#! Initialize an implicit herschel-bulkley constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param tau_y Yield stress
+#! \param m Papanstasiou exponent
+#! \param gamma_min Minimum allowable strain rate
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_mrt_hb_implicit(k::AbstractFloat, n::Number,
+                                      tau_y::AbstractFloat,
+                                      m::Number,
+                                      gamma_min::AbstractFloat,
+                                      max_iters::Int,
+                                      tol::AbstractFloat = 1e-6,
+                                      relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
+          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
+    lat = sim.lat;
+    msm = sim.msm;
+    const rhoij = sim.msm.rho[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    const muo = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+    muij = muo;
+    Sij = S(muij, rhoij, lat.cssq, lat.dt);
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
+      gamma = @strain_rate(D);
+
+      # update relaxation matrix
+      gamma = gamma < gamma_min ? gamma_min : gamma;
+      muij = (
+               (1 - relax) * muij
+                + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+             );
+      Sij = S(muij, rhoij, lat.cssq, lat.dt);
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol
+        break;
+      end
+
+      if iters > max_iters
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
         break;
       end
 
@@ -476,6 +677,8 @@ function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
       end
 
       if iters > max_iters
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
         break;
       end
 

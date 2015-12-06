@@ -1,21 +1,28 @@
-version: 0.2.4
+version: 0.2.1
 
 # code to execute before parsing
 preamble: >
+  using PyPlot;
   using Base.Test;
-  const pgrad = -1.102e-4;
+  const pgrad = rand(-1.0e-5:-1.0e-5:-1.0e-4);
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
-  const nj = 35;
-  const mu = 1/6;
-  const constit_rel_f = init_constit_srt_bingham_explicit(mu, 0.0, 1e6, 1.e-8);
-  const forcing_kf = init_guo_Fk(F);
+  const nj = 25;
+  const mu = 2/11;
+  const tau = rand(1e-6:1e-6:5e-5);
+  const constit_rel_f = init_constit_mrt_hb_implicit(mu, 1.0, tau, 1e7, 1e-9, 10, 1e-7);
+  const forcing_kf = init_korner_Fk(F);
   const h = (nj-1)/2.0;
+  const y_tau = -tau / pgrad;
   analytic_soln(xs) = begin;
     result = zeros(length(xs));
-    for (i, x) in enumerate(xs) 
-      result[i] = -1.0 / (2.0 * mu) * pgrad * (h^2 - x^2);
+    for (i, x) in enumerate(xs)
+      if abs(x) <= y_tau
+        result[i] = -1.0 / (2.0 * mu) * pgrad * (h^2 - y_tau^2) - tau / mu * (h - y_tau);
+      else
+        result[i] = -1.0 / (2.0 * mu) * pgrad * (h^2 - x^2) - tau / mu * (h - abs(x));
+      end
     end
     return result;
   end;
@@ -36,7 +43,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_srt(constit_rel_f, forcing_kf);
+col_f:    init_col_mrt(constit_rel_f, forcing_kf, S_fallah);
 
 # boundaries
 sbounds:
@@ -55,6 +62,16 @@ bcs:
 
 callbacks:
   - print_step_callback(25) 
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
+  - >
+    (sim::Sim, k::Int) -> begin
+      xs = zeros(nj);
+      for i = 1:nj
+      xs[i] = (i - nj/2 - 0.5);
+      end
+      us = analytic_soln(xs);
+      plot(xs, us);
+    end
 
 # clean-up, backup, write out
 finally:

@@ -9,7 +9,7 @@ preamble: >
   const ni = 40;
   const nj = 35;
   const mu = 1/6;
-  const constit_rel_f = init_constit_srt_bingham_explicit(mu, 0.0, 1e6, 1.e-8);
+  const constit_rel_f = init_constit_srt_hb_explicit(mu, 1, 0.0, 1e6, 1.e-8);
   const forcing_kf = init_guo_Fk(F);
   const h = (nj-1)/2.0;
   analytic_soln(xs) = begin;

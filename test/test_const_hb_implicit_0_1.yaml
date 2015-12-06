@@ -3,14 +3,14 @@ version: 0.2.4
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -1.102e-4;
+  const pgrad = 1.502e-4;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
-  const nj = 35;
-  const mu = 1/6;
-  const constit_rel_f = init_constit_srt_bingham_explicit(mu, 0.0, 1e6, 1.e-8);
-  const forcing_kf = init_guo_Fk(F);
+  const nj = 28;
+  const mu = 1/5;
+  const constit_rel_f = init_constit_srt_hb_implicit(mu, 0.0, 1.0, 1e6, 1.e-8, rand(10:50), rand(1.e-7:1.e-7:1.e-2));
+  const forcing_kf = init_korner_Fk(F);
   const h = (nj-1)/2.0;
   analytic_soln(xs) = begin;
     result = zeros(length(xs));
