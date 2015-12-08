@@ -10,7 +10,7 @@ preamble: >
   const nj = rand(18:25);
   const mu = 2/11;
   const tau = rand(1e-6:1e-6:5e-5);
-  const constit_rel_f = init_constit_mrt_hb_explicit(mu, 1.0, tau, 1e7, 1e-9);
+  const constit_rel_f = init_constit_mrt_hb_implicit(mu, 1.0, tau, 1e7, 1e-9, 120, 5e-6);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj-1)/2.0;
   const y_tau = -tau / pgrad;

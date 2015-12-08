@@ -297,6 +297,7 @@ end
 #!
 #! \param k Flow consistency index
 #! \param n Power law index
+#! \param gamma_min Minimum allowable strain rate
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
 function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
@@ -325,6 +326,7 @@ end
 #!
 #! \param k Flow consistency index
 #! \param n Power law index
+#! \param gamma_min Minimum allowable strain rate
 #! \param max_iters Maximum iterations
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
@@ -605,9 +607,11 @@ end
 #!
 #! \param k Flow consistency index
 #! \param n Power law index
+#! \param gamma_min Minimum allowable strain rate
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
 function init_constit_mrt_power_law_explicit(k::AbstractFloat, n::Number,
+                                             gamma_min::AbstractFloat,
                                              relax::Number = 1.0)
 
   return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
@@ -622,6 +626,7 @@ function init_constit_mrt_power_law_explicit(k::AbstractFloat, n::Number,
     gamma = @strain_rate(D);
 
     # update relaxation matrix
+    gamma = gamma < gamma_min ? gamma_min : gamma;
     muij = (
              (1 - relax) * muij
               + relax * k * gamma^(n-1);
@@ -634,11 +639,13 @@ end
 #!
 #! \param k Flow consistency index
 #! \param n Power law index
+#! \param gamma_min Minimum allowable strain rate
 #! \param max_iters Maximum iterations
 #! \param tol Convergence tolerance
 #! \param relax Relaxation coefficient
 #! \return Constitutive relation function
 function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
+                                             gamma_min::AbstractFloat,
                                              max_iters::Int, 
                                              tol::AbstractFloat = 1e-6,
                                              relax::Number = 1.0)
@@ -665,6 +672,7 @@ function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
       gamma = @strain_rate(D);
 
       # update relaxation matrix
+      gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
                 + relax * k * gamma^(n-1);
