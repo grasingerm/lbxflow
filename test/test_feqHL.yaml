@@ -1,9 +1,10 @@
-version: 0.2.1
+version: 0.2.4
 
 # code to execute before parsing
 preamble: >
+  @init_plot_env();
   using Base.Test;
-  const pgrad = -1.502e-4;
+  const pgrad = rand(-1.0e-5:-1.0e-6:-8.0e-5) * rand(-1:2:1);
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
@@ -55,6 +56,7 @@ bcs:
   - periodic_east_to_west!
 
 callbacks:
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
   - print_step_callback(25) 
 
 # clean-up, backup, write out
@@ -63,10 +65,10 @@ finally:
     (sim::Sim, k::Int) -> begin
       xs = zeros(nj);
       for i = 1:nj
-      xs[i] = (i - nj/2 - 0.5);
+        xs[i] = (i - nj/2 - 0.5);
       end
       us = analytic_soln(xs);
-      i = int(round(ni/2));
+      i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3

@@ -9,7 +9,7 @@ preamble: >
   const ni = 40;
   const nj = 28;
   const mu = 1/5;
-  const constit_rel_f = init_constit_srt_hb_implicit(mu, 0.0, 1.0, 1e6, 1.e-8, rand(10:50), rand(1.e-7:1.e-7:1.e-2));
+  const constit_rel_f = init_constit_srt_hb_implicit(mu, 1.0, 0.0, 1e6, 1.e-8, rand(10:50), rand(1.e-7:1.e-7:1.e-2));
   const forcing_kf = init_korner_Fk(F);
   const h = (nj-1)/2.0;
   analytic_soln(xs) = begin;
@@ -65,7 +65,7 @@ finally:
       xs[i] = (i - nj/2 - 0.5);
       end
       us = analytic_soln(xs);
-      i = int(round(ni/2));
+      i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3

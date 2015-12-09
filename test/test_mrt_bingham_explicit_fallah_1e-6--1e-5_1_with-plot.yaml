@@ -1,8 +1,8 @@
-version: 0.2.1
+version: 0.2.4
 
 # code to execute before parsing
 preamble: >
-  using PyPlot;
+  @init_plot_env();
   using Base.Test;
   const pgrad = rand(-1.0e-5:-1.0e-5:-1.0e-4);
   const F = [-pgrad; 0.0];

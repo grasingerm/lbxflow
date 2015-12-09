@@ -95,14 +95,14 @@ function parse_and_run(infile::AbstractString, args::Dict)
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
     "rhog"    =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
-    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a usingd parameter."); end,
-    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a usingd parameter."); end,
+    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
+    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
     "dx"      =>  (defs::Dict) -> begin; return 1.0; end,
     "dt"      =>  (defs::Dict) -> begin; return 1.0; end,
-    "ni"      =>  (defs::Dict) -> begin; error("`ni` is a usingd parameter."); end,
-    "nj"      =>  (defs::Dict) -> begin; error("`nj` is a usingd parameter."); end,
-    "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a usingd parameter."); end,
-    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a usingd parameter."); end,
+    "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
+    "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
+    "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
+    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
     "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
@@ -181,7 +181,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["test_for_term"] = (msm, prev_msm) -> true;
   end
 
-  nsim = 0;
   if !args["debug"]
 
     try
@@ -189,14 +188,23 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
       if !haskey(defs, "test_for_term")
         # this simulate should be more memory and computationally efficient
-        @profif(args["profile"], begin; nsim = simulate!(sim,
-                defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-                defs["nsteps"], defs["callbacks"], k); end);
+        @profif(args["profile"],
+          begin
+            global nsim;
+            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], 
+                             defs["cbounds"], defs["bcs"], defs["nsteps"], 
+                             defs["callbacks"], k);
+          end;
+        );
       else
-        @profif(args["profile"], begin; nsim = simulate!(sim,
-                defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-                defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); 
-                end);
+        @profif(args["profile"],
+          begin
+            global nsim;
+            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], 
+                             defs["cbounds"], defs["bcs"], defs["nsteps"], 
+                             defs["test_for_term"], defs["callbacks"], k); 
+          end;
+        );
       end
 
     catch e
@@ -233,64 +241,4 @@ function parse_and_run(infile::AbstractString, args::Dict)
   else
     error("Debugging mode is not yet available");
   end
-
-  #=
-  # TODO: is `debugging` mode actually useful?
-  else # debugging on, run simulation without exception catching
-    display_help = true
-    println("======================");
-    println("DEBUGGING MODE... REPL");
-    println("======================");
-    warn("debugging mode is still experimental and not yet working smoothly");
-    warn("... having trouble with variable and function scoping");
-    simulate!(nsteps) = simulate!(sim, defs["sbounds"], defs["col_f"],
-                                  defs["cbounds"], defs["bcs"], nsteps,
-                                  defs["callbacks"], k);
-    while true
-      # bring in everything from the global scope
-      # TODO: find a better solution...
-      global simulate!
-      global display_help
-      global sim
-      global msm
-      if display_help
-        println("Binding input file definitions to `simulate!` function...");
-        println("In interactive debugging mode...");
-        println("`simulate!(<nsteps>)` will run the simulation with input ",
-                "file defintions for <nsteps> number of time steps.");
-        println("`exit()` will end the REPL");
-        println("to suppress this message, `display_help = false`");
-      end
-      print(">> ");
-      command = readline(STDIN);
-      try
-        # bring in everything from the global scope
-        # TODO: find a better solution...
-        global simulate!
-        global display_help
-        global sim
-        global msm
-        eval(parse(command));
-      catch e
-        showerror(STDERR, e);
-        Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
-        println();
-      end
-    end
-
-    if args["profile"]; Profile.print(args["profile-io"], cols=args["profile-cols"]); end
-      if args["profile-file"] != nothing; 
-        close(args["profile-io"]);
-        bt, lidict = Profile.retrieve();
-        JLD.jldopen(args["profile-file"]*".jld", "w") do file
-          write(file, "bt", bt);
-          write(file, "lidict", lidict);
-        end
-      elseif args["profile"] && args["profile-view"]
-        ProfileView.view();
-        println("Press enter to continue...");
-        readline(STDIN);
-      end
-    end
-    =#
 end
