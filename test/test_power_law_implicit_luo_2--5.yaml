@@ -68,7 +68,7 @@ finally:
       xs[i] = (i - nj/2 - 0.5);
       end
       us = analytic_soln(xs);
-      i = int(round(ni/2));
+      i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
       end

@@ -4,14 +4,14 @@ version: 0.2.4
 preamble: >
   @init_plot_env();
   using Base.Test;
-  const pgrad = -0.25e-4;
+  const pgrad = -0.15e-4;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
   const nj = 24;
   const mu = 0.5;
   const n = 2.0;
-  const constit_rel_f = init_constit_srt_hb_implicit(mu, n, 0.0, 1e-9, 100, 1e-4, 1.0);
+  const constit_rel_f = init_constit_srt_hb_implicit(mu, n, 0.0, 1e5, 1e-9, 100, 1e-4);
   const forcing_kf = init_sukop_Fk(F);
   const h = (nj - 1)/2.0;
   const n_rat = convert(Float64, (n + 1.0) / n);
