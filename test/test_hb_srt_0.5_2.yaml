@@ -4,14 +4,14 @@ version: 0.2.4
 preamble: >
   @init_plot_env();
   using Base.Test;
-  const pgrad = -0.15e-4;
+  const pgrad = -0.75e-4;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
   const nj = 24;
   const mu = 0.5;
   const n = 2.0;
-  const constit_rel_f = init_constit_srt_hb_implicit(mu, n, 0.0, 1e5, 1e-9, 100, 1e-4);
+  const constit_rel_f = init_constit_srt_hb_implicit(mu, n, 0.0, 1e5, 1e-12, 250, 1e-6);
   const forcing_kf = init_sukop_Fk(F);
   const h = (nj - 1)/2.0;
   const n_rat = convert(Float64, (n + 1.0) / n);
@@ -76,8 +76,6 @@ finally:
       PyPlot.plot(xs, us, "r-", xs, ys, "b^");
       PyPlot.legend(["analytical","LBM"]);
       PyPlot.show();
-      println("Press Enter to continue");
-      readline(STDIN);
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1e-2
