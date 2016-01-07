@@ -65,12 +65,14 @@ callbacks:
   - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
   - >
     (sim::Sim, k::Int) -> begin
-      xs = zeros(nj);
-      for i = 1:nj
-      xs[i] = (i - nj/2 - 0.5);
+      if k % 10 == 0
+        xs = zeros(nj);
+        for i = 1:nj
+        xs[i] = (i - nj/2 - 0.5);
+        end
+        us = analytic_soln(xs);
+        PyPlot.plot(xs, us);
       end
-      us = analytic_soln(xs);
-      plot(xs, us);
     end
 
 # clean-up, backup, write out
@@ -79,7 +81,7 @@ finally:
     (sim::Sim, k::Int) -> begin
       xs = zeros(nj);
       for i = 1:nj
-      xs[i] = (i - nj/2 - 0.5);
+        xs[i] = (i - nj/2 - 0.5);
       end
       us = analytic_soln(xs);
       i = int(round(ni/2));

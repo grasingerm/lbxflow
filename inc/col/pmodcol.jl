@@ -17,7 +17,7 @@ require(abspath(joinpath(__modcol_root__, "..", "sim", "simtypes.jl")));
 #! \param sim Simulation object
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
-function init_pcol_srt!(constit_relation_f::Function)
+function init_pcol_srt(constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -55,8 +55,8 @@ end
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
-function init_pcol_srt!(constit_relation_f::Function,
-                        forcing_kf::Tuple{Function, Function})
+function init_pcol_srt(constit_relation_f::Function,
+                       forcing_kf::Tuple{Function, Function})
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -95,7 +95,7 @@ end
 #! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
 #! \param feq_f Equilibrium particle distribution function
-function init_pcol_srt!(constit_relation_f::Function, feq_f::Function)
+function init_pcol_srt(constit_relation_f::Function, feq_f::Function)
   error("Not yet implemented.");
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -132,7 +132,7 @@ end
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
 #! \param feq_f Equilibrium particle distribution function
-function init_pcol_srt!(constit_relation_f::Function,
+function init_pcol_srt(constit_relation_f::Function,
                        forcing_kf::Tuple{Function, Function}, feq_f::Function)
   error("Not yet implemented.");
   const uf, colf = forcing_kf;
@@ -171,7 +171,7 @@ end
 #! \param S Function that returns (sparse) diagonal relaxation matrix
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
-function init_pcol_mrt!(constit_relation_f::Function)
+function init_pcol_mrt(constit_relation_f::Function)
   error("Not yet implemented.");
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -217,7 +217,7 @@ end
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
-function init_pcol_mrt!(constit_relation_f::Function,
+function init_pcol_mrt(constit_relation_f::Function,
                        forcing_kf::Tuple{Function, Function})
   error("Not yet implemented.");
   const uf, colf = forcing_kf;
@@ -269,7 +269,7 @@ end
 #! \param bounds 2D array, each row is i_min, i_max, j_min, j_max
 #! \param constit_relation_f Constitutive relationship
 #! \param feq_f Equilibrium particle distribution function
-function init_pcol_mrt!(constit_relation_f::Function, feq_f::Function)
+function init_pcol_mrt(constit_relation_f::Function, feq_f::Function)
   error("Not yet implemented.");
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -316,7 +316,7 @@ end
 #! \param constit_relation_f Constitutive relationship
 #! \param forcing_kf Forcing functions
 #! \param feq_f Equilibrium particle distribution function
-function init_pcol_mrt!(constit_relation_f::Function,
+function init_pcol_mrt(constit_relation_f::Function,
                        forcing_kf::Tuple{Function, Function}, feq_f::Function)
   error("Not yet implemented.");
   const uf, colf = forcing_kf;

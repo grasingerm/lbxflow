@@ -15,15 +15,22 @@ pargs = parse_args(s);
 const nprocs = pargs["nprocs"];
 if (nprocs < 1); error("Number of processes must be greater than 0"); end
 
+const stests = [
+    "test_multiscale.jl",
+    "test_constitutive.jl",
+    "test_tracking.jl"
+  ];
+
 if !pargs["skip-serial-tests"]
   __run_tests_root__ = dirname(@__FILE__);
-  require(abspath(joinpath(__run_tests_root__, "test_multiscale.jl")));
-  require(abspath(joinpath(__run_tests_root__, "test_constitutive.jl")));
-  require(abspath(joinpath(__run_tests_root__, "test_tracking.jl")));
+  for stest in stests
+    require(abspath(joinpath(__run_tests_root__, stest)));
+  end
 end
 
 addprocs(nprocs-1);
 @everywhere __run_tests_root__ = dirname(@__FILE__);
+for i = 1:nprocs; remotecall_fetch(()->println("$i: $__run_tests_root__"), i); end
 @everywhere const main = abspath(joinpath(__run_tests_root__, "..", "lbxflow.jl"));
 @everywhere const test_input_files = filter(s -> endswith(s, ".yaml"), readdir(__run_tests_root__));
 @everywhere run_test(test_input_file) = begin
