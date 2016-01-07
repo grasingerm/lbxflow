@@ -381,6 +381,94 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
   end
 end
 
+#! Initialize an explicit casson constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param gamma_min Minimum allowable strain rate
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_casson_explicit(k::AbstractFloat, n::Number,
+                                          gamma_min::AbstractFloat,
+                                          relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    const rhoij = sim.msm.rho[i,j];
+    const omegaij = sim.msm.omega[i,j];
+    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+
+    D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
+    gamma = @strain_rate(D);
+    gamma = gamma < gamma_min ? gamma_min : gamma;
+
+    # update relaxation matrix
+    muij = (
+             (1 - relax) * muij
+              + relax * k * gamma^(n-1);
+           );
+    return muij;
+  end
+end
+
+#! Initialize an explicit power law constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param gamma_min Minimum allowable strain rate
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
+                                             gamma_min::AbstractFloat,
+                                             max_iters::Int, tol::AbstractFloat,
+                                             relax::Number = 1.0)
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    lat = sim.lat;
+    msm = sim.msm;
+    const rhoij = sim.msm.rho[i,j];
+    omegaij = msm.omega[i,j];
+
+    # initialize density, viscosity, and relaxation matrix at node i,j
+    const muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+
+    # iteratively determine mu
+    iters = 0;
+    mu_prev = muo;
+    muij = muo;
+
+    while true
+      iters += 1;
+
+      D = strain_rate_tensor(lat, rhoij, fneq, omegaij);
+      gamma = @strain_rate(D);
+      gamma = gamma < gamma_min ? gamma_min : gamma;
+
+      # update relaxation matrix
+      muij = (
+               (1 - relax) * muij
+                + relax * k * gamma^(n-1);
+             );
+      omegaij = @omega(muij, lat.cssq, lat.dt);
+
+      # check for convergence
+      if abs(mu_prev - muij) / muo <= tol
+        break;
+      end
+
+      if iters > max_iters
+        warn("Solution for constitutive equation did not converge");
+        @show i, j;
+        break;
+      end
+
+      mu_prev = muij;
+    end
+    return muij;
+  end
+end
+
 #! Initialize a constant constitutive relationship
 #!
 #! \param mu Dynamic viscosity

@@ -190,7 +190,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
         # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin
-            global nsim;
+            global nsim = 0;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], 
                              defs["cbounds"], defs["bcs"], defs["nsteps"], 
                              defs["callbacks"], k);
@@ -199,7 +199,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
       else
         @profif(args["profile"],
           begin
-            global nsim;
+            global nsim = 0;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], 
                              defs["cbounds"], defs["bcs"], defs["nsteps"], 
                              defs["test_for_term"], defs["callbacks"], k); 

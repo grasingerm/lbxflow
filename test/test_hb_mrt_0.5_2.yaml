@@ -1,0 +1,89 @@
+version: 0.2.4
+
+# code to execute before parsing
+preamble: >
+  @init_plot_env();
+  using Base.Test;
+  const pgrad = -5.0e-6;
+  const F = [-pgrad; 0.0];
+  const datadir = "data";
+  const ni = 40;
+  const nj = 24;
+  const mu = 0.5;
+  const n = 2.0;
+  const constit_rel_f = init_constit_mrt_hb_implicit(mu, n, 0.0, 1e5, 1e-6, 250, 1e-7);
+  const forcing_kf = init_sukop_Fk(F);
+  const h = (nj - 1)/2.0;
+  const n_rat = convert(Float64, (n + 1.0) / n);
+  analytic_soln(xs) = begin;
+    result = zeros(length(xs));
+    for (i, x) in enumerate(xs)
+      l_n = 1.0 / n_rat * (-pgrad / mu)^(1.0 / n);
+      result[i] = l_n * (h^n_rat - abs(x)^n_rat);
+    end
+    return result;
+  end;
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,     expr: false }
+nu:       { value: mu,     expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+nsteps:   { value: 10000,   expr: false }
+col_f:    init_col_mrt(constit_rel_f, forcing_kf, S_luo);
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+callbacks:
+  - print_step_callback(25) 
+  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      xs = zeros(nj);
+      for i = 1:nj
+        xs[i] = (i - nj/2 - 0.5);
+      end
+      us = analytic_soln(xs);
+      i = convert(Int64, round(ni/2));
+      ys = reshape(sim.msm.u[1,i,:], length(xs), 1);
+      PyPlot.clf();
+      PyPlot.plot(xs, us, "r-", xs, ys, "b^");
+      PyPlot.legend(["analytical","LBM"]);
+      PyPlot.show();
+      println("Press Enter to continue");
+      readline(STDIN);
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1e-2
+      end
+      println("TEST PASSED");
+    end 
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x
