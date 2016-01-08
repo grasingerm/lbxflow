@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
-const LBX_VERSION = v"0.2.4";
-const root = dirname(@__FILE__);
+const LBX_VERSION = v"0.2.5";
 
 # load dependencies
-require(abspath(joinpath(root, "inc", "api.jl")));
+push!(LOAD_PATH, "inc");
+import LBXFlow;
 using ArgParse;
 
 const term_rows, term_cols = Base.tty_size();
@@ -61,9 +61,6 @@ s = ArgParseSettings();
   "--version"
     help = "display information about the program"
     action = :store_true
-  "--debug"
-    help = "turns on debugging mode"
-    action = :store_true
 end
 
 pa = parse_args(s);
@@ -88,7 +85,7 @@ if pa["profile-view"]; using ProfileView; end
 
 # run input file
 if pa["file"] != nothing
-  parse_and_run(pa["file"], pa);
+  LBXFlow.parse_and_run(pa["file"], pa);
 end
 
 # recursively search directory for input files
@@ -119,7 +116,7 @@ if pa["dir"] != nothing
   end
   
   for file in files
-    parse_and_run(file, pa);
+    LBXFlow.parse_and_run(file, pa);
   end
 
 end

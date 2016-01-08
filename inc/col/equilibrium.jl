@@ -2,9 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const __equilibrium_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__equilibrium_root__, "..", "lattice.jl")));
-require(abspath(joinpath(__equilibrium_root__, "..", "multiscale.jl")));
+include(joinpath("..", "lattice.jl"));
+include(joinpath("..", "multiscale.jl"));
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow
 #!

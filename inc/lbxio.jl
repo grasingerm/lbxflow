@@ -4,8 +4,7 @@
 
 @everywhere import HDF5, JLD
 
-const __lbxio_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__lbxio_root__, "multiscale.jl")));
-require(abspath(joinpath(__lbxio_root__, "sim", "simulate.jl")));
-require(abspath(joinpath(__lbxio_root__, "io", "readwrite.jl")));
-require(abspath(joinpath(__lbxio_root__, "io", "animate.jl")));
+include("multiscale.jl");
+include(joinpath("sim", "simulate.jl"));
+include(joinpath("io", "readwrite.jl"));
+include(joinpath("io", "animate.jl"));

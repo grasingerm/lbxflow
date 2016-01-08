@@ -2,19 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const __api_root__ = dirname(@__FILE__);
-
-require(abspath(joinpath(__api_root__, "boundary.jl")));
-require(abspath(joinpath(__api_root__, "col", "collision.jl")));
-require(abspath(joinpath(__api_root__, "convergence.jl")));
-require(abspath(joinpath(__api_root__, "lattice.jl")));
-require(abspath(joinpath(__api_root__, "lbxio.jl")));
-require(abspath(joinpath(__api_root__, "multiscale.jl")));
-require(abspath(joinpath(__api_root__, "profile.jl")));
-require(abspath(joinpath(__api_root__, "sim", "simulate.jl")));
-
-using PyCall
-@pyimport yaml
+push!(LOAD_PATH, ".");
+using LBXFlow;
 
 function parse_and_run(infile::AbstractString, args::Dict)
 
@@ -181,64 +170,4 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["test_for_term"] = (msm, prev_msm) -> true;
   end
 
-  if !args["debug"]
-
-    try
-      tic();
-
-      if !haskey(defs, "test_for_term")
-        # this simulate should be more memory and computationally efficient
-        @profif(args["profile"],
-          begin
-            global nsim = 0;
-            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], 
-                             defs["cbounds"], defs["bcs"], defs["nsteps"], 
-                             defs["callbacks"], k);
-          end;
-        );
-      else
-        @profif(args["profile"],
-          begin
-            global nsim = 0;
-            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], 
-                             defs["cbounds"], defs["bcs"], defs["nsteps"], 
-                             defs["test_for_term"], defs["callbacks"], k); 
-          end;
-        );
-      end
-
-    catch e
-      showerror(STDERR, e);
-      println();
-      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
-      warn("$infile: not completed successfully.");
-
-    finally
-      for fin in defs["finally"]
-        fin(sim, nsim);
-      end
-
-      println("$infile:\tSteps simulated: $nsim");
-      toc();
-
-      if args["profile"]
-        Profile.print(args["profile-io"], cols=args["profile-cols"]);
-      end
-
-      if args["profile-file"] != nothing; 
-        close(args["profile-io"]);
-        bt, lidict = Profile.retrieve();
-        JLD.jldopen(args["profile-file"]*".jld", "w") do file
-          write(file, "bt", bt);
-          write(file, "lidict", lidict);
-        end
-      elseif args["profile"] && args["profile-view"]
-        ProfileView.view();
-        println("Press enter to continue...");
-        readline(STDIN);
-      end
-    end
-  else
-    error("Debugging mode is not yet available");
-  end
 end
