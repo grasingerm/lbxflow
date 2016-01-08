@@ -2,15 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const __modcol_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__modcol_root__, "constitutive.jl")));
-require(abspath(joinpath(__modcol_root__, "forcing.jl")));
-require(abspath(joinpath(__modcol_root__, "equilibrium.jl")));
-require(abspath(joinpath(__modcol_root__, "..", "lattice.jl")));
-require(abspath(joinpath(__modcol_root__, "mrt_matrices.jl")));
-require(abspath(joinpath(__modcol_root__, "..", "multiscale.jl")));
-require(abspath(joinpath(__modcol_root__, "..", "numerics.jl")));
-require(abspath(joinpath(__modcol_root__, "..", "sim", "simtypes.jl")));
+include(joinpath("constitutive.jl"));
+include(joinpath("forcing.jl"));
+include(joinpath("equilibrium.jl"));
+include(joinpath("..", "lattice.jl"));
+include(joinpath("mrt_matrices.jl"));
+include(joinpath("..", "multiscale.jl"));
+include(joinpath("..", "numerics.jl"));
+include(joinpath("..", "sim", "simtypes.jl"));
 
 #! Single relaxation time collision function for incompressible Newtonian flow
 #!

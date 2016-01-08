@@ -2,9 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const __multiscale_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__multiscale_root__, "lattice.jl")));
-require(abspath(joinpath(__multiscale_root__, "numerics.jl")));
+include(joinpath("lattice.jl"));
+include(joinpath("numerics.jl"));
 
 #! Calculate strain rate from strain rate tensor
 macro strain_rate(D)

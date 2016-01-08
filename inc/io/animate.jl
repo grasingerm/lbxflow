@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const __animate_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__animate_root__, "..", "col", "mrt_matrices.jl")));
+#require(abspath(joinpath(__animate_root__, "..", "col", "mrt_matrices.jl")));
 
 #! Create callback for pausing the simulation
 function pause_sim_callback(step::Int)

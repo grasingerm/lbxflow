@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const __boundary_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__boundary_root__, "lattice.jl")));
+include("lattice.jl");
 
 #! Bounceback boundary condition for north boundary
 function north_bounce_back!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
