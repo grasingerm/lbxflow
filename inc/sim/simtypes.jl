@@ -10,8 +10,8 @@ abstract AbstractSim
 #! lat Lattice
 #! msm Multiscale map
 immutable Sim <: AbstractSim
-  lat::Lattice
-  msm::MultiscaleMap
+  lat::Lattice;
+  msm::MultiscaleMap;
 
   Sim(lat::Lattice, msm::MultiscaleMap) = new(lat, msm);
 end

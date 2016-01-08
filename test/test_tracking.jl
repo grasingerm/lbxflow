@@ -1,9 +1,6 @@
 using Base.Test
-const __test_tracking_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__test_tracking_root__, "..", "inc", "sim", 
-                         "tracking.jl")));
-require(abspath(joinpath(__test_tracking_root__, "..", "inc", "sim", 
-                         "simtypes.jl")));
+include(joinpath("..", "inc", "sim", "tracking.jl"));
+include(joinpath("..", "inc", "sim", "simtypes.jl"));
 
 const abounds = [1 1 1 1;]'
 const bbounds = [1 10 2 10;

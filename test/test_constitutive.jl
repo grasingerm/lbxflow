@@ -1,13 +1,8 @@
 using Base.Test
-const __test_constitutive_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__test_constitutive_root__, "..", "inc", "col", 
-                         "constitutive.jl")));
-require(abspath(joinpath(__test_constitutive_root__, "..", "inc", "col", 
-                         "equilibrium.jl")));
-require(abspath(joinpath(__test_constitutive_root__, "..", "inc",
-                         "multiscale.jl")));
-require(abspath(joinpath(__test_constitutive_root__, "..", "inc", "sim",
-                         "simtypes.jl")));
+include(joinpath("..", "inc", "col", "constitutive.jl"));
+include(joinpath("..", "inc", "col", "equilibrium.jl"));
+include(joinpath("..", "inc", "multiscale.jl"));
+include(joinpath("..", "inc", "sim", "simtypes.jl"));
 
 if length(ARGS) == 1
   const skip = int(ARGS[1]);

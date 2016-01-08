@@ -43,7 +43,6 @@ end
 
 #! Multiscale map for resolving macroscopic parameters
 immutable MultiscaleMap
-  lat::Lattice;
   rho_0::AbstractFloat;
   omega::Matrix{Float64};
   u::Array{Float64,3};
@@ -52,16 +51,16 @@ immutable MultiscaleMap
   function MultiscaleMap(nu::AbstractFloat, lat::Lattice, rho::AbstractFloat = 1.0)
     const ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 
-    new(lat, rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
+    new(rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
         zeros(Float64, (2, ni, nj)), fill(rho, (ni, nj)));
   end
   
-  MultiscaleMap(lat::Lattice, rho_0::AbstractFloat, omega::Matrix{Float64},
+  MultiscaleMap(rho_0::AbstractFloat, omega::Matrix{Float64},
                 u::Array{Float64,3}, rho::Matrix{Float64}) =
-    new(lat, rho_0, omega, u, rho);
+    new(rho_0, omega, u, rho);
 
   MultiscaleMap(msm::MultiscaleMap) =
-    new(msm.lat, msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho));
+    new(msm.rho_0, copy(msm.omega), copy(msm.u), copy(msm.rho));
 end
 
 #! Map particle distribution frequencies to macroscopic variables

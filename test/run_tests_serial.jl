@@ -1,9 +1,8 @@
-const __run_tests_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__run_tests_root__, "test_multiscale.jl")));
-require(abspath(joinpath(__run_tests_root__, "test_constitutive.jl")));
-require(abspath(joinpath(__run_tests_root__, "test_tracking.jl")));
+include("test_multiscale.jl");
+include("test_constitutive.jl");
+include("test_tracking.jl");
 
-const main = abspath(joinpath(__run_tests_root__, "..", "lbxflow.jl"));
+const main = abspath(joinpath("..", "lbxflow.jl"));
 const test_input_files = filter(s -> endswith(s, ".yaml"), readdir(__run_tests_root__));
 for test_input_file in test_input_files
   full_path_to_input_file = joinpath(__run_tests_root__, test_input_file);

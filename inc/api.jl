@@ -2,8 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-push!(LOAD_PATH, ".");
-using LBXFlow;
+#push!(LOAD_PATH, "inc");
+#using LBXFlow;
+
+using PyCall;
+@pyimport yaml;
 
 function parse_and_run(infile::AbstractString, args::Dict)
 
@@ -28,9 +31,9 @@ function parse_and_run(infile::AbstractString, args::Dict)
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
 
-  if haskey(ins, "version") && eval(parse("v\"$(ins["version"])\"")) > LBX_VERSION
+  #=if haskey(ins, "version") && eval(parse("v\"$(ins["version"])\"")) > LBX_VERSION
     warn("$infile recommends v$(ins["version"]), consider updating.");
-  end
+  end=#
 
   if haskey(ins, "preamble")
     if args["verbose"]; info("evaluating preamble..."); end;
@@ -168,6 +171,54 @@ function parse_and_run(infile::AbstractString, args::Dict)
   # Do not simulate, only post process
   if args["post-process"]
     defs["test_for_term"] = (msm, prev_msm) -> true;
+  end
+
+  nsim = 0;
+  try
+    tic();
+
+    if !haskey(defs, "test_for_term")
+      # this simulate should be more memory and computationally efficient
+      @profif(args["profile"], begin; nsim = simulate!(sim,
+              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+              defs["nsteps"], defs["callbacks"], k); end);
+    else
+      @profif(args["profile"], begin; nsim = simulate!(sim,
+              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
+              defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); 
+              end);
+    end
+
+  catch e
+    showerror(STDERR, e);
+    println();
+    Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+    warn("$infile: not completed successfully.");
+
+  finally
+    for fin in defs["finally"]
+      fin(sim, nsim);
+    end
+
+    println("$infile:\tSteps simulated: $nsim");
+    toc();
+
+    if args["profile"]
+      Profile.print(args["profile-io"], cols=args["profile-cols"]);
+    end
+
+    if args["profile-file"] != nothing; 
+      close(args["profile-io"]);
+      bt, lidict = Profile.retrieve();
+      JLD.jldopen(args["profile-file"]*".jld", "w") do file
+        write(file, "bt", bt);
+        write(file, "lidict", lidict);
+      end
+    elseif args["profile"] && args["profile-view"]
+      ProfileView.view();
+      println("Press enter to continue...");
+      readline(STDIN);
+    end
   end
 
 end

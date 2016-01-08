@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include(joinpath("constitutive.jl"));
-include(joinpath("forcing.jl"));
-include(joinpath("equilibrium.jl"));
+include("constitutive.jl");
+include("forcing.jl");
+include("equilibrium.jl");
 include(joinpath("..", "lattice.jl"));
-include(joinpath("mrt_matrices.jl"));
+include("mrt_matrices.jl");
 include(joinpath("..", "multiscale.jl"));
 include(joinpath("..", "numerics.jl"));
 include(joinpath("..", "sim", "simtypes.jl"));

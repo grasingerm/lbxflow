@@ -1,7 +1,5 @@
 using Base.Test
-const __test_multiscale_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__test_multiscale_root__, "..", "inc",
-                         "multiscale.jl")));
+include(joinpath("..", "inc","multiscale.jl"));
 
 println("Testing @nu and @omega macros...");
 for i=1:100000
