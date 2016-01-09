@@ -20,6 +20,39 @@ catch e
   warn("unable to clone List.jl");
 end
 
+function add_lbxflow_to_load_path(fp::AbstractString)
+  const defhome = homedir();
+  println("What is your home directory? (Enter for default: $defhome) ");
+  home = readline(STDIN);
+
+  home = (home == "\n") ? defhome : home;
+  jrc = open(joinpath(home, ".juliarc.jl"), "a");
+  write(jrc, "
+# This line was added by the lbxflow installation in order that LBXFlow
+# module might be found in the LOAD_PATH
+push!(LOAD_PATH, \"$fp\");
+");
+  close(jrc);
+end
+
+if isdir("inc") && isfile(joinpath("inc", "LBXFlow.jl"))
+  const fp = abspath("inc");
+  if !(fp in LOAD_PATH || joinpath(fp, "LBXFlow.jl") in LOAD_PATH)
+    info("$fp is not contained in LOAD_PATH, adding now...");
+    add_lbxflow_to_load_path(fp);
+  end
+elseif (isdir(joinpath("..", "inc")) && 
+        isfile(joinpath("..", "inc", "LBXFlow.jl")))
+  const fp = abspath("..", "inc");
+  if !(fp in LOAD_PATH || joinpath(fp, "LBXFlow.jl") in LOAD_PATH)
+    info("$fp is not contained in LOAD_PATH, adding now...");
+    add_lbxflow_to_load_path(fp);
+  end
+else
+  warn("Cannot find directory where LBXFlow module is contained.");
+  error("Try rerunning the install script from lbxflow root!");
+end
+
 warn("For python dependencies, pip must be installed!");
 try
   println("Attempting to install PyYaml...");
