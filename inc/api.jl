@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#push!(LOAD_PATH, "inc");
-#using LBXFlow;
-
 using PyCall;
 @pyimport yaml;
 
@@ -173,20 +170,27 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["test_for_term"] = (msm, prev_msm) -> true;
   end
 
-  nsim = 0;
   try
     tic();
 
     if !haskey(defs, "test_for_term")
       # this simulate should be more memory and computationally efficient
-      @profif(args["profile"], begin; nsim = simulate!(sim,
-              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-              defs["nsteps"], defs["callbacks"], k); end);
+      @profif(args["profile"],
+        begin;
+          global nsim;
+          nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                           defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
+        end;
+      );
     else
-      @profif(args["profile"], begin; nsim = simulate!(sim,
-              defs["sbounds"], defs["col_f"], defs["cbounds"], defs["bcs"],
-              defs["nsteps"], defs["test_for_term"], defs["callbacks"], k); 
-              end);
+      @profif(args["profile"],
+        begin;
+          global nsim;
+          nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                           defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                           defs["callbacks"], k); 
+        end;
+      );
     end
 
   catch e

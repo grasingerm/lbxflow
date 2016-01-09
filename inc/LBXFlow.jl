@@ -17,15 +17,4 @@ include("stability.jl");
 
 include("api.jl");
 
-#=export north_bounce_back!;
-export south_bounce_back!;
-export east_bounce_back!;
-export west_bounce_back!;
-export north_half_bounce_back!;
-export south_half_bounce_back!;
-export east_half_bounce_back!;
-export west_half_bounce_back!;
-export periodic!;
-export periodic_east_to_west!=#
-
 end
