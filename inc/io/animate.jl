@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#require(abspath(joinpath(__animate_root__, "..", "col", "mrt_matrices.jl")));
-
 #! Create callback for pausing the simulation
 function pause_sim_callback(step::Int)
   return (sim::AbstractSim, k::Int) -> begin
@@ -177,12 +175,12 @@ function plot_streamlines_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       const ni, nj = size(sim.msm.rho);
-      x = linspace(0.0, 1.0, ni);
-      y = linspace(0.0, 1.0, nj);
+      x = collect(linspace(0.0, 1.0, ni));
+      y = collect(linspace(0.0, 1.0, nj));
 
       PyPlot.clf();
-      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
+                        transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
       PyPlot.ylim(0.0, 1.0);
       PyPlot.xlim(0.0, 1.0);
       PyPlot.draw();
@@ -352,12 +350,12 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::AbstractString,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       const ni, nj = size(sim.msm.rho);
-      x = linspace(0.0, 1.0, ni);
-      y = linspace(0.0, 1.0, nj);
+      x = collect(linspace(0.0, 1.0, ni));
+      y = collect(linspace(0.0, 1.0, nj));
 
       PyPlot.clf();
-      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
+                        transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
       PyPlot.ylim(0.0, 1.0);
       PyPlot.xlim(0.0, 1.0);
       PyPlot.savefig(fname*"_step-$k.png");
@@ -568,12 +566,12 @@ function plot_streamlines_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       const ni, nj = size(sim.msm.rho);
-      x = linspace(0.0, 1.0, ni);
-      y = linspace(0.0, 1.0, nj);
+      x = collect(linspace(0.0, 1.0, ni));
+      y = collect(linspace(0.0, 1.0, nj));
 
       PyPlot.clf();
-      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
+                        transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
       PyPlot.ylim(0.0, 1.0);
       PyPlot.xlim(0.0, 1.0);
       PyPlot.text(xy[1], xy[2], "step: $k");
@@ -762,12 +760,12 @@ function plot_streamlines_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       const ni, nj = size(sim.msm.rho);
-      x = linspace(0.0, 1.0, ni);
-      y = linspace(0.0, 1.0, nj);
+      x = collect(linspace(0.0, 1.0, ni));
+      y = collect(linspace(0.0, 1.0, nj));
 
       PyPlot.clf();
-      PyPlot.streamplot(x, y, reshape(transpose(sim.msm.u[1,:,:]), (nj, ni)), 
-                        reshape(transpose(sim.msm.u[2,:,:]), (nj, ni)));
+      PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
+                        transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
       PyPlot.ylim(0.0, 1.0);
       PyPlot.xlim(0.0, 1.0);
       PyPlot.text(xy[1], xy[2], "step: $k");
