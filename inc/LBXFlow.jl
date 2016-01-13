@@ -14,7 +14,9 @@ include("multiscale.jl");
 include("profile.jl");
 include(joinpath("sim","simulate.jl"));
 include("stability.jl");
-
 include("api.jl");
+
+include(joinpath("col","entropic.jl"));
+import Entropic;
 
 end
