@@ -17,6 +17,5 @@ include("stability.jl");
 include("api.jl");
 
 include(joinpath("col","entropic.jl"));
-import Entropic;
 
 end

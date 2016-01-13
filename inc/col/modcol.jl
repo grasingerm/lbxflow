@@ -13,7 +13,6 @@ include(joinpath("..", "sim", "simtypes.jl"));
 
 #! Single relaxation time collision function for incompressible Newtonian flow
 #!
-#! \param bounds Boundaries that define active parts of the lattice
 #! \param constit_relation_f Constitutive relationship
 #! \return collision_function!(sim, bounds)
 function init_col_srt(constit_relation_f::Function)

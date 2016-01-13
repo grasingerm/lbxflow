@@ -19,6 +19,9 @@ function entropy_lat_boltzmann(lat::Lattice, i::Int, j::Int)
 end
 
 #! Calculate the classical Boltzmann entropy
+#!
+#! \param   lat Lattice
+#! \return      Map of Boltzmann entropy over the domain 
 function entropy_lat_boltzmann(lat::Lattice)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   ent = Array{Float64,2}(lat.ni, lat.nj);
@@ -27,6 +30,19 @@ function entropy_lat_boltzmann(lat::Lattice)
   end
 
   return ent;
+end
+
+#! Calculate the classical Boltzmann entropy
+#!
+#! \param lat Lattice
+#! \param f   Particle distribution vector
+#! \return    Entropy
+function entropy_lat_boltzmann(lat::Lattice, f::Vector{Float64})
+  ent = 0.0;
+  for k = 1:lat.n
+    ent -= f[k] * log(f[k] / lat.w[k]);
+  end
+  return ent
 end
 
 #! Calculate relative non-equilibrium entropy density
