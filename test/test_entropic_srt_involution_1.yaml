@@ -36,7 +36,9 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    Entropic.init_col_srt(constit_rel_f, forcing_kf);
+col_f: >    
+  init_col_entropic_srt(constit_rel_f, forcing_kf, 
+    search_entropic_stability=search_alpha_entropic_involution_db);
 
 # boundaries
 sbounds:
@@ -54,7 +56,8 @@ bcs:
   - periodic_east_to_west!
 
 callbacks:
-  - print_step_callback(25) 
+  - print_step_callback(25)
+  - pause_sim_callback(50)
 
 # clean-up, backup, write out
 finally:

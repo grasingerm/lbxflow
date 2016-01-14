@@ -13,7 +13,11 @@ include("lattice.jl");
 function entropy_lat_boltzmann(lat::Lattice, i::Int, j::Int)
   ent = 0.0;
   for k = 1:lat.n
-    ent -= lat.f[k, i, j] * log(lat.f[k, i, j] / lat.w[k]);
+    if lat.f[k, i, j] > 0.0
+      ent -= lat.f[k, i, j] * log(lat.f[k, i, j] / lat.w[k]);
+    elseif lat.f[k, i, j] < -2*eps()
+      error("f[$k, $i, $j] = $(f[$k, $i, $j]), f[$k, $i, $j] < 0.0");
+    end
   end
   return ent
 end
@@ -40,7 +44,11 @@ end
 function entropy_lat_boltzmann(lat::Lattice, f::Vector{Float64})
   ent = 0.0;
   for k = 1:lat.n
-    ent -= f[k] * log(f[k] / lat.w[k]);
+    if f[k] > 0.0
+      ent -= f[k] * log(f[k] / lat.w[k]);
+    elseif f[k] < -2*eps()
+      error("f[$k] = $(f[k]), f[$k] < 0.0");
+    end
   end
   return ent
 end
