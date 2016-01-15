@@ -17,6 +17,8 @@ const __KAPPA_ERROR_MSG__ = ("Entropic relaxation factor, kappa, must be "  *
                              "or equal to one for the collision operator "  *
                              "to Lyapunov stable.");
 
+const ALPHA_EPS           = 1.0e-4; #TODO do something with this heuristic
+
 #! Entropically stabilized LBGK collision operator for incompressible flow
 #!
 #! \param constit_relation_f  Constitutive relationship
@@ -37,6 +39,8 @@ function init_col_entropic_srt(constit_relation_f::Function;
     const ni, nj = size(msm.rho);
     const nbounds = size(bounds, 2);
 
+    root_not_found = false;
+
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
       for j = j_min:j_max, i = i_min:i_max
@@ -55,7 +59,6 @@ function init_col_entropic_srt(constit_relation_f::Function;
         const mu      =   constit_relation_f(sim, fneq, i, j);
         const omega   =   @omega(mu, lat.cssq, lat.dt);
 
-        info("dS = $(entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f))");
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
           for k = 1:lat.n
@@ -63,10 +66,8 @@ function init_col_entropic_srt(constit_relation_f::Function;
           end
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          @show alpha;
-          if alpha < 1e-4 #TODO fix this heuristic...
-            warn("Root for entropic stabilization not found at node ($i, $j)");
-            warn("Solution may become unstable due to decrease in entropy.");
+          if alpha < ALPHA_EPS
+            root_not_found = true;
             for k = 1:lat.n
               lat.f[k,i,j] += omega * (feq[k] - lat.f[k,i,j]);
             end
@@ -80,6 +81,12 @@ function init_col_entropic_srt(constit_relation_f::Function;
         msm.omega[i,j] = omega;
       end
     end
+
+    if root_not_found
+      warn("Root for entropic stabilization not found.");
+      warn("Solution may become unstable due to decrease in entropy.");
+    end
+
   end
 end
 
@@ -106,6 +113,8 @@ function init_col_entropic_srt(constit_relation_f::Function,
     const ni, nj = size(msm.rho);
     const nbounds = size(bounds, 2);
 
+    root_not_found = false;
+
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
       for j = j_min:j_max, i = i_min:i_max
@@ -124,7 +133,6 @@ function init_col_entropic_srt(constit_relation_f::Function,
         const mu      =   constit_relation_f(sim, fneq, i, j);
         const omega   =   @omega(mu, lat.cssq, lat.dt);
 
-        info("dS = $(entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f))");
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
           for k = 1:lat.n
@@ -133,10 +141,8 @@ function init_col_entropic_srt(constit_relation_f::Function,
           end
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          @show alpha;
-          if alpha < 1e-4 #TODO fix this heuristic...
-            warn("Root for entropic stabilization not found at node ($i, $j)");
-            warn("Solution may become unstable due to decrease in entropy.");
+          if alpha < ALPHA_EPS
+            root_not_found = true;
             for k = 1:lat.n
               lat.f[k,i,j] += (omega * (feq[k] - lat.f[k,i,j])
                                + colf(lat, omega, uij, k));
@@ -151,6 +157,12 @@ function init_col_entropic_srt(constit_relation_f::Function,
         msm.omega[i,j] = omega;
       end
     end
+
+    if root_not_found
+      warn("Root for entropic stabilization not found.");
+      warn("Solution may become unstable due to decrease in entropy.");
+    end
+
   end
 end
 
@@ -176,6 +188,8 @@ function init_col_entropic_mrt(constit_relation_f::Function;
     const ni, nj = size(msm.rho);
     const nbounds = size(bounds, 2);
 
+    root_not_found = false;
+
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
       for j = j_min:j_max, i = i_min:i_max
@@ -197,9 +211,8 @@ function init_col_entropic_mrt(constit_relation_f::Function;
           lat.f[:,i,j] = f - iM * Sij * M * fneq; # perform collision
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          if alpha < 1e-4 #TODO fix this heuristic...
-            warn("Root for entropic stabilization not found at node ($i, $j)");
-            warn("Solution may become unstable due to decrease in entropy.");
+          if alpha < ALPHA_EPS
+            root_not_found = true;
             lat.f[:,i,j] = f - iM * Sij * M * fneq;
           else
             for a in (8,9); Sij[a] *= kappa * alpha; end;
@@ -210,6 +223,12 @@ function init_col_entropic_mrt(constit_relation_f::Function;
         msm.omega[i,j] = @omega(mu, lat.cssq, lat.dt);;
       end
     end
+
+    if root_not_found
+      warn("Root for entropic stabilization not found.");
+      warn("Solution may become unstable due to decrease in entropy.");
+    end
+
   end
 end
 
@@ -235,6 +254,8 @@ function init_col_entropic_mrt(constit_relation_f::Function,
     const iM = @DEFAULT_MRT_IM();
     const ni, nj = size(msm.rho);
     const nbounds = size(bounds, 2);
+
+    root_not_found = false;
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
@@ -265,9 +286,8 @@ function init_col_entropic_mrt(constit_relation_f::Function,
           lat.f[:,i,j]   = f - iM * Sij * M * fneq + fdl;
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          if alpha < 1e-4 #TODO fix this heuristic...
-            warn("Root for entropic stabilization not found at node ($i, $j)");
-            warn("Solution may become unstable due to decrease in entropy.");
+          if alpha < ALPHA_EPS
+            root_not_found = true;
             lat.f[:,i,j] = f - iM * Sij * M * fneq + fdl;
           else
             for a in (8,9); Sij[a] *= kappa * alpha; end;
@@ -278,10 +298,14 @@ function init_col_entropic_mrt(constit_relation_f::Function,
         msm.omega[i,j] = omegaij;
       end
     end
+
+    if root_not_found
+      warn("Root for entropic stabilization not found.");
+      warn("Solution may become unstable due to decrease in entropy.");
+    end
+
   end
 end
-
-import PyPlot;
 
 #! Search for alpha, the limit of over-relaxation for entropic involution
 #!
@@ -296,8 +320,6 @@ function search_alpha_entropic_involution(lat::Lattice, f::Vector{Float64},
   const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
   const rs = Roots.fzeros(F, sbounds[1], sbounds[2]);
-  @show sbounds;
-  @show rs;
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
@@ -319,32 +341,13 @@ function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64},
   const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
 
+  # Determine appropriate search upperbound
   bs = Array{Float64}(lat.n);
   for i=1:lat.n
     bs[i] = abs(f[i] / (f[i] - feq[i]));
   end
-
-  xs = linspace(0.0, 2.0, 1000);
-  S(f) = entropy_lat_boltzmann(lat, f);
-  ys = zeros(1000);
-  for i=1:1000
-    ys[i] = F(xs[i]);
-  end
-  PyPlot.plot(xs, ys);
-  PyPlot.show();
-
-  xs = linspace(0.0, minimum(bs), 1000);
-  S = entropy_lat_boltzmann;
-  ys = zeros(1000);
-  for i=1:1000
-    ys[i] = F(xs[i]);
-  end
-  PyPlot.plot(xs, ys);
-  PyPlot.show();
-
-  @show bs, minimum(bs);
+  
   const rs = Roots.fzeros(F, 0.0, minimum(bs));
-  @show rs;
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
