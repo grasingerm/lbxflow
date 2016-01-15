@@ -3,12 +3,12 @@ version: 0.2.5
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -9e-3;
+  const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 40;
-  const nj = 25;
-  const mu = 0.25;
+  const nj = 12;
+  const mu = 1/6;
   const constit_rel_f = init_constit_srt_const(mu);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj - 1)/2.0;
@@ -19,8 +19,6 @@ preamble: >
     end
     return result;
   end;
-  u_max = -1.0 / (2.0 * mu) * pgrad * (h^2 - (nj/2)^2);
-  info("Reynolds = $(reynolds(u_max, nj, mu))");
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -40,7 +38,7 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >    
   init_col_entropic_srt(constit_rel_f, forcing_kf,
-    search_entropic_stability=init_search_alpha_entropic_involution((0.0,4.0)));
+    search_entropic_stability=search_alpha_newton_entropic_involution);
 
 # boundaries
 sbounds:
@@ -58,7 +56,7 @@ bcs:
   - periodic_east_to_west!
 
 callbacks:
-  - print_step_callback(5)
+  - print_step_callback(100)
 
 # clean-up, backup, write out
 finally:
@@ -72,10 +70,9 @@ finally:
       i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1.5e-2
       end
       println("TEST PASSED");
-      info("Reynolds = $(reynolds(maximum(us), nj, mu))");
     end 
 
 # test for conditions to end simulation

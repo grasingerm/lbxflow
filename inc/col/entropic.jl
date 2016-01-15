@@ -307,6 +307,7 @@ function init_col_entropic_mrt(constit_relation_f::Function,
   end
 end
 
+#TODO should we allow the user to specify their own H-function?
 #! Search for alpha, the limit of over-relaxation for entropic involution
 #!
 #! \param   lat       Lattice
@@ -388,4 +389,81 @@ function init_search_alpha_entropic_contraction(sbounds::Tuple{Real,Real},
   return (lat, f, feq) -> search_alpha_entropic_contraction(lat, f, feq, 
                                                             sbounds=sbounds,
                                                             omega=omega);
+end
+
+#! Helper functions to be used in Newton and other gradient based methods
+const __F_ENTROPY = (lat, x_n, f, feq) -> begin;
+  return (entropy_lat_boltzmann(lat, f + x_n * (feq - f) ) 
+         - entropy_lat_boltzmann(lat, f));
+end;
+
+function __F_PRIME_ENTROPY(lat, x_n, f, feq)
+  sum = 0.0;
+  for i=1:lat.n
+    fneq = feq[i] - f[i];
+    sum -= (fneq * ( log( (f[i] + x_n * fneq) / lat.w[i] ) + 1 ));
+  end
+  return sum;
+end
+
+const __MAX_ITERS_NEWTON = convert(Int, 1e6);
+
+#! Search for alpha using Newton's method
+#! Details for this algorithm were mostly borrowed from Gorban and Packwood 2014
+#!
+#! \param   lat         Lattice
+#! \param   f           Particle distribution vector
+#! \param   feq         Equilibrium particle distribution vector
+#! \param   x_0         Initial guess
+#! \param   esp_search  Search tolerance
+#! \return              Limit of over-relaxation for entropic involution
+function search_alpha_newton_entropic_involution(lat::Lattice,
+                                                 f::Vector{Float64}, 
+                                                 feq::Vector{Float64};
+                                                 x_0=1.5::Real,
+                                                 eps_search=1e-5::Real)
+  @assert(eps_search >= 0.0, "Search tolerance must be nonnegative");
+
+  const fneq_norm = norm(feq - f, 2);
+  k = 0;
+  x_n = x_0;
+
+  while true
+
+    if x_n == 0.0 # heuristic so that we don't get stuck at zero
+      x_n += rand(0.0:1e-4:2.0);
+    end
+
+    fe  =  __F_ENTROPY(lat, x_n, f, feq);
+    fep =  __F_PRIME_ENTROPY(lat, x_n, f, feq);
+
+    x_n -= fe / fep;
+
+    #=for i=1:lat.n # heuristic, don't want to fall out of polytope
+      if f[i] - feq[i] < -2*eps()
+        x_n = rand(0.0:1e-4:2.0);
+        continue;
+      end
+    end=#
+
+    #TODO perhaps wrap this in a try catch clause and just bail if shit goes bad
+    if fneq_norm * abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search 
+    #if abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search
+      break;
+    end
+
+    k += 1;
+    @assert(k <= __MAX_ITERS_NEWTON, "Root not found");
+  end
+
+  fe = __F_ENTROPY(lat, x_n, f, feq);
+  return (fe >= 0) ? x_n : x_n - 2 * fe / __F_PRIME_ENTROPY(lat, x_n, f, feq); 
+end
+
+#! Bind initial guess to entropic involution search using Newton's method
+#TODO use FastAnnonymous module here
+function init_search_alpha_newton_entropic_involution(x_0::Real, 
+                                                      eps_search::Real)
+  return (lat, f, feq) -> (search_alpha_newton_entropic_involution(lat, f, feq, 
+                            x_0, eps_search));
 end

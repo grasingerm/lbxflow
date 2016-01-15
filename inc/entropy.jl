@@ -4,6 +4,9 @@
 
 include("lattice.jl");
 
+#const _EPS_POS_F = -1e-2;
+const _EPS_POS_F = -2*eps();
+
 #! Calculate the classical Boltzmann entropy
 #!
 #! \param lat Lattice
@@ -15,8 +18,9 @@ function entropy_lat_boltzmann(lat::Lattice, i::Int, j::Int)
   for k = 1:lat.n
     if lat.f[k, i, j] > 0.0
       ent -= lat.f[k, i, j] * log(lat.f[k, i, j] / lat.w[k]);
-    elseif lat.f[k, i, j] < -2*eps()
-      error("f[$k, $i, $j] = $(f[$k, $i, $j]), f[$k, $i, $j] < 0.0");
+    elseif lat.f[k, i, j] < _EPS_POS_F
+      error("f[$k, $i, $j] = $(f[$k, $i, $j]), f[$k, $i, $j] < 0.0 in " * "
+            $(@__FILE__)");
     end
   end
   return ent
@@ -46,8 +50,8 @@ function entropy_lat_boltzmann(lat::Lattice, f::Vector{Float64})
   for k = 1:lat.n
     if f[k] > 0.0
       ent -= f[k] * log(f[k] / lat.w[k]);
-    elseif f[k] < -2*eps()
-      error("f[$k] = $(f[k]), f[$k] < 0.0");
+    elseif f[k] < _EPS_POS_F
+      error("f[$k] = $(f[k]), f[$k] < 0.0 in $(@__FILE__)");
     end
   end
   return ent

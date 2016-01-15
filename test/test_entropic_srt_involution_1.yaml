@@ -37,7 +37,8 @@ nj:       { value: nj,      expr: true  }
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
 col_f: >    
-  init_col_entropic_srt(constit_rel_f, forcing_kf);
+  init_col_entropic_srt(constit_rel_f, forcing_kf,
+    search_entropic_stability=init_search_alpha_entropic_involution((0.0,4.0)));
 
 # boundaries
 sbounds:
