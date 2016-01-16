@@ -83,14 +83,14 @@ end
 #! \param u Macroscopic flow at lattice site
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency distribution that maximizes entropy
-function feq_incomp_entropic(lat::LatticeD2Q9, rho::AbstractFloat, 
-                             u::Vector{Float64}, k::Int)
-  const nj = length(u);
-  prod = 1.0;
+function feq_incomp_max_entropy(lat::LatticeD2Q9, rho::AbstractFloat, 
+                                u::Vector{Float64}, k::Int)
+  const nj  =   length(u);
+  prod      =   1.0;
 
   for j=1:nj
-    x1 = sqrt(1 + 3.0*u[j]^2);
-    prod *= (2 - x1) * ( (2*u[j] + x1) / (1 - u[j]) )^lat.c[j,k]; 
+    x1      =   sqrt(1 + 3.0*u[j]^2);
+    prod    *=  (2 - x1) * ( (2*u[j] + x1) / (1 - u[j]) )^lat.c[j,k]; 
   end
 
   return lat.w[k] * rho * prod;

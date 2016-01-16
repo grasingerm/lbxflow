@@ -4,6 +4,9 @@
 
 include("lattice.jl");
 
+#const _EPS_POS_F = -1e-2;
+const _EPS_POS_F = -2*eps();
+
 #! Calculate the classical Boltzmann entropy
 #!
 #! \param lat Lattice
@@ -13,12 +16,20 @@ include("lattice.jl");
 function entropy_lat_boltzmann(lat::Lattice, i::Int, j::Int)
   ent = 0.0;
   for k = 1:lat.n
-    ent -= lat.f[k, i, j] * log(lat.f[k, i, j] / lat.w[k]);
+    if lat.f[k, i, j] > 0.0
+      ent -= lat.f[k, i, j] * log(lat.f[k, i, j] / lat.w[k]);
+    elseif lat.f[k, i, j] < _EPS_POS_F
+      error("f[$k, $i, $j] = $(f[$k, $i, $j]), f[$k, $i, $j] < 0.0 in " * "
+            $(@__FILE__)");
+    end
   end
   return ent
 end
 
 #! Calculate the classical Boltzmann entropy
+#!
+#! \param   lat Lattice
+#! \return      Map of Boltzmann entropy over the domain 
 function entropy_lat_boltzmann(lat::Lattice)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
   ent = Array{Float64,2}(lat.ni, lat.nj);
@@ -27,6 +38,23 @@ function entropy_lat_boltzmann(lat::Lattice)
   end
 
   return ent;
+end
+
+#! Calculate the classical Boltzmann entropy
+#!
+#! \param lat Lattice
+#! \param f   Particle distribution vector
+#! \return    Entropy
+function entropy_lat_boltzmann(lat::Lattice, f::Vector{Float64})
+  ent = 0.0;
+  for k = 1:lat.n
+    if f[k] > 0.0
+      ent -= f[k] * log(f[k] / lat.w[k]);
+    elseif f[k] < _EPS_POS_F
+      error("f[$k] = $(f[k]), f[$k] < 0.0 in $(@__FILE__)");
+    end
+  end
+  return ent
 end
 
 #! Calculate relative non-equilibrium entropy density
