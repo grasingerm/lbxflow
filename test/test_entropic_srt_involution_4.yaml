@@ -3,12 +3,12 @@ version: 0.2.5
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -1.102e-3;
+  const pgrad = -1.2e-3;
   const F = [-pgrad; 0.0];
   const datadir = "data";
-  const ni = 40;
-  const nj = 12;
-  const mu = 1/6;
+  const ni = 80;
+  const nj = 30;
+  const mu = 0.15;
   const constit_rel_f = init_constit_srt_const(mu);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj - 1)/2.0;
@@ -19,6 +19,8 @@ preamble: >
     end
     return result;
   end;
+  u_max = -1.0 / (2.0 * mu) * pgrad * (h^2 - (nj/2)^2);
+  info("Reynolds = $(reynolds(u_max, nj, mu))");
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -73,6 +75,7 @@ finally:
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1.5e-2
       end
       println("TEST PASSED");
+      info("Reynolds = $(reynolds(maximum(us), nj, mu))");
     end 
 
 # test for conditions to end simulation

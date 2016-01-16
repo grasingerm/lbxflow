@@ -465,5 +465,5 @@ end
 function init_search_alpha_newton_entropic_involution(x_0::Real, 
                                                       eps_search::Real)
   return (lat, f, feq) -> (search_alpha_newton_entropic_involution(lat, f, feq, 
-                            x_0, eps_search));
+                            x_0=x_0, eps_search=eps_search));
 end
