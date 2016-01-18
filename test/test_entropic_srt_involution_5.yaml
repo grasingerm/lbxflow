@@ -8,7 +8,7 @@ preamble: >
   const datadir = "data";
   const ni = 90;
   const nj = 35;
-  const mu = 0.15;
+  const mu = 0.25;
   const constit_rel_f = init_constit_srt_const(mu);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj - 1)/2.0;
