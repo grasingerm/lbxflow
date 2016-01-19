@@ -336,6 +336,29 @@ end
 #! \param   lat       Lattice
 #! \param   f         Particle distribution vector
 #! \param   feq       Equilibrium particle distribution vector
+#! \param   x_0       Initial guess
+#! \param   order     Order of method
+#! \return            Limit of over-relaxation for entropic involution
+function search_alpha_stef_entropic_involution(lat::Lattice, f::Vector{Float64}, 
+                                               feq::Vector{Float64};
+                                               x_0::Real=1.5, order::Int=1)
+  const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
+                        - entropy_lat_boltzmann(lat, f));
+  return Roots.fzero(F, x_0, order=order);
+end
+
+#! Bind search range to entropic involution search function
+#TODO use FastAnnonymous module here
+function init_search_alpha_stef_entropic_involution(x_0::Real; order::Int=1)
+  return (lat, f, feq) -> search_alpha_entropic_involution(lat, f, feq, x_0=x_0,
+                                                           order=order);
+end
+
+#! Search for alpha, the limit of over-relaxation for entropic involution
+#!
+#! \param   lat       Lattice
+#! \param   f         Particle distribution vector
+#! \param   feq       Equilibrium particle distribution vector
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64}, 
                                              feq::Vector{Float64})
@@ -515,7 +538,7 @@ end
 #! \param   x_0         Initial guess
 #! \param   esp_search  Search tolerance
 #! \param   omega       Entropic contraction factor
-#! \return              Limit of over-relaxation for entropic involution
+#! \return              Limit of over-relaxation for entropic contraction
 function search_alpha_newton_entropic_contraction(lat::Lattice, 
                                                   f::Vector{Float64}, 
                                                   feq::Vector{Float64};
@@ -583,7 +606,8 @@ function __test_search_alpha_newton_entropic_involution(x_0::Real=1.5,
   return (lat, f, feq) -> begin;
     const norm_fneq     = norm(f-feq, 2);
     const alpha_newton  = _sanei(lat, f, feq);
-    const alpha_roots   = search_alpha_entropic_involution_db(lat, f, feq);
+    const alpha_roots   = search_alpha_stef_entropic_involution(lat, f, feq);
+    #TODO plot
     @show alpha_newton, alpha_roots;
     @test_approx_eq_eps alpha_newton alpha_roots 0.05;
     return alpha_newton;

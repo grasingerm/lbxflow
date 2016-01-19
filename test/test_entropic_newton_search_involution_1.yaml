@@ -40,7 +40,7 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >    
   init_col_entropic_srt(constit_rel_f, forcing_kf,
-    search_entropic_stability=__test_search_alpha_newton_entropic_involution());
+    search_entropic_stability=__test_search_alpha_newton_entropic_involution(1.5, 1e-15));
 
 # boundaries
 sbounds:
