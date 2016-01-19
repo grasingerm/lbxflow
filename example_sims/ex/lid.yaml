@@ -1,14 +1,14 @@
-version: 0.2.1
+version: 0.2.5
 
 # code to execute before parsing
 preamble: >
   const id = "lid";
   const datadir = joinpath("data","ex-lid");
-  const ni = 256;
-  const nj = 256;
-  const U = 1.00;
-  const mu_p = 2.56;
-  const Re = U * ni / mu_p;
+  const ni  = 256;
+  const nj  = 256;
+  const U   = 0.01;
+  const mu  = 2.56;
+  const Re  = U * ni / mu;
   info("Re = $Re");
   using PyPlot;
   const constit_rel_f = init_constit_srt_const(mu_p);
