@@ -336,6 +336,29 @@ end
 #! \param   lat       Lattice
 #! \param   f         Particle distribution vector
 #! \param   feq       Equilibrium particle distribution vector
+#! \param   x_0       Initial guess
+#! \param   order     Order of method
+#! \return            Limit of over-relaxation for entropic involution
+function search_alpha_stef_entropic_involution(lat::Lattice, f::Vector{Float64}, 
+                                               feq::Vector{Float64};
+                                               x_0::Real=1.5, order::Int=1)
+  const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
+                        - entropy_lat_boltzmann(lat, f));
+  return Roots.fzero(F, x_0, order=order);
+end
+
+#! Bind search range to entropic involution search function
+#TODO use FastAnnonymous module here
+function init_search_alpha_stef_entropic_involution(x_0::Real; order::Int=1)
+  return (lat, f, feq) -> search_alpha_entropic_involution(lat, f, feq, x_0=x_0,
+                                                           order=order);
+end
+
+#! Search for alpha, the limit of over-relaxation for entropic involution
+#!
+#! \param   lat       Lattice
+#! \param   f         Particle distribution vector
+#! \param   feq       Equilibrium particle distribution vector
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64}, 
                                              feq::Vector{Float64})
@@ -352,7 +375,7 @@ function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64},
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
-#! Search for alpha, the limit of over-relaxation for entropic involution
+#! Search for alpha, the limit of over-relaxation for entropic contraction
 #!
 #! \param   lat       Lattice
 #! \param   f         Particle distribution vector
@@ -391,6 +414,37 @@ function init_search_alpha_entropic_contraction(sbounds::Tuple{Real,Real},
                                                             omega=omega);
 end
 
+#! Search for alpha, the limit of over-relaxation for entropic contraction
+#!
+#! \param   lat       Lattice
+#! \param   f         Particle distribution vector
+#! \param   feq       Equilibrium particle distribution vector
+#! \param   omega     Entropic contraction factor
+#! \return            Limit of over-relaxation for entropic involution
+function search_alpha_entropic_contraction_db(lat::Lattice, f::Vector{Float64}, 
+                                              feq::Vector{Float64};
+                                              omega=1.5::Real)
+  @assert(1.0 <= omega && omega < 2.0, ("Entropic contraction factor must be " *
+                                        "greater than or equal to 1.0 and "    *
+                                        "less than two"));
+
+  const F = (alpha) -> begin;
+    const sf      = entropy_lat_boltzmann(lat, f);
+    const sfeq    = entropy_lat_boltzmann(lat, feq);
+    const sfp     = entropy_lat_boltzmann(lat, f + alpha * (feq - f));
+    return sqrt(omega - 1) * (sf - sfeq) - (sfp - sfeq);
+  end
+
+  # Determine appropriate search upperbound
+  bs = Array{Float64}(lat.n);
+  for i=1:lat.n
+    bs[i] = abs(f[i] / (f[i] - feq[i]));
+  end
+
+  const rs        = Roots.fzeros(F, 0.0, minimum(bs));
+  return (length(rs) > 0) ? rs[end] : 0.0;
+end
+
 #! Helper functions to be used in Newton and other gradient based methods
 const __F_ENTROPY = (lat, x_n, f, feq) -> begin;
   return (entropy_lat_boltzmann(lat, f + x_n * (feq - f) ) 
@@ -421,7 +475,7 @@ function search_alpha_newton_entropic_involution(lat::Lattice,
                                                  f::Vector{Float64}, 
                                                  feq::Vector{Float64};
                                                  x_0=1.5::Real,
-                                                 eps_search=1e-5::Real)
+                                                 eps_search=1e-10::Real)
   @assert(eps_search >= 0.0, "Search tolerance must be nonnegative");
 
   const fneq_norm = norm(feq - f, 2);
@@ -440,7 +494,7 @@ function search_alpha_newton_entropic_involution(lat::Lattice,
     x_n -= fe / fep;
 
     #=for i=1:lat.n # heuristic, don't want to fall out of polytope
-      if f[i] - feq[i] < -2*eps()
+      if f[i] + x_n * (feq[i]-f[i]) < -2*eps()
         x_n = rand(0.0:1e-4:2.0);
         continue;
       end
@@ -466,4 +520,114 @@ function init_search_alpha_newton_entropic_involution(x_0::Real,
                                                       eps_search::Real)
   return (lat, f, feq) -> (search_alpha_newton_entropic_involution(lat, f, feq, 
                             x_0=x_0, eps_search=eps_search));
+end
+
+#! Helper functions to be used in Newton and other gradient based methods
+function __FC_ENTROPY(lat, x_n, f, feq, omega)
+  const sfeq = entropy_lat_boltzmann(lat, feq);
+  return (entropy_lat_boltzmann(lat, f + x_n * (feq - f) ) 
+         - sfeq 
+         - sqrt(omega-1) * (entropy_lat_boltzmann(lat, f) - sfeq));
+end
+
+#! Search for alpha, the limit of over-relaxation for entropic contraction
+#!
+#! \param   lat         Lattice
+#! \param   f           Particle distribution vector
+#! \param   feq         Equilibrium particle distribution vector
+#! \param   x_0         Initial guess
+#! \param   esp_search  Search tolerance
+#! \param   omega       Entropic contraction factor
+#! \return              Limit of over-relaxation for entropic contraction
+function search_alpha_newton_entropic_contraction(lat::Lattice, 
+                                                  f::Vector{Float64}, 
+                                                  feq::Vector{Float64};
+                                                  x_0=1.5::Real,
+                                                  eps_search=1e-10::Real,
+                                                  omega=1.5::Real)
+  @assert(1.0 <= omega && omega < 2.0, ("Entropic contraction factor must be " *
+                                        "greater than or equal to 1.0 and "    *
+                                        "less than two"));
+  @assert(eps_search >= 0.0, "Search tolerance must be nonnegative");
+
+  const fneq_norm = norm(feq - f, 2);
+  k = 0;
+  x_n = x_0;
+
+  while true
+
+    if x_n == 0.0 # heuristic so that we don't get stuck at zero
+      x_n += rand(0.0:1e-4:2.0);
+    end
+
+    fe  =  __FC_ENTROPY(lat, x_n, f, feq, omega);
+    fep =  __F_PRIME_ENTROPY(lat, x_n, f, feq);
+
+    x_n -= fe / fep;
+
+    #=for i=1:lat.n # heuristic, don't want to fall out of polytope
+      if f[i] + x_n * (feq[i]-f[i]) < -2*eps()
+        x_n = rand(0.0:1e-4:2.0);
+        continue;
+      end
+    end=#
+
+    #TODO perhaps wrap this in a try catch clause and just bail if shit goes bad
+    if fneq_norm * abs(__FC_ENTROPY(lat, x_n, f, feq, omega)) < eps_search 
+    #if abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search
+      break;
+    end
+
+    k += 1;
+    @assert(k <= __MAX_ITERS_NEWTON, "Root not found");
+  end
+
+  fe = __FC_ENTROPY(lat, x_n, f, feq, omega);
+  return (fe >= 0) ? x_n : x_n - 2 * fe / __F_PRIME_ENTROPY(lat, x_n, f, feq);
+end
+
+#! Bind search range and contraction factor to entropic contraction search
+#TODO use FastAnnonymous module here
+function init_search_alpha_newton_entropic_contraction(x_0::Real,
+                                                       eps_search=1e-10::Real,
+                                                       omega=1.5::Real)
+
+  return (lat, f, feq) -> search_alpha_entropic_contraction(lat, f, feq,
+                                                          x_0=x_0,
+                                                          esp_search=eps_search,
+                                                          omega=omega);
+end
+
+#! Test functions
+using Base.Test;
+function __test_search_alpha_newton_entropic_involution(x_0::Real=1.5, 
+                                                        eps_search::Real=1e-10)
+  const _sanei = init_search_alpha_newton_entropic_involution(x_0, eps_search);
+  return (lat, f, feq) -> begin;
+    const norm_fneq     = norm(f-feq, 2);
+    const alpha_newton  = _sanei(lat, f, feq);
+    const alpha_roots   = search_alpha_stef_entropic_involution(lat, f, feq);
+    #TODO plot
+    @show alpha_newton, alpha_roots;
+    @test_approx_eq_eps alpha_newton alpha_roots 0.05;
+    return alpha_newton;
+  end;
+end
+
+function __test_search_alpha_newton_entropic_contraction(x_0::Real=1.5, 
+                                                         eps_search::Real=1e-10,
+                                                         omega=1.5::Real)
+  const _sanec = init_search_alpha_newton_entropic_contraction(x_0, eps_search,
+                                                               omega);
+  return (lat, f, feq) -> begin;
+    const norm_fneq     = norm(f-feq, 2);
+    const alpha_newton  = _sanec(lat, f, feq);
+    const alpha_roots   = search_alpha_entropic_contraction_db(lat, f, feq,
+                                                               omega=omega);
+    @show alpha_newton, alpha_roots;
+    if alpha_roots != 0.0
+      @test_approx_eq_eps alpha_newton alpha_roots 0.05;
+    end
+    return alpha_newton;
+  end;
 end

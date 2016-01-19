@@ -3,12 +3,12 @@ version: 0.2.5
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -2.5e-4;
+  const pgrad = -2e-3;
   const F = [-pgrad; 0.0];
   const datadir = "data";
-  const ni = 128;
-  const nj = 64;
-  const mu = 1e-2;
+  const ni = 90;
+  const nj = 35;
+  const mu = 0.25;
   const constit_rel_f = init_constit_srt_const(mu);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj - 1)/2.0;
@@ -40,7 +40,7 @@ nj:       { value: nj,      expr: true  }
 nsteps:   { value: 10000,   expr: false }
 col_f: >    
   init_col_entropic_srt(constit_rel_f, forcing_kf,
-    search_entropic_stability=init_search_alpha_newton_entropic_involution(1.5, 1.0e-10));
+    search_entropic_stability=__test_search_alpha_newton_entropic_involution(1.5, 1e-15));
 
 # boundaries
 sbounds:
