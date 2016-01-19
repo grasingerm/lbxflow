@@ -3,7 +3,7 @@ version: 0.2.5
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -2e-3;
+  const pgrad = -1e-3;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 90;

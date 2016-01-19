@@ -15,9 +15,7 @@ include(joinpath("..", "numerics.jl"));
 const __KAPPA_ERROR_MSG__ = ("Entropic relaxation factor, kappa, must be "  *
                              "greater than or equal to zero and less than " *
                              "or equal to one for the collision operator "  *
-                             "to Lyapunov stable.");
-
-const ALPHA_EPS           = 1.0e-4; #TODO do something with this heuristic
+                             "to Lyapunov stable."); 
 
 #! Entropically stabilized LBGK collision operator for incompressible flow
 #!
@@ -28,9 +26,9 @@ const ALPHA_EPS           = 1.0e-4; #TODO do something with this heuristic
 #! \param search_entropic_stabiliy Search function for stability factor, alpha
 #! \return collision_function!(sim, bounds)
 function init_col_entropic_srt(constit_relation_f::Function; 
-                      feq_f::Function=feq_incomp_max_entropy,
-                      kappa=0.5::Real, eps_ds=1e-15::Real,
-                      search_entropic_stability=search_alpha_entropic_involution)
+                               feq_f::Function=feq_incomp_max_entropy,
+                               kappa::Real=__KAPPA, eps_ds::Real=__EPS_DS,
+                               search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
 
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
@@ -66,7 +64,7 @@ function init_col_entropic_srt(constit_relation_f::Function;
           end
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          if alpha < ALPHA_EPS
+          if alpha < __ALPHA_EPS
             root_not_found = true;
             for k = 1:lat.n
               lat.f[k,i,j] += omega * (feq[k] - lat.f[k,i,j]);
@@ -100,10 +98,10 @@ end
 #! \param search_entropic_stabiliy Search function for stability factor, alpha
 #! \return collision_function!(sim, bounds)
 function init_col_entropic_srt(constit_relation_f::Function,
-                      forcing_kf::Tuple{Function, Function};
-                      feq_f::Function=feq_incomp_max_entropy,
-                      kappa=0.5::Real, eps_ds=1e-15::Real,
-                      search_entropic_stability=search_alpha_entropic_involution)
+                               forcing_kf::Tuple{Function, Function};
+                               feq_f::Function=feq_incomp_max_entropy,
+                               kappa::Real=__KAPPA, eps_ds::Real=__EPS_DS,
+                               search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
 
   const uf, colf = forcing_kf;
@@ -141,7 +139,7 @@ function init_col_entropic_srt(constit_relation_f::Function,
           end
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          if alpha < ALPHA_EPS
+          if alpha < __ALPHA_EPS
             root_not_found = true;
             for k = 1:lat.n
               lat.f[k,i,j] += (omega * (feq[k] - lat.f[k,i,j])
@@ -171,14 +169,16 @@ end
 #!
 #! \param constit_relation_f  Constitutive relationship
 #! \param feq_f               Equilibrium particle distribution function
+#! \param S                   Function for building a relaxation matrix
 #! \param kappa               Entropic relaxation factor
 #! \param eps_ds              Change in entropy threshold for ELBM
 #! \param search_entropic_stabiliy Search function for stability factor, alpha
 #! \return collision_function!(sim, bounds)
 function init_col_entropic_mrt(constit_relation_f::Function;
-                      feq_f::Function=feq_incomp_max_entropy,
-                      kappa=0.5::Real, eps_ds=1e-15::Real,
-                      search_entropic_stability=search_alpha_entropic_involution)
+                               feq_f::Function=feq_incomp_max_entropy,
+                               S::Function=__S,
+                               kappa::Real=__KAPPA, eps_ds::Real=__EPS_DS,
+                               search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -211,7 +211,7 @@ function init_col_entropic_mrt(constit_relation_f::Function;
           lat.f[:,i,j] = f - iM * Sij * M * fneq; # perform collision
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          if alpha < ALPHA_EPS
+          if alpha < __ALPHA_EPS
             root_not_found = true;
             lat.f[:,i,j] = f - iM * Sij * M * fneq;
           else
@@ -237,16 +237,20 @@ end
 #! \param constit_relation_f  Constitutive relationship
 #! \param forcing_kf          Forcing functions
 #! \param feq_f               Equilibrium particle distribution function
+#! \param S                   Function for building a relaxation matrix
 #! \param kappa               Entropic relaxation factor
 #! \param eps_ds              Change in entropy threshold for ELBM
 #! \param search_entropic_stabiliy Search function for stability factor, alpha
 #! \return collision_function!(sim, bounds)
 function init_col_entropic_mrt(constit_relation_f::Function,
-                      forcing_kf::Tuple{Function, Function};
-                      feq_f::Function=feq_incomp_max_entropy,
-                      kappa=0.5::Real, eps_ds=1e-15::Real,
-                      search_entropic_stability=search_alpha_entropic_involution)
+                               forcing_kf::Tuple{Function, Function};
+                               feq_f::Function=feq_incomp_max_entropy,
+                               S::Function=__S,
+                               kappa::Real=__KAPPA, eps_ds::Real=__EPS_DS,
+                               search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
+  
+  const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -286,7 +290,7 @@ function init_col_entropic_mrt(constit_relation_f::Function,
           lat.f[:,i,j]   = f - iM * Sij * M * fneq + fdl;
         else
           const alpha    = search_entropic_stability(lat, f, feq);
-          if alpha < ALPHA_EPS
+          if alpha < __ALPHA_EPS
             root_not_found = true;
             lat.f[:,i,j] = f - iM * Sij * M * fneq + fdl;
           else
@@ -317,7 +321,7 @@ end
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_entropic_involution(lat::Lattice, f::Vector{Float64}, 
                                           feq::Vector{Float64};
-                                          sbounds=(0.0, 2.0)::Tuple{Real,Real})
+                                          sbounds::Tuple{Real,Real}=__SBOUNDS)
   const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
   const rs = Roots.fzeros(F, sbounds[1], sbounds[2]);
@@ -341,7 +345,8 @@ end
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_stef_entropic_involution(lat::Lattice, f::Vector{Float64}, 
                                                feq::Vector{Float64};
-                                               x_0::Real=1.5, order::Int=1)
+                                               x_0::Real=__X_0, 
+                                               order::Int=__ORD)
   const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
   return Roots.fzero(F, x_0, order=order);
@@ -349,7 +354,7 @@ end
 
 #! Bind search range to entropic involution search function
 #TODO use FastAnnonymous module here
-function init_search_alpha_stef_entropic_involution(x_0::Real; order::Int=1)
+function init_search_alpha_stef_entropic_involution(x_0::Real; order::Int=__ORD)
   return (lat, f, feq) -> search_alpha_entropic_involution(lat, f, feq, x_0=x_0,
                                                            order=order);
 end
@@ -385,8 +390,8 @@ end
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_entropic_contraction(lat::Lattice, f::Vector{Float64}, 
                                            feq::Vector{Float64};
-                                           sbounds=(1.0, 2.0)::Tuple{Real,Real},
-                                           omega=1.5::Real)
+                                           sbounds::Tuple{Real,Real}=__SBOUNDS,
+                                           omega::Real=__OMEGA)
   @assert(1.0 <= omega && omega < 2.0, ("Entropic contraction factor must be " *
                                         "greater than or equal to 1.0 and "    *
                                         "less than two"));
@@ -405,7 +410,7 @@ end
 #! Bind search range and contraction factor to entropic contraction search
 #TODO use FastAnnonymous module here
 function init_search_alpha_entropic_contraction(sbounds::Tuple{Real,Real},
-                                                omega=1.5::Real)
+                                                omega::Real=__OMEGA)
   @assert(1.0 <= omega && omega < 2.0, ("Entropic contraction factor must be " *
                                         "greater than or equal to 1.0 and "    *
                                         "less than two"));
@@ -423,7 +428,7 @@ end
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_entropic_contraction_db(lat::Lattice, f::Vector{Float64}, 
                                               feq::Vector{Float64};
-                                              omega=1.5::Real)
+                                              omega::Real=__OMEGA)
   @assert(1.0 <= omega && omega < 2.0, ("Entropic contraction factor must be " *
                                         "greater than or equal to 1.0 and "    *
                                         "less than two"));
@@ -474,8 +479,8 @@ const __MAX_ITERS_NEWTON = convert(Int, 1e6);
 function search_alpha_newton_entropic_involution(lat::Lattice,
                                                  f::Vector{Float64}, 
                                                  feq::Vector{Float64};
-                                                 x_0=1.5::Real,
-                                                 eps_search=1e-10::Real)
+                                                 x_0::Real=__X_0,
+                                                 eps_search::Real=__EPS_SEARCH)
   @assert(eps_search >= 0.0, "Search tolerance must be nonnegative");
 
   const fneq_norm = norm(feq - f, 2);
@@ -542,9 +547,9 @@ end
 function search_alpha_newton_entropic_contraction(lat::Lattice, 
                                                   f::Vector{Float64}, 
                                                   feq::Vector{Float64};
-                                                  x_0=1.5::Real,
-                                                  eps_search=1e-10::Real,
-                                                  omega=1.5::Real)
+                                                  x_0::Real=__X_0,
+                                                  eps_search::Real=__EPS_SEARCH,
+                                                  omega::Real=__OMEGA)
   @assert(1.0 <= omega && omega < 2.0, ("Entropic contraction factor must be " *
                                         "greater than or equal to 1.0 and "    *
                                         "less than two"));
@@ -589,8 +594,8 @@ end
 #! Bind search range and contraction factor to entropic contraction search
 #TODO use FastAnnonymous module here
 function init_search_alpha_newton_entropic_contraction(x_0::Real,
-                                                       eps_search=1e-10::Real,
-                                                       omega=1.5::Real)
+                                                       eps_search::Real=__EPS_SEARCH,
+                                                       omega::Real=__OMEGA)
 
   return (lat, f, feq) -> search_alpha_entropic_contraction(lat, f, feq,
                                                           x_0=x_0,
@@ -600,23 +605,45 @@ end
 
 #! Test functions
 using Base.Test;
-function __test_search_alpha_newton_entropic_involution(x_0::Real=1.5, 
-                                                        eps_search::Real=1e-10)
+import PyPlot;
+function __test_search_alpha_newton_entropic_involution(x_0::Real=__X_0, 
+                                                        eps_search::Real=__EPS_SEARCH)
+  global time_spent_newton  = 0;
+  global time_spent_root    = 0;
   const _sanei = init_search_alpha_newton_entropic_involution(x_0, eps_search);
   return (lat, f, feq) -> begin;
     const norm_fneq     = norm(f-feq, 2);
+
+    t                   = time();
     const alpha_newton  = _sanei(lat, f, feq);
+    time_spent_newton  += time() - t;
+    
+    t                   = time();
     const alpha_roots   = search_alpha_stef_entropic_involution(lat, f, feq);
-    #TODO plot
+    time_spent_root    += time() - t;
+   
+    const fe_an         = __F_ENTROPY(lat, alpha_newton, f, feq); 
+    const fe_ar         = __F_ENTROPY(lat, alpha_roots, f, feq); 
     @show alpha_newton, alpha_roots;
-    @test_approx_eq_eps alpha_newton alpha_roots 0.05;
+    if abs(alpha_newton - alpha_roots) > 0.05 && false
+      const xs = linspace(-0.2, max(alpha_newton, alpha_roots)+0.2, 1000);
+      ys = Array{Float64}(1000);
+      for i=1:1000; ys[i] = __F_ENTROPY(lat, xs[i], f, feq); end
+      #PyPlot.scatter([alpha_newton; alpha_roots], [fe_an; fe_ar]);
+      PyPlot.plot(xs, ys, xs, zeros(1000));
+      PyPlot.show();
+    end
+    @test_approx_eq_eps fe_an 0.0 1e-10; 
+    @test_approx_eq_eps fe_ar 0.0 1e-10; 
+    @test_approx_eq_eps fe_an fe_ar 1e-9;
+    @show time_spent_newton, time_spent_root, time_spent_newton-time_spent_root;
     return alpha_newton;
   end;
 end
 
-function __test_search_alpha_newton_entropic_contraction(x_0::Real=1.5, 
-                                                         eps_search::Real=1e-10,
-                                                         omega=1.5::Real)
+function __test_search_alpha_newton_entropic_contraction(x_0::Real=__X_0, 
+                                                         eps_search::Real=__EPS_SEARCH,
+                                                         omega::Real=__OMEGA)
   const _sanec = init_search_alpha_newton_entropic_contraction(x_0, eps_search,
                                                                omega);
   return (lat, f, feq) -> begin;
@@ -631,3 +658,17 @@ function __test_search_alpha_newton_entropic_contraction(x_0::Real=1.5,
     return alpha_newton;
   end;
 end
+
+# Default arguments
+const __ALPHA_EPS         = 1e-5;   #TODO do something with this heuristic
+const __KAPPA             = 0.5;    #TODO do something with this heuristic
+const __EPS_DS            = 1e-15;  #TODO do something with this heuristic
+const __SES               = search_alpha_newton_entropic_involution;
+const __S                 = S_fallah;
+
+#   Search constants
+const __X_0               =     1.6;
+const __SBOUNDS           =     (0.0, 2.5);
+const __EPS_SEARCH        =     1e-10;
+const __ORD               =     1;
+const __OMEGA             =     1.5;

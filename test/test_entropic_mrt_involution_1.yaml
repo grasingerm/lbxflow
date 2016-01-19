@@ -3,15 +3,15 @@ version: 0.2.5
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = rand(-1.0e-4:-1.0e-4:-1.0e-3);
+  const pgrad = -1e-3;
   const F = [-pgrad; 0.0];
   const datadir = "data";
-  const ni = 40;
-  const nj = 13;
-  const mu = 1/6;
+  const ni = 90;
+  const nj = 35;
+  const mu = 0.25;
   const constit_rel_f = init_constit_mrt_const(mu);
   const forcing_kf = init_korner_Fk(F);
-  const h = (nj-1)/2.0;
+  const h = (nj - 1)/2.0;
   analytic_soln(xs) = begin;
     result = zeros(length(xs));
     for (i, x) in enumerate(xs) 
@@ -19,6 +19,8 @@ preamble: >
     end
     return result;
   end;
+  u_max = -1.0 / (2.0 * mu) * pgrad * (h^2 - (nj/2)^2);
+  info("Reynolds = $(reynolds(u_max, nj, mu))");
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -36,7 +38,9 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_mrt(constit_rel_f, forcing_kf, S_luo);
+col_f: >    
+  init_col_entropic_mrt(constit_rel_f, forcing_kf,
+    search_entropic_stability=search_alpha_newton_entropic_involution);
 
 # boundaries
 sbounds:
@@ -54,7 +58,7 @@ bcs:
   - periodic_east_to_west!
 
 callbacks:
-  - print_step_callback(25) 
+  - print_step_callback(100)
 
 # clean-up, backup, write out
 finally:
@@ -62,15 +66,16 @@ finally:
     (sim::Sim, k::Int) -> begin
       xs = zeros(nj);
       for i = 1:nj
-      xs[i] = (i - nj/2 - 0.5);
+        xs[i] = (i - nj/2 - 0.5);
       end
       us = analytic_soln(xs);
-      i = int(round(ni/2));
+      i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1.5e-2
       end
       println("TEST PASSED");
+      info("Reynolds = $(reynolds(maximum(us), nj, mu))");
     end 
 
 # test for conditions to end simulation
