@@ -6,6 +6,8 @@ include(joinpath("..", "lattice.jl"));
 include(joinpath("..", "multiscale.jl"));
 include(joinpath("..", "sim", "simtypes.jl"));
 
+typealias Force Tuple{LBXFunction, LBXFunction};
+
 #! Initialize a sukop forcing function
 #!
 #! \param F Body force vector

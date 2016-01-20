@@ -2,16 +2,16 @@ version: 0.2.5
 
 # code to execute before parsing
 preamble: >
+  @init_plot_env();
   const id = "lid";
   const datadir = joinpath("data","ex-lid");
   const ni  = 256;
   const nj  = 256;
   const U   = 0.01;
-  const mu  = 2.56;
+  const mu  = 0.25;
   const Re  = U * ni / mu;
   info("Re = $Re");
-  using PyPlot;
-  const constit_rel_f = init_constit_srt_const(mu_p);
+  const constit_rel_f = init_constit_srt_const(mu);
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -19,7 +19,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: 1.0,       expr: false }
-nu:       { value: mu_p,      expr: true  }
+nu:       { value: mu,      expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }

@@ -16,7 +16,8 @@ include(joinpath("..", "sim", "simtypes.jl"));
 #! \param constit_relation_f  Constitutive relationship
 #! \param feq_f               Equilibrium particle distribution function
 #! \return collision_function!(sim, bounds)
-function init_col_srt(constit_relation_f::Function; feq_f=feq_incomp::Function)
+function init_col_srt(constit_relation_f::Function; 
+                      feq_f::LBXFunction=feq_incomp)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -52,8 +53,8 @@ end
 #! \param feq_f               Equilibrium particle distribution function
 #! \return collision_function!(sim, bounds)
 function init_col_srt(constit_relation_f::Function,
-                      forcing_kf::Tuple{Function, Function};
-                      feq_f=feq_incomp::Function)
+                      forcing_kf::Force;
+                      feq_f::LBXFunction=feq_incomp)
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
@@ -91,7 +92,7 @@ end
 #! \param feq_f               Equilibrium particle distribution function
 #! \return collision_function!(sim, bounds)
 function init_col_mrt(constit_relation_f::Function, S::Function;
-                      feq_f=feq_incomp::Function)
+                      feq_f::LBXFunction=feq_incomp)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
@@ -136,7 +137,7 @@ end
 #! \return collision_function!(sim, bounds)
 function init_col_mrt(constit_relation_f::Function,
                       forcing_kf::Tuple{Function, Function}, S::Function;
-                      feq_f=feq_incomp::Function)
+                      feq_f::LBXFunction=feq_incomp)
   const uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;

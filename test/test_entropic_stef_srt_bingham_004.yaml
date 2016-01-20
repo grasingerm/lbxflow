@@ -1,0 +1,109 @@
+# author:         
+#  name:         Matthew Grasinger
+#  email:        grasingerm at gmail dot com
+#
+# date-created:   2015-09-23
+#
+# description: >
+#   Poiseuille bingham plastic flow for collision operator comparison. Based on parameters from
+#   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
+#   relaxation-time latice Boltzmann model. Yield stress is 4e-5.
+
+preamble: >
+  @init_plot_env();
+  const ni = 128;
+  const nj = 64;
+  const pgrad = -5.6e-6;
+  const F = [-pgrad; 0.0];
+  const mu_p = 0.2;
+  const tau_y = 4.0e-5;
+  const m = 1.0e8;
+  const max_iters = 11;
+  const tol = 1e-3;
+  const nsteps = 20000;
+  const id = "poise-bgk-000004";
+  const datadir = joinpath("data","test_entropic_stef_srt_bingham_004");
+  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+  const forcing_kf = init_korner_Fk(F);
+  const h = (nj-1)/2.0;
+  const y_tau = -tau_y / pgrad;
+  analytic_soln(xs) = begin;
+    result = zeros(length(xs));
+    for (i, x) in enumerate(xs)
+      if abs(x) <= y_tau
+        result[i] = -1.0 / (2.0 * mu_p) * pgrad * (h^2 - y_tau^2) - tau_y / mu_p * (h - y_tau);
+      else
+        result[i] = -1.0 / (2.0 * mu_p) * pgrad * (h^2 - x^2) - tau_y / mu_p * (h - abs(x));
+      end
+    end
+    return result;
+  end;
+
+datadir:    { value: datadir,   expr: true    }
+
+# material init
+rho_0:      { value: 1.0,       expr: false   }
+nu:         { value: mu_p,      expr: true    }
+
+# lattice configuration
+dx:         { value: 1.0,       expr: false   }
+dt:         { value: 1.0,       expr: false   }
+ni:         { value: ni,        expr: true    }
+nj:         { value: nj,        expr: true    }
+
+# simulation parameters
+nsteps:     { value: nsteps,    expr: true    }
+col_f:      init_col_entropic_srt(constit_rel_f, forcing_kf,
+              search_entropic_stability=search_alpha_stef_entropic_involution)
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, convert(Int64, round(nsteps/20)))
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      xs = zeros(nj);
+      for i = 1:nj
+        xs[i] = (i - nj/2 - 0.5);
+      end
+      us = analytic_soln(xs);
+      i = convert(Int, round(ni/2));
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+      end
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+      end
+      println("TEST PASSED");
+      println("omega = ", sim.msm.omega[convert(Int, ni/2), convert(Int, nj/2)]);
+      println("Re = ", reynolds(maximum(us), nj, mu_p));
+      println("Bn = ", bingham_number(maximum(us), nj, mu_p, tau_y));
+      PyPlot.plot(xs, us, "-", xs, vec(sim.msm.u[1,i,:]), "^");
+      PyPlot.legend(["analytical","lbm"]);
+      PyPlot.show();
+      println("Press ENTER to continue");
+      readline(STDIN);
+    end
+  - write_jld_file_callback(datadir)
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x

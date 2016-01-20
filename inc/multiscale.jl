@@ -92,8 +92,19 @@ end
 #! \param L Characteristic length of flow
 #! \param nu Kinematic viscosity
 #! \return Reyond's number
-function reynolds(u::Number, L::Number, nu::Number)
+function reynolds(u::Real, L::Real, nu::Real)
   return u * L / nu;
+end
+
+#! Bingham number
+#!
+#! \param u     Magnitude of macroscopic flow
+#! \param L     Characteristic length of flow
+#! \param mu_p  Plastic viscosity
+#! \param tau_y Yield stress
+#! \return      Bingham number of the flow
+function bingham_number(u::Real, L::Real, mu_p::Real, tau_y::Real)
+  return tau_y * L / (mu_p * u);
 end
 
 #! Calculate the magnitude of velocity at each lattice node
