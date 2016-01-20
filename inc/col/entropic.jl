@@ -506,8 +506,8 @@ function search_alpha_newton_entropic_involution(lat::Lattice,
     end=#
 
     #TODO perhaps wrap this in a try catch clause and just bail if shit goes bad
-    if fneq_norm * abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search 
-    #if abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search
+    #if fneq_norm * abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search 
+    if abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search
       break;
     end
 
@@ -578,8 +578,8 @@ function search_alpha_newton_entropic_contraction(lat::Lattice,
     end=#
 
     #TODO perhaps wrap this in a try catch clause and just bail if shit goes bad
-    if fneq_norm * abs(__FC_ENTROPY(lat, x_n, f, feq, omega)) < eps_search 
-    #if abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search
+    #if fneq_norm * abs(__FC_ENTROPY(lat, x_n, f, feq, omega)) < eps_search 
+    if abs(__F_ENTROPY(lat, x_n, f, feq)) < eps_search
       break;
     end
 

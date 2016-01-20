@@ -64,6 +64,7 @@ s = ArgParseSettings();
 end
 
 pa = parse_args(s);
+pa["LBX_VERSION"] = LBX_VERSION; # add version to arguments
 
 if pa["version"]
   println();

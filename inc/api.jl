@@ -28,9 +28,10 @@ function parse_and_run(infile::AbstractString, args::Dict)
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
 
-  #=if haskey(ins, "version") && eval(parse("v\"$(ins["version"])\"")) > LBX_VERSION
+  if (haskey(ins, "version") && haskey(args, "LBX_VERSION") 
+      && eval(parse("v\"$(ins["version"])\"")) > args["LBX_VERSION"])
     warn("$infile recommends v$(ins["version"]), consider updating.");
-  end=#
+  end
 
   if haskey(ins, "preamble")
     if args["verbose"]; info("evaluating preamble..."); end;

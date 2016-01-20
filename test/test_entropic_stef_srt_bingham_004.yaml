@@ -1,13 +1,4 @@
-# author:         
-#  name:         Matthew Grasinger
-#  email:        grasingerm at gmail dot com
-#
-# date-created:   2015-09-23
-#
-# description: >
-#   Poiseuille bingham plastic flow for collision operator comparison. Based on parameters from
-#   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
-#   relaxation-time latice Boltzmann model. Yield stress is 4e-5.
+version: 0.2.5
 
 preamble: >
   @init_plot_env();
@@ -21,8 +12,8 @@ preamble: >
   const max_iters = 11;
   const tol = 1e-3;
   const nsteps = 20000;
-  const id = "poise-bgk-000004";
-  const datadir = joinpath("data","test_entropic_stef_srt_bingham_004");
+  const id = "test_entropic_stef_srt_bingham_004";
+  const datadir = joinpath("data", id);
   const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj-1)/2.0;

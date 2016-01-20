@@ -10,8 +10,6 @@ include("mrt_matrices.jl");
 include(joinpath("..", "multiscale.jl"));
 include(joinpath("..", "numerics.jl"));
 
-#TODO consider caching entropy
-
 typealias EntropyCache Dict{Tuple{Int, Int}, Real};
 
 #! Scale based on normalized median of neighboorhood non-equilibrium entropy
