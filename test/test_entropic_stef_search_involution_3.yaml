@@ -6,7 +6,7 @@ preamble: >
   const pgrad = -5e-5;
   const F = [-pgrad; 0.0];
   const datadir = "data";
-  const ni = 360;
+  const ni = 240;
   const nj = 120;
   const mu = 0.3;
   const constit_rel_f = init_constit_srt_const(mu);

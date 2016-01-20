@@ -4,6 +4,10 @@
 
 using List
 
+#using FastAnonymous;
+#typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure};
+typealias LBXFunction Function;
+
 abstract AbstractSim
 
 #! Simulation object

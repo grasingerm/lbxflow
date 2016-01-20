@@ -17,5 +17,6 @@ include("stability.jl");
 include("api.jl");
 
 include(joinpath("col","entropic.jl"));
+include(joinpath("col","filtering.jl"));
 
 end
