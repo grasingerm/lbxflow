@@ -24,11 +24,11 @@ typealias EntropyCache Dict{Tuple{Int, Int}, Real};
 function scale_root_median(sim::Sim, i::Int, j::Int, feq_f::Function,
                            noneq_entropy::Real, entropy_cache::EntropyCache)
 
-  const ni, nj      = size(lat, 2), size(lat, 3);
-  noneq_entropies   = Array{Float64}(lat.n);
+  const ni, nj      = size(sim.msm.rho);
+  noneq_entropies   = Array{Float64}(sim.lat.n-1);
   nvalid            = 0; 
 
-  for k=2:sim.lat.n
+  for k=1:sim.lat.n-1
     const i_nbr     = i + sim.lat.c[1,k];
     const j_nbr     = j + sim.lat.c[2,k];
     const key       = (i_nbr, j_nbr);
@@ -42,11 +42,11 @@ function scale_root_median(sim::Sim, i::Int, j::Int, feq_f::Function,
       nvalid                 += 1;
       feq                     = Array{Float64}(sim.lat.n);
 
-      for p=1:lat.n
+      for p=1:sim.lat.n
         feq[p]                    = feq_f(sim.lat, sim.msm.rho[i_nbr, j_nbr],
                                           sim.msm.u[:, i_nbr, j_nbr], p);
       end
-        const f                   = sim.lat[:, i_nbr, j_nbr];
+        const f                   = sim.lat.f[:, i_nbr, j_nbr];
         const noneq_entropy_k     = entropy_quadratic(f, feq, f - feq);
         noneq_entropies[nvalid]   = noneq_entropy_k;
         entropy_cache[key]        = noneq_entropy_k;
@@ -66,11 +66,11 @@ end
 function scale_root_median(sim::Sim, i::Int, j::Int, 
                            noneq_densities::Matrix{Float64})
 
-  const ni, nj      = size(lat, 2), size(lat, 3);
-  noneq_entropies   = Array{Float64}(lat.n);
+  const ni, nj      = size(sim.msm.rho);
+  noneq_entropies   = Array{Float64}(sim.lat.n-1);
   nvalid            = 0; 
 
-  for k=2:sim.lat.n
+  for k=1:sim.lat.n-1 # last vector is a "rest" particle
     const i_nbr     = i + sim.lat.c[1,k];
     const j_nbr     = j + sim.lat.c[2,k];
 
@@ -85,8 +85,8 @@ end
 
 # Filtering constants
 const __FILTER    = scale_root_median;
-const __DS        = 1e-5;
-const __STDS      = 2.5;
+const __DS        = 1e-6;
+const __STDS      = 2.7;
 
 
 #TODO should collision functions have their own type ...
@@ -121,6 +121,7 @@ function init_col_filter_cache_fixds(inner_col_f!::LBXFunction,
 
           rhoij       =   sim.msm.rho[i,j];
           uij         =   sim.msm.u[:,i,j];
+          const f     =   sim.lat.f[:,i,j];
           feq         =   Array(Float64, sim.lat.n); 
           fneq        =   Array(Float64, sim.lat.n);
 
@@ -167,7 +168,7 @@ function init_col_filter_std(inner_col_f!::LBXFunction,
                              feq_f::LBXFunction=feq_incomp,
                              stds::Real=__STDS)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
-    const ni, nj    = size(msm.rho);
+    const ni, nj    = size(sim.msm.rho);
     const nbounds   = size(bounds, 2);
     noneq_densities = Array{Float64}(size(sim.msm.rho));
     nfiltered       = 0;
@@ -180,30 +181,44 @@ function init_col_filter_std(inner_col_f!::LBXFunction,
       ncollided += (i_max - i_min) * (j_max - j_min);
       for j = j_min:j_max, i = i_min:i_max
 
-        rhoij           =   sim.msm.rho[i,j];
-        uij             =   sim.msm.u[:,i,j];
-        feq             =   Array(Float64, sim.lat.n); 
-        fneq            =   Array(Float64, sim.lat.n);
+        rhoij                 =   sim.msm.rho[i,j];
+        uij                   =   sim.msm.u[:,i,j];
+        const f               =   sim.lat.f[:,i,j];
+        feq                   =   Array(Float64, sim.lat.n); 
+        fneq                  =   Array(Float64, sim.lat.n);
 
+        #TODO consider caching these values... but only 1%ish need recalced?
         for k = 1:sim.lat.n 
-          feq[k]          =   feq_f(sim.lat, rhoij, uij, k);
-          fneq[k]         =   sim.lat.f[k,i,j] - feq[k];
+          feq[k]                  =   feq_f(sim.lat, rhoij, uij, k);
+          fneq[k]                 =   sim.lat.f[k,i,j] - feq[k];
         end
 
-        noneq_densities =   entropy_quadratic(f, feq, fneq);
+        noneq_densities[i, j] =   entropy_quadratic(f, feq, fneq);
       end
 
     end
 
     const mean_neq_entropy  = mean(noneq_densities);
     const std_neq_entropy   = std(noneq_densities);
-    if noneq_densities[i, j] > mean_neq_entropy + stds * std_neq_entropy
-      const delta              =  scale(sim, i, j, noneq_densities);
-      nfiltered               +=  1;
 
-      for k = 1:sim.lat.n
-        sim.lat.f[k, i, j] = feq[k] + delta * fneq[k]; 
-      end 
+    for r = 1:nbounds
+      i_min, i_max, j_min, j_max = bounds[:,r];
+      for j = j_min:j_max, i = i_min:i_max
+        if noneq_densities[i, j] > mean_neq_entropy + stds * std_neq_entropy
+          const delta              =  scale(sim, i, j, noneq_densities);
+          nfiltered               +=  1;
+
+          rhoij                    =   sim.msm.rho[i,j];
+          uij                      =   sim.msm.u[:,i,j];
+
+          for k = 1:sim.lat.n 
+            const feq                 =   feq_f(sim.lat, rhoij, uij, k);
+            const fneq                =   sim.lat.f[k, i, j] - feq;
+            sim.lat.f[k, i, j]        =   feq + delta * fneq; 
+          end
+
+        end
+      end
     end
 
     const percent_filtered  = nfiltered / ncollided;

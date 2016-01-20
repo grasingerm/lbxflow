@@ -72,7 +72,7 @@ finally:
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
-      info("Omega_max = $(maximum(sim.omega[i,:]))");
+      info("Omega_max = $(maximum(sim.msm.omega[i,:]))");
     end 
 
 # test for conditions to end simulation
