@@ -103,9 +103,11 @@ function init_col_filter_cache_fixds(inner_col_f!::LBXFunction,
                                      feq_f::LBXFunction=feq_incomp,
                                      ds_threshold::Real=__DS)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
-    cache       = EntropyCache();
-    nfiltered   = 0;
-    ncollided   = 0;
+    const nbounds   = size(bounds, 2);
+    noneq_densities = Array{Float64}(size(sim.msm.rho));
+    cache           = EntropyCache();
+    nfiltered       = 0;
+    ncollided       = 0;
     inner_col_f!(sim, bounds);
 
     for r = 1:nbounds
@@ -165,6 +167,8 @@ function init_col_filter_std(inner_col_f!::LBXFunction,
                              feq_f::LBXFunction=feq_incomp,
                              stds::Real=__STDS)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
+    const ni, nj    = size(msm.rho);
+    const nbounds   = size(bounds, 2);
     noneq_densities = Array{Float64}(size(sim.msm.rho));
     nfiltered       = 0;
     ncollided       = 0;
