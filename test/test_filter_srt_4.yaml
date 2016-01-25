@@ -1,9 +1,9 @@
-version: 0.2.1
+version: 0.2.5
 
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -7e-5;
+  const pgrad = -1e-5;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 120;
@@ -36,7 +36,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_filter_std(init_col_srt(constit_rel_f, forcing_kf), stds=1.8);
+col_f:    init_col_filter_std(init_col_srt(constit_rel_f, forcing_kf), stds=2.4);
 
 # boundaries
 sbounds:
@@ -68,11 +68,15 @@ finally:
       i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] us[j]*1e-2+1e-4
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
-      info("Omega_max = $(maximum(sim.msm.omega[i,:]))");
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
+      info("Omega std     = $(std(omegas))");
     end 
 
 # test for conditions to end simulation

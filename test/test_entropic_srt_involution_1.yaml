@@ -73,6 +73,11 @@ finally:
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
       end
       println("TEST PASSED");
+      const omegas = sim.msm.omega[i,:];
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
     end 
 
 # test for conditions to end simulation

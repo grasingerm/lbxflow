@@ -88,6 +88,11 @@ finally:
       println("omega = ", sim.msm.omega[convert(Int, ni/2), convert(Int, nj/2)]);
       println("Re = ", reynolds(maximum(us), nj, mu_p));
       println("Bn = ", bingham_number(maximum(us), nj, mu_p, tau_y));
+      const omegas = sim.msm.omega[i,:];
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
       PyPlot.plot(xs, us, "-", xs, vec(sim.msm.u[1,i,:]), "^");
       PyPlot.legend(["analytical","lbm"]);
       PyPlot.show();

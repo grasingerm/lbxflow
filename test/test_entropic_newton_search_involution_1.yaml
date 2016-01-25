@@ -76,6 +76,11 @@ finally:
       end
       println("TEST PASSED");
       info("Reynolds = $(reynolds(maximum(us), nj, mu))");
+      const omegas = sim.msm.omega[i,:];
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
     end 
 
 # test for conditions to end simulation

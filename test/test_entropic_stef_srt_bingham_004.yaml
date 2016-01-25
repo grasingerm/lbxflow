@@ -86,6 +86,11 @@ finally:
       end
       println("TEST PASSED");
       println("omega = ", sim.msm.omega[convert(Int, ni/2), convert(Int, nj/2)]);
+      const omegas = sim.msm.omega[i,:];
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
       println("Re = ", reynolds(maximum(us), nj, mu_p));
       println("Bn = ", bingham_number(maximum(us), nj, mu_p, tau_y));
       PyPlot.plot(xs, us, "-", xs, vec(sim.msm.u[1,i,:]), "^");

@@ -1,9 +1,9 @@
-version: 0.2.1
+version: 0.2.5
 
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -7e-5;
+  const pgrad = -1e-5;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = 120;
@@ -72,7 +72,11 @@ finally:
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
-      info("Omega_max = $(maximum(sim.msm.omega[i,:]))");
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
+      info("Omega std     = $(std(omegas))");
     end 
 
 # test for conditions to end simulation

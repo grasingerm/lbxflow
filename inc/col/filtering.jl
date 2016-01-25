@@ -85,9 +85,28 @@ end
 
 # Filtering constants
 const __FILTER    = scale_root_median;
-const __DS        = 1e-6;
+const __DS        = 1e-4;
 const __STDS      = 2.7;
 
+#TODO consider moving this kernal function to another file and including it
+#! Kernal function for calculating uij, rhoij, f, feq, fneq
+function __uij_rhoij_f_feq_fneq_kernal(lat::Lattice, msm::MultiscaleMap,
+                                       feq_f::LBXFunction, i::Int, j::Int)
+
+  rhoij       =   msm.rho[i,j];
+  uij         =   msm.u[:,i,j];
+  const f     =   lat.f[:,i,j];
+  feq         =   Array(Float64, lat.n); 
+  fneq        =   Array(Float64, lat.n);
+
+  for k = 1:lat.n 
+    feq[k]      =   feq_f(lat, rhoij, uij, k);
+    fneq[k]     =   lat.f[k,i,j] - feq[k];
+  end
+
+  return rhoij, uij, f, feq, fneq;
+
+end
 
 #TODO should collision functions have their own type ...
 #     (with equilibrium function as data member)?
@@ -102,7 +121,7 @@ function init_col_filter_cache_fixds(inner_col_f!::LBXFunction,
                                      scale::LBXFunction=__FILTER;
                                      feq_f::LBXFunction=feq_incomp,
                                      ds_threshold::Real=__DS)
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     const nbounds   = size(bounds, 2);
     noneq_densities = Array{Float64}(size(sim.msm.rho));
     cache           = EntropyCache();
@@ -112,23 +131,19 @@ function init_col_filter_cache_fixds(inner_col_f!::LBXFunction,
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
-      ncollided += (i_max - i_min) * (j_max - j_min);
+      ncollided += (i_max - i_min + 1) * (j_max - j_min + 1);
       for j = j_min:j_max, i = i_min:i_max
+
         const key = (i, j);
+        is_cached = false;
+
         if haskey(cache, key)
-          ds      = cache[key];
+          ds        = cache[key];
+          is_cached = true;
         else
-
-          rhoij       =   sim.msm.rho[i,j];
-          uij         =   sim.msm.u[:,i,j];
-          const f     =   sim.lat.f[:,i,j];
-          feq         =   Array(Float64, sim.lat.n); 
-          fneq        =   Array(Float64, sim.lat.n);
-
-          for k = 1:sim.lat.n 
-            feq[k]      =   feq_f(sim.lat, rhoij, uij, k);
-            fneq[k]     =   sim.lat.f[k,i,j] - feq[k];
-          end
+          rhoij, uij, f, feq, fneq = __uij_rhoij_f_feq_fneq_kernal(sim.lat,
+                                                                   sim.msm,
+                                                                   feq_f, i, j);
 
           ds          =   entropy_quadratic(f, feq, fneq);
           cache[key]  =   ds; # cache this expensive operation
@@ -137,6 +152,13 @@ function init_col_filter_cache_fixds(inner_col_f!::LBXFunction,
         if ds > ds_threshold
           const delta   =   scale(sim, i, j, feq_f, ds, cache);
           nfiltered    +=   1;
+
+          if is_cached
+            rhoij, uij, f, feq, fneq = __uij_rhoij_f_feq_fneq_kernal(sim.lat,
+                                                                     sim.msm,
+                                                                     feq_f, 
+                                                                     i, j);
+          end
 
           for k = 1:sim.lat.n
             sim.lat.f[k, i, j] = feq[k] + delta * fneq[k]; 
@@ -167,7 +189,7 @@ function init_col_filter_std(inner_col_f!::LBXFunction,
                              scale::LBXFunction=__FILTER;
                              feq_f::LBXFunction=feq_incomp,
                              stds::Real=__STDS)
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     const ni, nj    = size(sim.msm.rho);
     const nbounds   = size(bounds, 2);
     noneq_densities = Array{Float64}(size(sim.msm.rho));
@@ -178,24 +200,14 @@ function init_col_filter_std(inner_col_f!::LBXFunction,
     # Calculate nonequilibrium entropy densities
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
-      ncollided += (i_max - i_min) * (j_max - j_min);
+      ncollided += (i_max - i_min + 1) * (j_max - j_min + 1);
       for j = j_min:j_max, i = i_min:i_max
+        rhoij, uij, f, feq, fneq  = __uij_rhoij_f_feq_fneq_kernal(sim.lat,
+                                                                  sim.msm,
+                                                                  feq_f, i, j);
 
-        rhoij                 =   sim.msm.rho[i,j];
-        uij                   =   sim.msm.u[:,i,j];
-        const f               =   sim.lat.f[:,i,j];
-        feq                   =   Array(Float64, sim.lat.n); 
-        fneq                  =   Array(Float64, sim.lat.n);
-
-        #TODO consider caching these values... but only 1%ish need recalced?
-        for k = 1:sim.lat.n 
-          feq[k]                  =   feq_f(sim.lat, rhoij, uij, k);
-          fneq[k]                 =   sim.lat.f[k,i,j] - feq[k];
-        end
-
-        noneq_densities[i, j] =   entropy_quadratic(f, feq, fneq);
+        noneq_densities[i, j]     =   entropy_quadratic(f, feq, fneq);
       end
-
     end
 
     const mean_neq_entropy  = mean(noneq_densities);

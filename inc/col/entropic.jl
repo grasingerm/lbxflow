@@ -31,7 +31,7 @@ function init_col_entropic_srt(constit_relation_f::Function;
                                search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
 
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const ni, nj = size(msm.rho);
@@ -105,7 +105,7 @@ function init_col_entropic_srt(constit_relation_f::Function,
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
 
   const uf, colf = forcing_kf;
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const ni, nj = size(msm.rho);
@@ -180,7 +180,7 @@ function init_col_entropic_mrt(constit_relation_f::Function;
                                kappa::Real=__KAPPA, eps_ds::Real=__EPS_DS,
                                search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
@@ -251,7 +251,7 @@ function init_col_entropic_mrt(constit_relation_f::Function,
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
   
   const uf, colf = forcing_kf;
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
