@@ -8,7 +8,7 @@ preamble: >
   const datadir = "data";
   const ni = 120;
   const nj = 40;
-  const mu = 0.005;
+  const mu = 0.05;
   const constit_rel_f = init_constit_srt_const(mu);
   const forcing_kf = init_korner_Fk(F);
   const h = (nj - 1)/2.0;
@@ -36,7 +36,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_filter_std(init_col_srt(constit_rel_f, forcing_kf), stds=2.4);
+col_f:    init_col_filter_std(init_col_srt(constit_rel_f, forcing_kf), stds=3.5);
 
 # boundaries
 sbounds:
@@ -68,7 +68,7 @@ finally:
       i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] us[j]*1e-2+1e-4
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] us[j]*1e-3+5e-3
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
