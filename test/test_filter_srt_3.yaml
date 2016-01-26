@@ -68,10 +68,11 @@ finally:
       i = convert(Int, round(ni/2));
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] us[j]*1e-2+5e-3;
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] us[j]*3e-2+5e-3;
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
+      const omegas    = vec(sim.msm.omega[i,:]);
       info("Omega_max     = $(maximum(omegas))");
       info("Omega_min     = $(minimum(omegas))");
       info("Omega median  = $(median(omegas))");

@@ -72,6 +72,7 @@ finally:
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
+      const omegas    = vec(sim.msm.omega[i,:]);
       info("Omega_max     = $(maximum(omegas))");
       info("Omega_min     = $(minimum(omegas))");
       info("Omega median  = $(median(omegas))");

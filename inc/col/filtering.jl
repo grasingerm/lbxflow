@@ -12,6 +12,8 @@ include(joinpath("..", "numerics.jl"));
 
 typealias EntropyCache Dict{Tuple{Int, Int}, Real};
 
+const __DEFAULT_DELTA   =   0.0;
+
 #! Scale based on normalized median of neighboorhood non-equilibrium entropy
 #!
 #! \param   sim            Simulation object
@@ -33,27 +35,32 @@ function scale_root_median(sim::Sim, i::Int, j::Int, feq_f::Function,
     const j_nbr     = j + sim.lat.c[2,k];
     const key       = (i_nbr, j_nbr);
 
-    if haskey(entropy_cache, key)
+    if haskey(entropy_cache, key) || noneq_entropies[nvalid+1] >= 0
       nvalid                 += 1;
       noneq_entropies[nvalid] = entropy_cache[key];
     else
       if i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr; continue; end
 
-      nvalid                 += 1;
-      feq                     = Array{Float64}(sim.lat.n);
+      feq                       = Array{Float64}(sim.lat.n);
 
       for p=1:sim.lat.n
         feq[p]                    = feq_f(sim.lat, sim.msm.rho[i_nbr, j_nbr],
                                           sim.msm.u[:, i_nbr, j_nbr], p);
       end
-        const f                   = sim.lat.f[:, i_nbr, j_nbr];
-        const noneq_entropy_k     = entropy_quadratic(f, feq, f - feq);
-        noneq_entropies[nvalid]   = noneq_entropy_k;
-        entropy_cache[key]        = noneq_entropy_k;
+
+      const f                   = sim.lat.f[:, i_nbr, j_nbr];
+      const noneq_entropy_k     = entropy_quadratic(f, feq, f - feq);
+      if noneq_entropy_k < 0; continue; end 
+
+      nvalid                   += 1;
+      noneq_entropies[nvalid]   = noneq_entropy_k;
+      entropy_cache[key]        = noneq_entropy_k;
     end
   end
 
-  return sqrt( median(noneq_entropies[1:nvalid]) / noneq_entropy ); 
+  return ( (nvalid > 0) ? 
+          sqrt( median(noneq_entropies[1:nvalid]) / noneq_densities[i, j] ) :
+          __DEFAULT_DELTA );
 end
 
 #! Scale based on normalized median of neighboorhood non-equilibrium entropy
@@ -74,13 +81,18 @@ function scale_root_median(sim::Sim, i::Int, j::Int,
     const i_nbr     = i + sim.lat.c[1,k];
     const j_nbr     = j + sim.lat.c[2,k];
 
-    if i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr; continue; end
+    if (i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr
+        || noneq_densities[i_nbr, j_nbr] < 0)
+      continue;
+    end
 
     nvalid                   += 1;
     noneq_entropies[nvalid]   = noneq_densities[i_nbr, j_nbr];
   end
 
-  return sqrt( median(noneq_entropies[1:nvalid]) / noneq_densities[i, j] ); 
+  return ( (nvalid > 0) ? 
+          sqrt( median(noneq_entropies[1:nvalid]) / noneq_densities[i, j] ) :
+          __DEFAULT_DELTA );
 end
 
 # Filtering constants
