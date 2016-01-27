@@ -50,7 +50,6 @@ function scale_root_median(sim::Sim, i::Int, j::Int, feq_f::Function,
 
       const f                   = sim.lat.f[:, i_nbr, j_nbr];
       const noneq_entropy_k     = entropy_quadratic(f, feq, f - feq);
-      if noneq_entropy_k < 0; continue; end 
 
       nvalid                   += 1;
       noneq_entropies[nvalid]   = noneq_entropy_k;
@@ -58,9 +57,9 @@ function scale_root_median(sim::Sim, i::Int, j::Int, feq_f::Function,
     end
   end
 
-  return ( (nvalid > 0) ? 
-          sqrt( median(noneq_entropies[1:nvalid]) / noneq_densities[i, j] ) :
-          __DEFAULT_DELTA );
+  const   med_noneq_entropy   =   median(noneq_entropies[1:nvalid]);
+  return  (sign(med_noneq_entropy) * 
+           sqrt( abs(med_noneq_entropy) / noneq_densities[i, j] ));
 end
 
 #! Scale based on normalized median of neighboorhood non-equilibrium entropy
@@ -81,18 +80,15 @@ function scale_root_median(sim::Sim, i::Int, j::Int,
     const i_nbr     = i + sim.lat.c[1,k];
     const j_nbr     = j + sim.lat.c[2,k];
 
-    if (i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr
-        || noneq_densities[i_nbr, j_nbr] < 0)
-      continue;
-    end
+    if i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr; continue; end
 
     nvalid                   += 1;
     noneq_entropies[nvalid]   = noneq_densities[i_nbr, j_nbr];
   end
 
-  return ( (nvalid > 0) ? 
-          sqrt( median(noneq_entropies[1:nvalid]) / noneq_densities[i, j] ) :
-          __DEFAULT_DELTA );
+  const   med_noneq_entropy   =   median(noneq_entropies[1:nvalid]);
+  return  (sign(med_noneq_entropy) * 
+           sqrt( abs(med_noneq_entropy) / noneq_densities[i, j] ));
 end
 
 # Filtering constants

@@ -7,12 +7,12 @@ preamble: >
   const pgrad = -5.6e-6;
   const F = [-pgrad; 0.0];
   const mu_p = 0.2;
-  const tau_y = 4.0e-5;
+  const tau_y = 12.0e-5;
   const m = 1.0e8;
   const max_iters = 11;
   const tol = 1e-3;
   const nsteps = 20000;
-  const id = "test_entropic_srt_bingham_004";
+  const id = "test_entropic_srt_bingham_012";
   const datadir = joinpath("data", id);
   const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
   const forcing_kf = init_korner_Fk(F);

@@ -3,7 +3,7 @@ version: 0.2.5
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -1.102e-3;
+  const pgrad = -5.6e-6;
   const F = [-pgrad; 0.0];
   const datadir = "data/filter_srt_bingham_012_4";
   const nsteps = 25000;
@@ -75,11 +75,6 @@ finally:
       end
       us = analytic_soln(xs);
       i = convert(Int, round(ni/2));
-      for j = 1:nj
-        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
-      end
-      println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu_p))");
       const omegas    = vec(sim.msm.omega[i,:]);
       info("Omega_max     = $(maximum(omegas))");
@@ -89,6 +84,11 @@ finally:
       info("Omega std     = $(std(omegas))");
       info("L2 relative   = $(norm(us-vec(sim.msm.u[1,i,:]),2)/norm(us,2))");
       info("Linf relative = $(norm(us-vec(sim.msm.u[1,i,:]),Inf)/norm(us,Inf))");
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+      end
+      println("TEST PASSED");
     end 
 
 # test for conditions to end simulation

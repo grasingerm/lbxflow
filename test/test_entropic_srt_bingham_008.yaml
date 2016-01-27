@@ -76,6 +76,15 @@ finally:
       end
       us = analytic_soln(xs);
       i = convert(Int, round(ni/2));
+      info("Reynolds  = $(reynolds(maximum(us), nj, mu_p))");
+      const omegas    = vec(sim.msm.omega[i,:]);
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
+      info("Omega std     = $(std(omegas))");
+      info("L2 relative   = $(norm(us-vec(sim.msm.u[1,i,:]),2)/norm(us,2))");
+      info("Linf relative = $(norm(us-vec(sim.msm.u[1,i,:]),Inf)/norm(us,Inf))");
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
       end
@@ -84,14 +93,6 @@ finally:
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
       end
       println("TEST PASSED");
-      println("omega = ", sim.msm.omega[convert(Int, ni/2), convert(Int, nj/2)]);
-      println("Re = ", reynolds(maximum(us), nj, mu_p));
-      println("Bn = ", bingham_number(maximum(us), nj, mu_p, tau_y));
-      const omegas = sim.msm.omega[i,:];
-      info("Omega_max     = $(maximum(omegas))");
-      info("Omega_min     = $(minimum(omegas))");
-      info("Omega median  = $(median(omegas))");
-      info("Omega mean    = $(mean(omegas))");
       PyPlot.plot(xs, us, "-", xs, vec(sim.msm.u[1,i,:]), "^");
       PyPlot.legend(["analytical","lbm"]);
       PyPlot.show();
