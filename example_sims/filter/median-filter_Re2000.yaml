@@ -1,0 +1,75 @@
+version: 0.2.5
+
+# code to execute before parsing
+preamble: >
+  const id      =   "median-filter_Re2000";
+  const datadir =   joinpath("data","filter", id);
+  const nsteps  =   50000;
+  const ni      =   100;
+  const nj      =   100;
+  const U       =   0.1;
+  const mu      =   0.0135;
+  const rho_0   =   2.7;
+  const Re      =   U * ni / (mu / rho_0);
+  const feq_f   =   feq_incomp_max_entropy; 
+  info("Re = $Re");
+  const constit_rel_f = init_constit_srt_const(mu);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: rho_0,       expr: true  }
+nu:       { value: mu,          expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+simtype:    default
+nsteps:     { value: nsteps,   expr: true }
+col_f:      init_col_filter_std(init_col_srt(constit_rel_f, feq_f=feq_f), stds=3.0, feq_f=feq_f)
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - >
+    begin;
+      curry_lid_driven!(lat) = lid_driven!(lat, U);
+      return curry_lid_driven!;
+    end
+  - south_bounce_back!
+  - east_bounce_back!
+  - west_bounce_back!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, convert(Int, nsteps/100))
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      const xs = linspace(0, 1.0, ni);
+      const ys = linspace(0, 1.0, nj);
+      writedlm(joinpath(datadir, "u.dsv"), transpose(sim.msm.u[1,:,:]), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(sim.msm.u[2,:,:]), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,round(ni/2),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,round(nj/2)])], ",");
+    end
+  - write_jld_file_callback(datadir)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
