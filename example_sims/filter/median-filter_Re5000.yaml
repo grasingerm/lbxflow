@@ -8,7 +8,7 @@ preamble: >
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
-  const mu      =   0.0135;
+  const mu      =   0.0054;
   const rho_0   =   2.7;
   const Re      =   U * ni / (mu / rho_0);
   const feq_f   =   feq_incomp_max_entropy; 
@@ -66,10 +66,10 @@ finally:
       const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
       const xs = linspace(0, 1.0, ni);
       const ys = linspace(0, 1.0, nj);
-      writedlm(joinpath(datadir, "u.dsv"), transpose(sim.msm.u[1,:,:]), ",");
-      writedlm(joinpath(datadir, "v.dsv"), transpose(sim.msm.u[2,:,:]), ",");
-      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,round(ni/2),:]) ys], ",");
-      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,round(nj/2)])], ",");
+      writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
     end
   - write_jld_file_callback(datadir)
   - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
