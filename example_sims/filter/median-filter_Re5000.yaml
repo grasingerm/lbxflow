@@ -8,7 +8,7 @@ preamble: >
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
-  const mu      =   0.0135;
+  const mu      =   0.0054;
   const rho_0   =   2.7;
   const Re      =   U * ni / (mu / rho_0);
   const feq_f   =   feq_incomp_max_entropy; 
