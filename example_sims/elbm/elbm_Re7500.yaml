@@ -2,13 +2,13 @@ version: 0.2.5
 
 # code to execute before parsing
 preamble: >
-  const id      =   "unregulated_Re2000";
-  const datadir =   joinpath("data","unregulated", id);
+  const id      =   "elbm_Re7500";
+  const datadir =   joinpath("data","elbm", id);
   const nsteps  =   50000;
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
-  const mu      =   0.0135;
+  const mu      =   0.0036;
   const rho_0   =   2.7;
   const Re      =   U * ni / (mu / rho_0);
   const feq_f   =   feq_incomp_max_entropy; 
@@ -32,7 +32,7 @@ nj:       { value: nj,      expr: true  }
 # simulation parameters
 simtype:    default
 nsteps:     { value: nsteps,   expr: true }
-col_f:      init_col_srt(constit_rel_f, feq_f=feq_f)
+col_f:      init_col_entropic_srt(constit_rel_f, feq_f=feq_f)
 
 # boundaries
 sbounds:
