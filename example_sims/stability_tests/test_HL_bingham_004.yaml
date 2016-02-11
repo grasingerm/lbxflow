@@ -1,0 +1,106 @@
+version: 0.2.5 
+
+preamble: >
+  @init_plot_env();
+  const ni = 128;
+  const nj = 64;
+  const pgrad = -5.6e-6;
+  const F = [-pgrad; 0.0];
+  const mu_p = 0.2;
+  const tau_y = 4.0e-5;
+  const m = 1.0e8;
+  const max_iters = 11;
+  const tol = 1e-3;
+  const nsteps = 20000;
+  const feq_f = init_feq_incomp_HL(1.0);
+  const id = "test_HL_bingham_004";
+  const datadir = joinpath("data", id);
+  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+  const forcing_kf = init_korner_Fk(F);
+  const h = (nj-1)/2.0;
+  const y_tau = -tau_y / pgrad;
+  analytic_soln(xs) = begin;
+    result = zeros(length(xs));
+    for (i, x) in enumerate(xs)
+      if abs(x) <= y_tau
+        result[i] = -1.0 / (2.0 * mu_p) * pgrad * (h^2 - y_tau^2) - tau_y / mu_p * (h - y_tau);
+      else
+        result[i] = -1.0 / (2.0 * mu_p) * pgrad * (h^2 - x^2) - tau_y / mu_p * (h - abs(x));
+      end
+    end
+    return result;
+  end;
+
+datadir:    { value: datadir,   expr: true    }
+
+# material init
+rho_0:      { value: 1.0,       expr: false   }
+nu:         { value: mu_p,      expr: true    }
+
+# lattice configuration
+dx:         { value: 1.0,       expr: false   }
+dt:         { value: 1.0,       expr: false   }
+ni:         { value: ni,        expr: true    }
+nj:         { value: nj,        expr: true    }
+
+# simulation parameters
+nsteps:     { value: nsteps,    expr: true    }
+col_f:      init_col_srt(constit_rel_f, forcing_kf, feq_f=feq_f);
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, convert(Int64, round(nsteps/20)))
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      xs = zeros(nj);
+      for i = 1:nj
+        xs[i] = (i - nj/2 - 0.5);
+      end
+      us = analytic_soln(xs);
+      i = convert(Int, round(ni/2));
+      info("Reynolds  = $(reynolds(maximum(us), nj, mu_p))");
+      const omegas    = vec(sim.msm.omega[i,:]);
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
+      info("Omega std     = $(std(omegas))");
+      info("L2 relative   = $(norm(us-vec(sim.msm.u[1,i,:]),2)/norm(us,2))");
+      info("Linf relative = $(norm(us-vec(sim.msm.u[1,i,:]),Inf)/norm(us,Inf))");
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+      end
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+      end
+      println("TEST PASSED");
+      PyPlot.plot(xs, us, "-", xs, vec(sim.msm.u[1,i,:]), "^");
+      PyPlot.legend(["analytical","lbm-HL"]);
+      PyPlot.show();
+      println("Press ENTER to continue");
+      readline(STDIN);
+    end
+  - write_jld_file_callback(datadir)
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x
