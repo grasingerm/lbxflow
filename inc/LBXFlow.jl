@@ -19,4 +19,6 @@ include("api.jl");
 include(joinpath("col","entropic.jl"));
 include(joinpath("col","filtering.jl"));
 
+include("analytical.jl");
+
 end

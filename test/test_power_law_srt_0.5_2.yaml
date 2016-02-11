@@ -76,8 +76,8 @@ finally:
       PyPlot.plot(xs, us, "r-", xs, ys, "b^");
       PyPlot.legend(["analytical","LBM"]);
       PyPlot.show();
-      println("Press Enter to continue");
-      readline(STDIN);
+      #println("Press Enter to continue");
+      #readline(STDIN);
       for j = 1:nj
         println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1e-2

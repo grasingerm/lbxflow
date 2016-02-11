@@ -21,7 +21,7 @@ end
 
 println("Test results");
 println("============");
-for (test, result) in zip(test_input_files, results)
+for (test, result) in zip(test_input_files, tests_results)
   @printf("%40s: ", test);
   if result
     print_with_color(:green, "Passed.");
