@@ -1,55 +1,40 @@
-using ArgParse;
-
-s = ArgParseSettings();
-@add_arg_table s begin
-  "--nprocs", "-p"
-    help = "Number of processors to use"
-    arg_type = Int
-    default = 1
-  "--skip-serial-tests"
-    help = "Skip serial unit tests"
-    action = :store_true
-end
-pargs = parse_args(s);
-
-const nprocs = pargs["nprocs"];
-if (nprocs < 1); error("Number of processes must be greater than 0"); end
-
-const stests = [
-    "test_multiscale.jl",
-    "test_constitutive.jl",
-    "test_tracking.jl"
-  ];
-
-if !pargs["skip-serial-tests"]
-  __run_tests_root__ = dirname(@__FILE__);
-  for stest in stests
-    require(abspath(joinpath(__run_tests_root__, stest)));
+@everywhere const main = begin;
+  if isfile("lbxflow.jl")
+    abspath("lbxflow.jl");
+  elseif isfile(joinpath("..", "lbxflow.jl"))
+    abspath(joinpath("..", "lbxflow.jl"));
+  else
+    error("Cannot find lbxflow.jl. Please run script from test directory");
   end
 end
 
-addprocs(nprocs-1);
-@everywhere __run_tests_root__ = dirname(@__FILE__);
-for i = 1:nprocs; remotecall_fetch(()->println("$i: $__run_tests_root__"), i); end
-@everywhere const main = abspath(joinpath(__run_tests_root__, "..", "lbxflow.jl"));
-@everywhere const test_input_files = filter(s -> endswith(s, ".yaml"), readdir(__run_tests_root__));
-@everywhere run_test(test_input_file) = begin
+@everywhere const __run_tests_root__  = dirname(@__FILE__); 
+
+const test_input_files    = filter(s -> endswith(s, ".yaml"), readdir(__run_tests_root__));
+
+function did_pass(file::AbstractString)
   full_path_to_input_file = joinpath(__run_tests_root__, test_input_file);
+  println("Parsing and running input file: ", full_path_to_input_file);
+  passed = true;
   try
     run(`julia $main -vf $full_path_to_input_file`);
   catch e
-    return false;
+    passed = false;
   end
-  return true;
-end;
+  return passed;
+end
 
-passes = pmap(run_test, test_input_files);
+println(test_input_files);
 
-# print results
-for (file, passed) in zip(test_input_files, passes)
-  if passed
-    print_with_color(:green, file, ": passed.\n");
+test_results              = pmap(did_pass, test_input_files);
+println("Test results");
+println("============");
+for (test, result) in zip(test_input_files, test_results)
+  @printf("%40s: ", test);
+  if result
+    print_with_color(:green, "Passed.");
   else
-    print_with_color(:red, file, ": failed.\n");
+    print_with_color(:red, "FAILED.");
   end
+  print("\n");
 end

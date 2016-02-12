@@ -96,8 +96,8 @@ finally:
       PyPlot.plot(xs, us, "-", xs, vec(sim.msm.u[1,i,:]), "^");
       PyPlot.legend(["analytical","lbm"]);
       PyPlot.show();
-      println("Press ENTER to continue");
-      readline(STDIN);
+      #println("Press ENTER to continue");
+      #readline(STDIN);
     end
   - write_jld_file_callback(datadir)
 
