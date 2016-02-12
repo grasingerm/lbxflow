@@ -1,14 +1,3 @@
-# author:         
-#  name:         Matthew Grasinger
-#  email:        grasingerm at gmail dot com
-#
-# date-created:   2015-09-23
-#
-# description: >
-#   Poiseuille bingham plastic flow for collision operator comparison. Based on parameters from
-#   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
-#   relaxation-time latice Boltzmann model. Yield stress is 0e-5.
-
 preamble: >
   @init_gadfly_plot_env();
   const ni = 128;
@@ -72,22 +61,8 @@ finally:
         ",");
     end
   - write_jld_file_callback(datadir)
-  - >
-    (sim::AbstractSim, k::Int) -> begin
-      const errors            =   lbm_error(sim, f_analyt, 1, convert(Int64, round(ni/2)); 
-      ps=[2, Inf], plot_errors=true, basename=joinpath(datadir, "error-plots"));
-      
-      info("Relative L2 error   = $(errors[1])");
-      info("Relative LInf error = $(errors[2])");
-      h = open(joinpath(datadir, "rerrors.txt"), "w");
-      write(h, "Relative L2 error   = $(errors[1])\n");
-      write(h, "Relative LInf error = $(errors[2])\n");
-      close(h);
-    end
-  - (sim::AbstractSim, k::Int) -> begin;
-      plot_lbm_vs_analyt(sim, f_analyt, 1, convert(Int64, round(ni/2)); 
-                         fname=joinpath(datadir, "velocity_profiles.pdf"));
-    end;
+  - report_lbm_error(f_analyt, 1, convert(Int64, round(ni/2)), datadir);
+  - init_plot_lbm_vs_analyt(f_analyt, 1, convert(Int64, round(ni/2)), datadir); 
 
 # test for conditions to end simulation
 test_for_term: is_steadystate_x

@@ -6,6 +6,7 @@
 macro init_gadfly_plot_env()
   return quote
     import Gadfly, DataFrames;
+    using Colors;
   end
 end
 
@@ -187,12 +188,46 @@ function plot_lbm_vs_analyt(sim::AbstractSim, analytical_solution::LBXFunction,
   const df2     =   DataFrames.DataFrame(x=x, y=analyt, label="Analytical");
   const df      =   DataFrames.vcat(df1, df2);
   
-  uplt = gd.plot(df, x="x", y="y", color="label", gd.Geom.line,
-                 gd.Guide.XLabel("x (lat)"), gd.Guide.YLabel("u (lat/sec)"));
+  #uplt = gd.plot(df, x="x", y="y", color="label", gd.Geom.line,
+  #               gd.Guide.XLabel("x (lat)"), gd.Guide.YLabel("u (lat/sec)"));
+  uplt = gd.plot(gd.layer(x=x, y=approx, gd.Geom.point, gd.Theme(default_color=parse(Colors.Colorant, "blue"))),
+                 gd.layer(x=x, y=analyt, gd.Geom.line, gd.Theme(default_color=parse(Colors.Colorant, "red"))),
+                 gd.Guide.XLabel("x (lat)"), gd.Guide.YLabel("u (lat/sec)"),
+                 gd.Guide.manual_color_key("Legend", ["LBM", "Analytical"],
+                                           ["red", "blue"]));
   gd.draw(gd.PDF(fname, plot_size[1]gd.inch, plot_size[2]gd.inch), 
           uplt);
 
   if show_plot
     uplt
   end
+end
+
+#! Initialize function for reporting LBM error
+function report_lbm_error(f_analyt::LBXFunction, d::Int, idx::Int, 
+                          datadir::AbstractString)
+
+  (sim::AbstractSim, k::Int) -> begin
+    const errors            =   lbm_error(sim, f_analyt, d, idx; ps=[2, Inf], 
+                                          plot_errors=true, 
+                                          basename=joinpath(datadir, 
+                                                            "error-plots"));
+    
+    info("Relative L2 error   = $(errors[1])");
+    info("Relative LInf error = $(errors[2])");
+    h = open(joinpath(datadir, "rerrors.txt"), "w");
+    write(h, "Relative L2 error   = $(errors[1])\n");
+    write(h, "Relative LInf error = $(errors[2])\n");
+    close(h);
+  end
+end
+
+#! Initialize function for plotting lbm approx against analytical solution
+function init_plot_lbm_vs_analyt(f_analyt::LBXFunction, d::Int, idx::Int,
+                                 datadir::AbstractString)
+
+  return ((sim::AbstractSim, k::Int) -> begin;
+    plot_lbm_vs_analyt(sim, f_analyt, d, 
+                       idx; fname=joinpath(datadir, "velocity_profiles.pdf"));
+  end);
 end
