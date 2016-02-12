@@ -16,13 +16,14 @@ preamble: >
   const pgrad = -1.0e-5;
   const F = [-pgrad; 0.0];
   const mu_p = 0.2;
-  const tau_y = 24.0e-5;
+  const tau_y = 36.0e-5;
   const m = 1.0e8;
-  const max_iters = 11;
+  const max_iters = 25;
+  const tol = 1e-3;
   const nsteps = 20000;
-  const id = "poise-bgk-000024";
-  const datadir = joinpath("data","poise","006","bgk","000024");
-  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+  const id = "poise-mrt-000036";
+  const datadir = joinpath("data","poise","006","mrt","000036");
+  const constit_rel_f = init_constit_mrt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
   const forcing_kf = init_korner_Fk(F);
   f_analyt(nnodes)  =   analytical_poise_bingham(mu_p, tau_y, pgrad, nnodes);
 
@@ -40,7 +41,7 @@ nj:         { value: nj,        expr: true    }
 
 # simulation parameters
 nsteps:     { value: nsteps,    expr: true    }
-col_f:      init_col_srt(constit_rel_f, forcing_kf)
+col_f:      init_col_mrt(constit_rel_f, forcing_kf, S_luo)
 
 # boundaries
 sbounds:
@@ -73,6 +74,6 @@ finally:
   - write_jld_file_callback(datadir)
   - report_lbm_error(f_analyt, 1, convert(Int64, round(ni/2)), datadir);
   - init_plot_lbm_vs_analyt(f_analyt, 1, convert(Int64, round(ni/2)), datadir); 
-
+  
 # test for conditions to end simulation
 test_for_term: is_steadystate_x
