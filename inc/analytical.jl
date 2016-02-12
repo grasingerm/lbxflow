@@ -194,7 +194,7 @@ function plot_lbm_vs_analyt(sim::AbstractSim, analytical_solution::LBXFunction,
                  gd.layer(x=x, y=analyt, gd.Geom.line, gd.Theme(default_color=parse(Colors.Colorant, "red"))),
                  gd.Guide.XLabel("x (lat)"), gd.Guide.YLabel("u (lat/sec)"),
                  gd.Guide.manual_color_key("Legend", ["LBM", "Analytical"],
-                                           ["red", "blue"]));
+                                           ["blue", "red"]));
   gd.draw(gd.PDF(fname, plot_size[1]gd.inch, plot_size[2]gd.inch), 
           uplt);
 
