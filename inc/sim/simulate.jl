@@ -85,12 +85,12 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   msm = sim.msm;
   t = sim.tracker;
 
-  masstransfer!(sim, sbounds); # Calculate mass transfer across interface
-  stream!(lat, temp_f, sbounds, t);
   # Reconstruct missing distribution functions at the interface
   for node in t.interfacels
     f_reconst!(sim, t, node.val, sbounds, sim.rhog);
   end
+  stream!(lat, temp_f, sbounds, t);
+  masstransfer!(sim, sbounds); # Calculate mass transfer across interface
   collision_f!(sim, cbounds);
   update!(sim, sbounds); # Update the state of cells
 
