@@ -12,6 +12,8 @@ include("lattice.jl");
 include("lbxio.jl");
 include("multiscale.jl");
 include("profile.jl");
+include(joinpath("sim","simtypes.jl"));
+include(joinpath("sim","tracking.jl"));
 include(joinpath("sim","simulate.jl"));
 include("stability.jl");
 include("api.jl");

@@ -18,7 +18,7 @@ include(joinpath("..", "sim", "simtypes.jl"));
 #! \return collision_function!(sim, bounds)
 function init_col_srt(constit_relation_f::Function; 
                       feq_f::LBXFunction=feq_incomp)
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const ni, nj = size(msm.rho);
@@ -56,7 +56,7 @@ function init_col_srt(constit_relation_f::Function,
                       forcing_kf::Force;
                       feq_f::LBXFunction=feq_incomp)
   const uf, colf = forcing_kf;
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const ni, nj = size(msm.rho);
@@ -93,7 +93,7 @@ end
 #! \return collision_function!(sim, bounds)
 function init_col_mrt(constit_relation_f::Function, S::Function;
                       feq_f::LBXFunction=feq_incomp)
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();
@@ -139,7 +139,7 @@ function init_col_mrt(constit_relation_f::Function,
                       forcing_kf::Tuple{Function, Function}, S::Function;
                       feq_f::LBXFunction=feq_incomp)
   const uf, colf = forcing_kf;
-  return (sim::Sim, bounds::Matrix{Int64}) -> begin
+  return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
     const M = @DEFAULT_MRT_M();

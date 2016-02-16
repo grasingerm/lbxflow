@@ -2,12 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#=require(abspath(joinpath(__simulate_root__, "..", "col", "collision.jl")));
-require(abspath(joinpath(__simulate_root__, "..", "lattice.jl")));
-require(abspath(joinpath(__simulate_root__, "..", "multiscale.jl")));
-require(abspath(joinpath(__simulate_root__, "simtypes.jl")));
-require(abspath(joinpath(__simulate_root__, "tracking.jl")));=#
-
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
   const nbounds = size(bounds, 2);
@@ -85,12 +79,14 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   msm = sim.msm;
   t = sim.tracker;
 
+  init_mass = sum(t.M);
+
   # Reconstruct missing distribution functions at the interface
   for node in t.interfacels
     f_reconst!(sim, t, node.val, sbounds, sim.rhog);
   end
-  stream!(lat, temp_f, sbounds, t);
   masstransfer!(sim, sbounds); # Calculate mass transfer across interface
+  stream!(lat, temp_f, sbounds, t);
   collision_f!(sim, cbounds);
   update!(sim, sbounds); # Update the state of cells
 
@@ -99,6 +95,12 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   end
 
   map_to_macro!(lat, msm);
+
+  # was mass conserved?
+  if abs(init_mass - sum(t.M))/init_mass > 1e-1
+    error("Mass was not conserved. Initial mass: ", init_mass,
+          " Final mass: ", sum(t.M));
+  end
 end
 
 #! Run simulation

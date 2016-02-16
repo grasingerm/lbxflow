@@ -214,7 +214,9 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(sim.tracker.M));
+      cs = PyPlot.contourf(transpose(sim.tracker.M), 
+                           levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
+      PyPlot.colorbar(cs);
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -375,7 +377,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.draw();
       PyPlot.pause(0.001);
@@ -393,9 +395,11 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(sim.tracker.M));
-      PyPlot.savefig(fname*"_step-$k.png");
+      cs = PyPlot.contourf(transpose(sim.tracker.M), 
+                           levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
+      PyPlot.colorbar(cs);
       PyPlot.draw();
+      PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.pause(0.001);
       sleep(pause);
     end
@@ -591,7 +595,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.draw();
       PyPlot.pause(0.001);
@@ -609,7 +613,9 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(sim.tracker.M));
+      cs = PyPlot.contourf(transpose(sim.tracker.M), 
+                           levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
+      PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.draw();
       PyPlot.pause(0.001);
@@ -787,7 +793,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.draw();
@@ -807,7 +813,9 @@ function plot_mass_contours_callback(iters_per_frame::Int,
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contour(transpose(sim.tracker.M));
+      cs = PyPlot.contourf(transpose(sim.tracker.M), 
+                           levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
+      PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.draw();

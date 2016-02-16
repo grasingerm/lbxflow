@@ -25,6 +25,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
 
+  # NOTE: This is mass transfer calculated AFTER streaming and f reconstructor
   for node in t.interfacels
     i, j = node.val;
     if !inbounds(i, j, sbounds)
@@ -37,15 +38,13 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
         continue;
       elseif t.state[i_nbr,j_nbr] == FLUID
         opk = opp_lat_vec(lat, k);
-        t.M[i,j] += lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j] # m in - m out
+        t.M[i,j] += -lat.f[k,i_nbr,j_nbr] + lat.f[opk,i,j]; # m in - m out
       elseif t.state[i_nbr,j_nbr] == INTERFACE
         opk = opp_lat_vec(lat, k);
-        epsx = t.M[i,j] / msm.rho[i,j];
-        epsxe = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
-        @assert epsx > -0.5 && epsx <= 1.5 && epsxe > -0.5 && epsxe <= 1.5
-        t.M[i,j] += (epsx + epsxe) / 2 * lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j];
+        t.M[i,j] += ((t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 
+                     * (-lat.f[k,i_nbr,j_nbr] + lat.f[opk,i,j]));
       else
-        @assert false && "state not understood or invalid";
+        error("state not understood or invalid");
       end
     end
   end
@@ -65,7 +64,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
     if !inbounds(i, j, sbounds)
       continue;
     end
-    
+
     if t.M[i,j] < -threshold
       println("node $i,$j is becoming a gas cell");
       t.M[i,j] = 0;
@@ -77,6 +76,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j_nbr,sbounds); continue; end
         if t.state[i_nbr,j_nbr] == FLUID
           t.state[i_nbr,j_nbr] = INTERFACE;
+          t.eps[i_nbr,j_nbr] = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
           println("node $i_nbr,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr,j_nbr)); # push into interface list
         end
@@ -86,6 +86,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j,sbounds); continue; end
         if t.state[i_nbr,j] == FLUID
           t.state[i_nbr,j] = INTERFACE;
+          t.eps[i_nbr,j] = t.M[i_nbr,j] / msm.rho[i_nbr,j];
           println("node $i_nbr,$j is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr, j)); # push into interface list
         end
@@ -95,6 +96,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i,j_nbr,sbounds); continue; end
         if t.state[i,j_nbr] == FLUID
           t.state[i,j_nbr] = INTERFACE;
+          t.eps[i,j_nbr] = t.M[i,j_nbr] / msm.rho[i,j_nbr];
           println("node $i,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i, j_nbr)); # push into interface list
         end
@@ -110,6 +112,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j_nbr,sbounds); continue; end
         if t.state[i_nbr,j_nbr] == GAS
           t.state[i_nbr,j_nbr] = INTERFACE;
+          t.eps[i_nbr,j_nbr] = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
           println("node $i_nbr,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr,j_nbr)); # push into interface list
         end
@@ -119,6 +122,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j,sbounds); continue; end
         if t.state[i_nbr,j] == GAS
           t.state[i_nbr,j] = INTERFACE;
+          t.eps[i_nbr,j] = t.M[i_nbr,j] / msm.rho[i_nbr,j];
           println("node $i_nbr,$j is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr, j)); # push into interface list
         end
@@ -128,11 +132,13 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i,j_nbr,sbounds); continue; end
         if t.state[i,j_nbr] == GAS
           t.state[i,j_nbr] = INTERFACE;
+          t.eps[i,j_nbr] = t.M[i,j_nbr] / msm.rho[i,j_nbr];
           println("node $i,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i, j_nbr)); # push into interface list
         end
       end
     end
+    t.eps[i,j] = t.M[i,j] / msm.rho[i,j]; # update fluid fraction
   end
 end
 
@@ -153,17 +159,15 @@ function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
   for k = 1:lat.n
     c = lat.c[:,k]; # TODO: consider using an ArrayView here
     if dot(n, c) >= 0
-      opk = opp_lat_vec(lat, k);
-      rhoij = msm.rho[i,j];
-      uij = msm.u[:,i,j]; # TODO: consider using an ArrayView here
-      lat.f[k,i,j] = (feq_incomp(lat, rhog, uij, k) -
-                  feq_incomp(lat, rhog, uij, opk) -
-                  lat.f[opk,i,j]);
-    else
       i_new = i - c[1];
       j_new = j - c[2];
       if !inbounds(i_new, j_new, sbounds); continue; end
-      lat.f[k,i,j] = lat.f[k,i_new,j_new];
+      opk = opp_lat_vec(lat, k);
+      rhoij = msm.rho[i,j];
+      uij = msm.u[:,i,j]; # TODO: consider using an ArrayView here
+      lat.f[k,i_new,j_new] = (feq_incomp(lat, rhog, uij, k) +
+                              feq_incomp(lat, rhog, uij, opk) -
+                              lat.f[opk,i,j]);
     end
   end
 end
