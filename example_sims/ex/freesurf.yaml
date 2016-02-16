@@ -1,7 +1,7 @@
-version: 0.2.1
+version: 0.2.5
 
 preamble: >
-  using PyPlot;
+  @init_plot_env
   const u = 0.05;
   const datadir = joinpath("data","freesurf");
   const ni = 30;

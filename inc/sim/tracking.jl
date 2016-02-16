@@ -4,11 +4,6 @@
 
 using ArrayViews
 
-#=const __tracking_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__tracking_root__, "..", "col", "collision.jl")));
-require(abspath(joinpath(__tracking_root__, "..", "multiscale.jl")));
-require(abspath(joinpath(__tracking_root__, "simtypes.jl")));=#
-
 #! Check to see if a pair of indices fall inside a bounds
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   const nbounds = size(sbounds, 2);
