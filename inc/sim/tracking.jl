@@ -31,7 +31,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
     if !inbounds(i, j, sbounds)
       continue;
     end
-    for k=1:lat.n
+    for k=1:lat.n-1
       i_nbr = i + lat.c[1,k];
       j_nbr = j + lat.c[2,k];
       if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr,j_nbr] == GAS
@@ -67,18 +67,18 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
     if t.M[i,j] < -threshold
       println("node $i,$j is becoming a gas cell");
-      t.M[i,j] = 0;
       t.state[i,j] = GAS;
       remove!(t.interfacels, node); # no longer an interface cell
+      new_interface_cells = Tuple{Int64,Int64}[];
       for ci in (-1, 1), cj in (-1, 1)
         i_nbr = i+ci;
         j_nbr = j+cj;
         if !inbounds(i_nbr,j_nbr,sbounds); continue; end
         if t.state[i_nbr,j_nbr] == FLUID
           t.state[i_nbr,j_nbr] = INTERFACE;
-          t.eps[i_nbr,j_nbr] = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
           println("node $i_nbr,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr,j_nbr)); # push into interface list
+          push!(new_interface_cells, (i_nbr,j_nbr));
         end
       end
       for ci in (-1, 1)
@@ -86,9 +86,9 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i_nbr,j,sbounds); continue; end
         if t.state[i_nbr,j] == FLUID
           t.state[i_nbr,j] = INTERFACE;
-          t.eps[i_nbr,j] = t.M[i_nbr,j] / msm.rho[i_nbr,j];
           println("node $i_nbr,$j is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr, j)); # push into interface list
+          push!(new_interface_cells, (i_nbr, j));
         end
       end
       for cj in (-1, 1)
@@ -96,15 +96,25 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
         if !inbounds(i,j_nbr,sbounds); continue; end
         if t.state[i,j_nbr] == FLUID
           t.state[i,j_nbr] = INTERFACE;
-          t.eps[i,j_nbr] = t.M[i,j_nbr] / msm.rho[i,j_nbr];
           println("node $i,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i, j_nbr)); # push into interface list
+          push!(new_interface_cells, (i, j_nbr));
         end
       end
+
+      dM = t.M[i, j] / length(new_interface_cells);
+      for new_interface_cell in new_interface_cells
+        i_new, j_new        =   new_interface_cell;
+        t.M[i_new, j_new]   +=  dM;
+        t.eps[i_new, j_new] =   t.M[i_new, j_new] / msm.rho[i_new, j_new];
+      end
+      t.M[i, j] = 0.0;
+
     elseif t.M[i,j] > (msm.rho[i,j] + threshold)
       t.M[i,j] = msm.rho[i,j];
       t.state[i,j] = FLUID;
       remove!(t.interfacels, node); # no longer an interface cell
+      new_interface_cells = Tuple{Int64,Int64}[];
       println("node $i,$j is becoming a fluid cell");
       for ci in (-1, 1), cj in (-1, 1)
         i_nbr = i+ci;
@@ -115,6 +125,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
           t.eps[i_nbr,j_nbr] = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
           println("node $i_nbr,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr,j_nbr)); # push into interface list
+          push!(new_interface_cells, (i_nbr,j_nbr));
         end
       end
       for ci in (-1, 1)
@@ -125,6 +136,7 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
           t.eps[i_nbr,j] = t.M[i_nbr,j] / msm.rho[i_nbr,j];
           println("node $i_nbr,$j is becoming an interface cell");
           unshift!(t.interfacels, (i_nbr, j)); # push into interface list
+          push!(new_interface_cells, (i_nbr,j));
         end
       end
       for cj in (-1, 1)
@@ -135,8 +147,19 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
           t.eps[i,j_nbr] = t.M[i,j_nbr] / msm.rho[i,j_nbr];
           println("node $i,$j_nbr is becoming an interface cell");
           unshift!(t.interfacels, (i, j_nbr)); # push into interface list
+          push!(new_interface_cells, (i, j_nbr));
         end
       end
+
+      dM = (t.M[i, j] - msm.rho[i,j]) / length(new_interface_cells);
+      for new_interface_cell in new_interface_cells
+        i_new, j_new        =   new_interface_cell;
+        t.M[i_new, j_new]   +=  dM;
+        t.eps[i_new, j_new] =   t.M[i_new, j_new] / msm.rho[i_new, j_new];
+      end
+      
+      t.M[i,j] = msm.rho[i,j];
+
     end
     t.eps[i,j] = t.M[i,j] / msm.rho[i,j]; # update fluid fraction
   end
