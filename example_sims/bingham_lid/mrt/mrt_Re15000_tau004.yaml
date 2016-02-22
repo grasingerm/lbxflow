@@ -3,18 +3,18 @@ version: 0.2.5
 # code to execute before parsing
 
 # Bingham plastic lid-driven flow
-# Reynolds number is 5000
-# Yield stress is 0.00012
+# Reynolds number is 15000
+# Yield stress is 0.00004
 # No filtering, MRT operator
 preamble: >
-  const id      =   "mrt_bingham_Re5000_tau012";
+  const id      =   "mrt_bingham_Re15000_tau004";
   const datadir =   joinpath("data", id);
-  const nsteps  =   50000;
+  const nsteps  =   20000;
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
-  const mu_p    =   0.0054;
-  const tau_y   =   12.0e-5;
+  const mu_p    =   0.0018;
+  const tau_y   =   4.0e-5;
   const m       =   1.0e8; 
   const rho_0   =   2.7;
   const Re      =   U * ni / (mu_p / rho_0);

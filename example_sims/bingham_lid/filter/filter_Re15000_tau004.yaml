@@ -3,24 +3,24 @@ version: 0.2.5
 # code to execute before parsing
 
 # Bingham plastic lid-driven flow
-# Reynolds number is 5000
-# Yield stress is 0.00012
-# No filtering, MRT operator
+# Reynolds number is 15000
+# Yield stress is 0.00004
+# Filtering, BGK operator
 preamble: >
-  const id      =   "mrt_bingham_Re5000_tau012";
+  const id      =   "filter_bingham_Re15000_tau004";
   const datadir =   joinpath("data", id);
-  const nsteps  =   50000;
+  const nsteps  =   20000;
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
-  const mu_p    =   0.0054;
-  const tau_y   =   12.0e-5;
+  const mu_p    =   0.0018;
+  const tau_y   =   4.0e-5;
   const m       =   1.0e8; 
   const rho_0   =   2.7;
   const Re      =   U * ni / (mu_p / rho_0);
   const feq_f   =   feq_incomp_max_entropy; 
   info("Re = $Re");
-  const constit_rel_f = init_constit_mrt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -39,7 +39,7 @@ nj:       { value: nj,      expr: true  }
 # simulation parameters
 simtype:    default
 nsteps:     { value: nsteps,   expr: true }
-col_f:      init_col_mrt(constit_rel_f, S_luo, feq_f=feq_f)
+col_f:      init_col_filter_std(init_col_srt(constit_rel_f, feq_f=feq_f));
 
 # boundaries
 sbounds:

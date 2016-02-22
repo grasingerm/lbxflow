@@ -9,7 +9,7 @@ version: 0.2.5
 preamble: >
   const id      =   "mrt_filter_bingham_Re5000_tau012";
   const datadir =   joinpath("data", id);
-  const nsteps  =   20000;
+  const nsteps  =   50000;
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
