@@ -1,0 +1,65 @@
+version: 0.2.5
+
+# code to execute before parsing
+preamble: >
+  const id = "lid";
+  const datadir = joinpath("data","ex-lid3");
+  const ni  = 50;
+  const nj  = 50;
+  const U   = 0.001;
+  const mu  = 0.25;
+  const Re  = U * ni / mu;
+  info("Re = $Re");
+  const constit_rel_f = init_constit_srt_const(mu);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,       expr: false }
+nu:       { value: mu,      expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+simtype:    default
+nsteps:     { value: 60000,   expr: false }
+col_f:      init_col_srt(constit_rel_f)
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - >
+    begin;
+      curry_lid_driven!(lat) = lid_driven!(lat, U);
+      return curry_lid_driven!;
+    end
+  - south_bounce_back!
+  - east_bounce_back!
+  - west_bounce_back!
+
+# callback functions
+callbacks:
+  - print_step_callback(50, id)
+  - write_jld_file_callback(datadir, 500)
+
+test_for_term:        init_is_steadystate(1e-9)
+test_for_term_steps:  100
+
+# clean-up, backup, write out
+finally:
+  - write_jld_file_callback(datadir)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
