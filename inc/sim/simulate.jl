@@ -2,12 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#=require(abspath(joinpath(__simulate_root__, "..", "col", "collision.jl")));
-require(abspath(joinpath(__simulate_root__, "..", "lattice.jl")));
-require(abspath(joinpath(__simulate_root__, "..", "multiscale.jl")));
-require(abspath(joinpath(__simulate_root__, "simtypes.jl")));
-require(abspath(joinpath(__simulate_root__, "tracking.jl")));=#
-
 #! stream particle densities
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
   const nbounds = size(bounds, 2);
@@ -134,6 +128,57 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
       copy!(prev_msm.omega, sim.msm.omega);
       copy!(prev_msm.rho, sim.msm.rho);
       copy!(prev_msm.u, sim.msm.u);
+    
+    catch e
+
+      showerror(STDERR, e);
+      println();
+      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+      warn("Simulation interrupted at step $i !");
+      return i;
+
+    end
+  end
+
+  return n_steps;
+
+end
+
+#! Run simulation
+function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
+                   collision_f!::Function, cbounds::Array{Int64,2},
+                   bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
+                   steps_for_term::Int, callbacks!::Array{Function}, k::Int = 0)
+
+  temp_f = copy(sim.lat.f);
+
+  sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+
+  for c! in callbacks!
+    c!(sim, k+1);
+  end
+
+  prev_msms = Vector{MultiscaleMap}(steps_for_term);
+  for i=1:steps_for_term; prev_msms[i] = MultiscaleMap(sim.msm); end;
+
+  for i = k+2:n_steps
+    try
+
+      sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+
+      for c! in callbacks!
+        c!(sim, i);
+      end
+
+      # if returns true, terminate simulation
+      if test_for_term(sim.msm, prev_msms)
+        return i;
+      end
+  
+      const idx = i % steps_for_term + 1;
+      copy!(prev_msms[idx].omega, sim.msm.omega);
+      copy!(prev_msms[idx].rho,   sim.msm.rho);
+      copy!(prev_msms[idx].u,     sim.msm.u);
     
     catch e
 

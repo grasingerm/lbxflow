@@ -4,7 +4,7 @@ version: 0.2.5
 preamble: >
   import PyPlot;
   const id = "lid";
-  const datadir = joinpath("data","ex-lid5");
+  const datadir = joinpath("data","ex-lid6");
   const ni  = 256;
   const nj  = 256;
   const U   = 0.005;
@@ -58,7 +58,7 @@ callbacks:
   - write_jld_file_callback(datadir, 500)
   - plot_streamlines_callback(100, joinpath(datadir, "sl"), 0.0)
 
-test_for_term:        init_is_steadystate(1e-8)
+test_for_term:        init_is_steadystate(1e-7)
 test_for_term_steps:  200
 
 # clean-up, backup, write out
