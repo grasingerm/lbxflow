@@ -19,7 +19,7 @@ preamble: >
   const m       =   1.0e5; 
   const rho_0   =   1.0;
   const Re      =   U * ni / (mu_p / rho_0);
-  const Bn      =   tau_y * ni / (mu_p / U);
+  const Bn      =   tau_y * ni / (mu_p * U);
   const feq_f   =   feq_incomp_max_entropy; 
   info("Re = $Re");  
   info("Re = $Re");
