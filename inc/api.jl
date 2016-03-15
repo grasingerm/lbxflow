@@ -97,7 +97,8 @@ function parse_and_run(infile::AbstractString, args::Dict)
     "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
     "callbacks" =>  (defs::Dict) -> begin; Array(Function, 0); end,
-    "finally" =>  (defs::Dict) -> begin; Array(Function, 0); end
+    "finally" =>  (defs::Dict) -> begin; Array(Function, 0); end,
+    "test_for_term_steps" => (defs::Dict) -> begin; return 1; end
   );
 
   if args["verbose"]; info("setting defaults."); end
@@ -189,7 +190,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
           global nsim;
           nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                            defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                           defs["callbacks"], k); 
+                           defs["test_for_term_steps"], defs["callbacks"], k); 
         end;
       );
     end

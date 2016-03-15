@@ -4,11 +4,6 @@
 
 using ArrayViews
 
-#=const __tracking_root__ = dirname(@__FILE__);
-require(abspath(joinpath(__tracking_root__, "..", "col", "collision.jl")));
-require(abspath(joinpath(__tracking_root__, "..", "multiscale.jl")));
-require(abspath(joinpath(__tracking_root__, "simtypes.jl")));=#
-
 #! Check to see if a pair of indices fall inside a bounds
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   const nbounds = size(sbounds, 2);
@@ -26,7 +21,7 @@ end
 #! \param sim FreeSurfSim object
 #! \param sbounds Bounds where fluid can be streaming
 function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
-  t = sim.tracker;
+  t   = sim.tracker;
   lat = sim.lat;
   msm = sim.msm;
 
@@ -40,17 +35,26 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
       j_nbr = j + lat.c[2,k];
       if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr,j_nbr] == GAS
         continue;
-      elseif t.state[i_nbr,j_nbr] == FLUID
+      elseif t.state[i,j] == FLUID && t.state[i_nbr,j_nbr] == FLUID
+
         opk = opp_lat_vec(lat, k);
         t.M[i,j] += lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j] # m in - m out
-      elseif t.state[i_nbr,j_nbr] == INTERFACE
+
+      elseif ((t.state[i,j] == FLUID ||  && t.state[i_nbr,j_nbr] == INTERFACE) ||
+              (t.state[i,j] == INTERFACE && t.state[i_nbr,j_nbr] == FLUID)     ||
+              (t.state[i,j] == INTERFACE && t.state[i_nbr,j_nbr] == INTERFACE)) 
+
         opk = opp_lat_vec(lat, k);
         epsx = t.M[i,j] / msm.rho[i,j];
         epsxe = t.M[i_nbr,j_nbr] / msm.rho[i_nbr,j_nbr];
-        @assert epsx > -0.5 && epsx <= 1.5 && epsxe > -0.5 && epsxe <= 1.5
-        t.M[i,j] += (epsx + epsxe) / 2 * lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j];
+        @assert(epsx > -0.5 && epsx <= 1.5, "Fluid fraction at ($i,$j) not " *
+                "within bounds. ϵ($i,$j) = $epsx");
+        @assert(epsxe > -0.5 && epsxe <= 1.5, "Fluid fraction at "
+                "($i_nbr,$j_nbr) not within bounds. ϵ($i_nbr,$j_nbr) = $epsxe");
+        t.M[i,j] += (epsx + epsxe) / 2 * (lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]);
+
       else
-        @assert false && "state not understood or invalid";
+        error("state not understood or invalid");
       end
     end
   end
