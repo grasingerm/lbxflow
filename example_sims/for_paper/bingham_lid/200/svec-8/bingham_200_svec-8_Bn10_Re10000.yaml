@@ -71,6 +71,10 @@ callbacks:
   - print_step_callback(100, id)
   - write_jld_file_callback(datadir, convert(Int, nsteps/100))
 
+# test for steady state
+test_for_term:          init_is_steadystate(1e-7)
+test_for_term_steps:    100
+
 # clean-up, backup, write out
 finally:
   - >
