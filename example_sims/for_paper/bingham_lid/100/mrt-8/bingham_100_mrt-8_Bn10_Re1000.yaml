@@ -1,0 +1,91 @@
+version: 0.2.5
+
+# code to execute before parsing
+
+# Bingham plastic lid-driven flow
+# Bingham number is 10
+# Reynolds number is 1000
+# Stress growth exponent is 10^8
+# No filtering, MRT operator
+preamble: >
+  const id      =   "bingham_100_mrt-8_Bn10_Re1000";
+  const datadir =   joinpath("data","paper-tests", id);
+  const nsteps  =   50000;
+  const ni      =   100;
+  const nj      =   100;
+  const U       =   1.0;
+  const mu_p    =   0.1;
+  const tau_y   =   0.01;
+  const m       =   1.0e8; 
+  const rho_0   =   1.0;
+  const Re      =   U * ni / (mu_p / rho_0);
+  const Bn      =   tau_y * ni / (mu_p * U);
+  const feq_f   =   feq_incomp_max_entropy; 
+  info("Bn = $Bn");
+  info("Re = $Re");
+  info("Grid size = $ni");
+  info("Stress growth exponent = $m");
+  const constit_rel_f = init_constit_mrt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: rho_0,       expr: true  }
+nu:       { value: mu_p,        expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+simtype:    default
+nsteps:     { value: nsteps,   expr: true }
+col_f:      init_col_mrt(constit_rel_f, S_luo, feq_f=feq_f)
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - >
+    begin;
+      curry_lid_driven!(lat) = lid_driven!(lat, U);
+      return curry_lid_driven!;
+    end
+  - south_bounce_back!
+  - east_bounce_back!
+  - west_bounce_back!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, convert(Int, nsteps/100))
+
+# test for steady state
+test_for_term:          init_is_steadystate(1e-7)
+test_for_term_steps:    100
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      const xs = linspace(0, 1.0, ni);
+      const ys = linspace(0, 1.0, nj);
+      writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+    end
+  - write_jld_file_callback(datadir)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)

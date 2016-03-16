@@ -9,7 +9,7 @@ version: 0.2.5
 preamble: >
   const id      =   "unregulated_bingham_Re5000_tau012_200grid";
   const datadir =   joinpath("data", id);
-  const nsteps  =   20000;
+  const nsteps  =   50000;
   const ni      =   200;
   const nj      =   200;
   const U       =   0.1;

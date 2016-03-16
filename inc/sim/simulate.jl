@@ -42,7 +42,6 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
         j_new = j + lat.c[2,k];
 
         if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
-            || t.state[i_new,j_new] == INTERFACE
             || t.state[i_new,j_new] == GAS)
           continue;
         end
@@ -75,24 +74,37 @@ end
 function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
                    sbounds::Array{Int64,2}, collision_f!::Function, 
                    cbounds::Array{Int64,2}, bcs!::Array{Function})
-  lat = sim.lat;
-  msm = sim.msm;
-  t = sim.tracker;
+  lat   = sim.lat;
+  msm   = sim.msm;
+  t     = sim.tracker;
 
-  # Reconstruct missing distribution functions at the interface
+  # Algorithm should be:
+  # 1.  mass transfer
+  masstransfer!(sim, sbounds); # Calculate mass transfer across interface
+
+  # 2.  stream
+  stream!(lat, temp_f, sbounds, t);
+
+  # 3.  reconstruct distribution functions from empty cells
+  # 4.  reconstruct distribution functions along interface normal
   for node in t.interfacels
     f_reconst!(sim, t, node.val, sbounds, sim.rhog);
   end
-  stream!(lat, temp_f, sbounds, t);
-  masstransfer!(sim, sbounds); # Calculate mass transfer across interface
-  collision_f!(sim, cbounds);
-  update!(sim, sbounds); # Update the state of cells
 
+  # 5.  particle collisions
+  collision_f!(sim, cbounds);
+  
+  # 6.  enforce boundary conditions
   for bc! in bcs!
     bc!(lat);
   end
 
+  # 7.  calculate macroscopic variables
   map_to_macro!(lat, msm);
+
+  # 8.  update fluid fractions
+  # 9.  update cell states
+  # 10. update timestep
 end
 
 #! Run simulation

@@ -1,0 +1,82 @@
+version: 0.2.5
+
+# code to execute before parsing
+
+# Bingham plastic lid-driven flow
+# Reynolds number is 5000
+# Yield stress is 0.00012
+# No filtering, MRT operator
+preamble: >
+  const id      =   "mrt_bingham_Re5000_tau012_200gird";
+  const datadir =   joinpath("data", id);
+  const nsteps  =   50000;
+  const ni      =   200;
+  const nj      =   200;
+  const U       =   0.1;
+  const mu_p    =   0.0108;
+  const tau_y   =   12.0e-5;
+  const m       =   1.0e8; 
+  const rho_0   =   2.7;
+  const Re      =   U * ni / (mu_p / rho_0);
+  const feq_f   =   feq_incomp_max_entropy; 
+  info("Re = $Re");
+  const constit_rel_f = init_constit_mrt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: rho_0,       expr: true  }
+nu:       { value: mu_p,        expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+simtype:    default
+nsteps:     { value: nsteps,   expr: true }
+col_f:      init_col_mrt(constit_rel_f, S_luo, feq_f=feq_f)
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - >
+    begin;
+      curry_lid_driven!(lat) = lid_driven!(lat, U);
+      return curry_lid_driven!;
+    end
+  - south_bounce_back!
+  - east_bounce_back!
+  - west_bounce_back!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, convert(Int, nsteps/100))
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      const xs = linspace(0, 1.0, ni);
+      const ys = linspace(0, 1.0, nj);
+      writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+    end
+  - write_jld_file_callback(datadir)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
