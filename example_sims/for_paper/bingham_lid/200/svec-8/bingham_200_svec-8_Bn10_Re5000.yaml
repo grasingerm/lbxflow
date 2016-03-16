@@ -21,7 +21,7 @@ preamble: >
   const Re      =   U * ni / (mu_p / rho_0);
   const Bn      =   tau_y * ni / (mu_p * U);
   const feq_f   =   feq_incomp_max_entropy; 
-  info("Re = $Re");  
+  info("Bn = $Bn");  
   info("Re = $Re");
   info("Grid size = $ni");
   info("Stress growth exponent = $m");
