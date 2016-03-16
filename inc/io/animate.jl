@@ -273,7 +273,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.plot(x,y);
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux (lat / sec)");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -299,7 +299,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.plot(x,y);
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux / u_max");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -317,7 +317,7 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -334,7 +334,7 @@ function plot_uvecs_callback(iters_per_frame::Int, fname::AbstractString,
     if k % iters_per_frame == 0
       PyPlot.clf();
       PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
