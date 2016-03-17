@@ -36,16 +36,17 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
-      if t.state[i,j] == GAS; continue; end
-      for k = 1:lat.n
-        i_new = i + lat.c[1,k];
-        j_new = j + lat.c[2,k];
+      if !t.state[i,j] == GAS
+        for k = 1:lat.n
+          i_new = i + lat.c[1,k];
+          j_new = j + lat.c[2,k];
 
-        if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
-            || t.state[i_new,j_new] == GAS)
-          continue;
+          if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
+              || t.state[i_new,j_new] == GAS)
+            continue;
+          end
+          temp_f[k,i_new,j_new] = lat.f[k,i,j];
         end
-        temp_f[k,i_new,j_new] = lat.f[k,i,j];
       end
     end
   end
@@ -104,7 +105,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  # 10. update timestep
+  update!(sim, sbounds, feq_f);
 end
 
 #! Run simulation
