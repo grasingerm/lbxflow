@@ -135,6 +135,8 @@ immutable FreeSurfSim <: AbstractSim
       t.state[i, j] =   INTERFACE;
       push!(t.interfacels, (i, j));
     end
+
+    return new(lat, msm, t, rho_g);
   end
 
 end

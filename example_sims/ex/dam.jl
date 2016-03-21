@@ -57,5 +57,5 @@ callbacks:
   - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
-finally:
-  - write_jld_file_callback(datadir)
+#finally:
+#  - write_jld_file_callback(datadir)

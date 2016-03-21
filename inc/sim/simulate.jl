@@ -36,7 +36,7 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
-      if !t.state[i,j] == GAS
+      if t.state[i,j] != GAS
         for k = 1:lat.n
           i_new = i + lat.c[1,k];
           j_new = j + lat.c[2,k];
@@ -90,7 +90,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
   for node in t.interfacels #TODO maybe abstract out interface list...
-    f_reconst!(sim, t, node.val, sbounds, feq_f, sim.rhog);
+    f_reconst!(sim, t, node.val, sbounds, feq_f, sim.rho_g);
   end
 
   # 5.  particle collisions
@@ -148,6 +148,7 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 
       showerror(STDERR, e);
       println();
+      println("Showing backtrace:");
       Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("Simulation interrupted at step $i !");
       return i;
@@ -199,6 +200,7 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 
       showerror(STDERR, e);
       println();
+      println("Showing backtrace:");
       Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("Simulation interrupted at step $i !");
       return i;
@@ -230,6 +232,7 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 
       showerror(STDERR, e);
       println();
+      println("Showing backtrace:");
       Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("Simulation interrupted at step $i !");
       return i;
@@ -250,7 +253,10 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
   for i = k+1:n_step
     try; sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
     catch e
-      showerror(STDERR, e); println();
+      showerror(STDERR, e);
+      println();
+      println("Showing backtrace:");
+      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
       warn("Simulation interrupted at step $i !");
       return i;
     end

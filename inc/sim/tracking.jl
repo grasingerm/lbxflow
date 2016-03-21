@@ -229,12 +229,12 @@ end
 
 # kernal function for interface f reconstruction
 function _f_reconst_ij!(lat::Lattice, msm::MultiscaleMap, feq_f::LBXFunction,
-                        rhog::Real, k::Int)
-  const opp_k       =   opp_lat_vec(lat, k);
-  const u_ij        =   msm.u[:, i, j];
-  lat.f[opp_k i, j] =   (feq_f(rhog, lat.w[k], lat.c[:, k], u_ij) +
-                         feq_f(rhog, lat.w[opp_k], lat.c[:, opp_k], u_ij) -
-                         lat.f[k, i, j]);
+                        rho_g::Real, k::Int)
+  const opp_k         =   opp_lat_vec(lat, k);
+  const u_ij          =   msm.u[:, i, j];
+  lat.f[opp_k, i, j]  =   (feq_f(rho_g, lat.w[k], lat.c[:, k], u_ij) +
+                           feq_f(rho_g, lat.w[opp_k], lat.c[:, opp_k], u_ij) -
+                           lat.f[k, i, j]);
 end
 
 #! Reconstruct distribution functions at interface
@@ -243,9 +243,9 @@ end
 #! \param t         Mass tracker
 #! \param ij        Tuple of i and j indices on grid
 #! \param sbounds   Bounds where fluid can be streaming
-#! \param rhog      Atmospheric pressure
+#! \param rho_g     Atmospheric pressure
 function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
-                    sbounds::Matrix{Int64}, feq_f::LBXFunction, rhog::Real)
+                    sbounds::Matrix{Int64}, feq_f::LBXFunction, rho_g::Real)
   const n     = _unit_normal(t, ij);
   const i, j  = ij;
   lat         = sim.lat;
@@ -258,7 +258,7 @@ function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
 
     if (i_nbr < 1 || i_nbr > ni || j_nbr < 1 || j_nbr > nj ||
         t.state[i_nbr, j_nbr] == GAS)
-      _f_reconst_ij!(lat, msm, feq_f, rhog, k);
+      _f_reconst_ij!(lat, msm, feq_f, rho_g, k);
     end
   end
 
@@ -266,7 +266,7 @@ function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
   for k = 1:lat.n-1
     c = lat.c[:,k]; # TODO: consider using an ArrayView here
     if dot(n, c) >= 0
-      _f_reconst_ij!(lat, msm, feq_f, rhog, k);
+      _f_reconst_ij!(lat, msm, feq_f, rho_g, k);
     end
   end
 end
