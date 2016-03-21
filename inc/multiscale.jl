@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("lattice.jl");
-include("numerics.jl");
-
 #! Calculate strain rate from strain rate tensor
 macro strain_rate(D)
   return :(sqrt(2.0 * ddot($D, $D)));

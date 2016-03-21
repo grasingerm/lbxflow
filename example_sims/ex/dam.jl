@@ -1,12 +1,11 @@
-version: 0.2.5
+version: 0.2.6
 
 preamble: >
   @init_plot_env();
-  const u             =   0.05;
-  const datadir       =   joinpath("data","freesurf");
+  const datadir       =   joinpath("data","dam");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
-  const F             =   [0.0; -2.0e-2];
+  const F             =   [0.0; -5.0e-4];
   const forcing_kf    =   init_guo_Fk(F);
   const ni            =   50;
   const nj            =   50;
@@ -27,7 +26,7 @@ nj:         {   value:  nj,           expr: true    }
 # simulation parameters
 simtype:    free_surface
 col_f:      init_col_srt(constit_rel_f, forcing_kf);
-nsteps:     {   value: 15000,         expr: false   }
+nsteps:     {   value: 250000,        expr: false   }
 
 # boundaries
 sbounds:
@@ -46,37 +45,17 @@ bcs:
   - north_bounce_back!
 
 # free surface conditions
-rhog: 1.0
+rho_g: 1.0
 
-states:
-  value: >
-    begin;
-      s = Array(Union(Gas, Interface, Fluid), ni, nj);
-      fill!(s, GAS);
-      for j=1:nj
-        for i=1:(int(ni/2))
-          s[i,j] = FLUID;
-        end
-        s[(int(ni/2))+1,j] = INTERFACE;
-      end
-      return s;
-    end
-  expr: true
+fill_x: { value: 0.5, expr: false }
+fill_y: { value: 1.0, expr: false }
 
 # callback functions
-#  - plot_mass_contours_callback(10, "mass", 0.0)
 callbacks:
-  - plot_mass_contours_callback(1)
-  - print_step_callback(1, "free-surf")
-  - >
-    (sim::FreeSurfSim, k::Int) -> begin;
-      if k % 5 == 0
-        println(sim.tracker.M);
-      end
-    end;
-  - pause_sim_callback(10)
-  - write_jld_file_callback(datadir, 300)
+  - plot_mass_contours_callback(100, "mass")
+  - print_step_callback(50, "free-surf")
+  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
-#finally:
-  #- write_jld_file_callback(datadir)
+finally:
+  - write_jld_file_callback(datadir)

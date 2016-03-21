@@ -225,7 +225,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot strain rate matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::AbstractFloat = 0.025)
   const M = @DEFAULT_MRT_M();
@@ -275,7 +275,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.plot(x,y);
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux (lat / sec)");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -301,7 +301,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.plot(x,y);
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux / u_max");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -319,7 +319,7 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -336,7 +336,7 @@ function plot_uvecs_callback(iters_per_frame::Int, fname::AbstractString,
     if k % iters_per_frame == 0
       PyPlot.clf();
       PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -360,7 +360,7 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::AbstractString,
                         transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
       PyPlot.ylim(0.0, 1.0);
       PyPlot.xlim(0.0, 1.0);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -377,8 +377,8 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      PyPlot.contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -398,6 +398,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
                            levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
       PyPlot.colorbar(cs);
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.pause(0.001);
@@ -407,7 +408,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot strain rate contours for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 pause::AbstractFloat = 0.025)
@@ -430,7 +431,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr));
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k_iter.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -439,7 +440,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot yielded regions for the domain
 function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
                                                fname::AbstractString,
                                                gamma_min::AbstractFloat,
@@ -462,7 +463,7 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
       end
       PyPlot.clf();
       PyPlot.contourf(transpose(sr), levels=[0.0, 1.0]);
-      PyPlot.savefig(fname*"_step-$k_iter.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -625,7 +626,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot stra rate for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 xy::Tuple{Number, Number},
                                                 pause::AbstractFloat = 0.025)
@@ -679,7 +680,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux (lat / sec)");
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -707,7 +708,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       PyPlot.xlabel("x / width");
       PyPlot.ylabel("ux / u_max");
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -728,7 +729,7 @@ function plot_umag_contour_callback(iters_per_frame::Int,
       cs = PyPlot.contourf(transpose(u_mag(sim.msm)));
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -748,7 +749,7 @@ function plot_uvecs_callback(iters_per_frame::Int,
       PyPlot.clf();
       PyPlot.quiver(transpose(sim.msm.u[1,:,:]), transpose(sim.msm.u[2,:,:]));
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -775,7 +776,7 @@ function plot_streamlines_callback(iters_per_frame::Int,
       PyPlot.ylim(0.0, 1.0);
       PyPlot.xlim(0.0, 1.0);
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -795,7 +796,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
       PyPlot.clf();
       PyPlot.contourf(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)));
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -817,7 +818,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
                            levels = [0.0; 0.25; 0.50; 0.75; 1.0]);
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -826,7 +827,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot strain rate for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 xy::Tuple{Number, Number},
                                                 fname::AbstractString,
@@ -851,7 +852,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       cs = PyPlot.contourf(transpose(sr));
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k_iter");
-      PyPlot.savefig(fname*"_step-$k_iter.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -874,7 +875,7 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(u_mag(sim.msm)), levels=levs);
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -896,7 +897,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
       cs = PyPlot.contour(transpose(pmap(rho -> rho*sim.lat.cssq, sim.msm.rho)),
                           levels=levs);
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -916,7 +917,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
       PyPlot.clf();
       cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -925,7 +926,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot strain rate for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 levs::Vector,
@@ -949,7 +950,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr), levels=levs);
       PyPlot.colorbar(cs);
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -972,7 +973,7 @@ function plot_umag_contour_callback(iters_per_frame::Int, fname::AbstractString,
         PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
                        facecolor="black");
       end
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -998,7 +999,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
         PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
                        facecolor="black");
       end
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -1022,7 +1023,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
         PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
                        facecolor="black");
       end
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
@@ -1031,7 +1032,7 @@ function plot_mass_contours_callback(iters_per_frame::Int,
 
 end
 
-#! Plot mass matrix for the domain
+#! Plot strain rate for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 levs::Vector, rects::Vector,
@@ -1059,7 +1060,7 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
         PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
                        facecolor="black");
       end
-      PyPlot.savefig(fname*"_step-$k.png");
+      PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);

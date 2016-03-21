@@ -36,17 +36,17 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
-      if t.state[i,j] == GAS; continue; end
-      for k = 1:lat.n
-        i_new = i + lat.c[1,k];
-        j_new = j + lat.c[2,k];
+      if !t.state[i,j] == GAS
+        for k = 1:lat.n
+          i_new = i + lat.c[1,k];
+          j_new = j + lat.c[2,k];
 
-        if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
-            || t.state[i_new,j_new] == INTERFACE
-            || t.state[i_new,j_new] == GAS)
-          continue;
+          if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
+              || t.state[i_new,j_new] == GAS)
+            continue;
+          end
+          temp_f[k,i_new,j_new] = lat.f[k,i,j];
         end
-        temp_f[k,i_new,j_new] = lat.f[k,i,j];
       end
     end
   end
@@ -73,46 +73,48 @@ end
 
 #! Simulate a single step free surface flow step
 function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
-                   sbounds::Array{Int64,2}, collision_f!::Function, 
-                   cbounds::Array{Int64,2}, bcs!::Array{Function})
-  lat = sim.lat;
-  msm = sim.msm;
-  t = sim.tracker;
+                   sbounds::Array{Int64,2}, collision_f!::LBXFunction, 
+                   cbounds::Array{Int64,2}, 
+                   bcs!::Array{LBXFunction}; feq_f::LBXFunction=feq_incomp)
+  lat   = sim.lat;
+  msm   = sim.msm;
+  t     = sim.tracker;
 
-  init_mass = sum(t.M);
+  # Algorithm should be:
+  # 1.  mass transfer
+  masstransfer!(sim, sbounds); # Calculate mass transfer across interface
 
-  # Reconstruct missing distribution functions at the interface
-  for node in t.interfacels
-    println("Reconstructing distribution functions at $(node.val)");
-    m = sum(t.M); f_reconst!(sim, t, node.val, sbounds, sim.rhog); @show m - sum(t.M);
+  # 2.  stream
+  stream!(lat, temp_f, sbounds, t);
+
+  # 3.  reconstruct distribution functions from empty cells
+  # 4.  reconstruct distribution functions along interface normal
+  for node in t.interfacels #TODO maybe abstract out interface list...
+    f_reconst!(sim, t, node.val, sbounds, feq_f, sim.rhog);
   end
-  println("streaming");
-  m = sum(t.M); stream!(lat, temp_f, sbounds, t); @show m - sum(t.M); 
-  println("mass transfer");
-  m = sum(t.M); masstransfer!(sim, sbounds); @show m - sum(t.M); # Calculate mass transfer across interface
-  println("cell updates");
-  m = sum(t.M); update!(sim, sbounds); @show m - sum(t.M); # Update the state of cells
-  println("colliding");
-  m = sum(t.M); collision_f!(sim, cbounds); @show m - sum(t.M);
 
+  # 5.  particle collisions
+  collision_f!(sim, cbounds);
+  
+  # 6.  enforce boundary conditions
   for bc! in bcs!
     bc!(lat);
   end
 
+  # 7.  calculate macroscopic variables
   map_to_macro!(lat, msm);
 
-  # was mass conserved?
-  if abs(init_mass - sum(t.M))/init_mass > 1e-1
-    error("Mass was not conserved. Initial mass: ", init_mass,
-          " Final mass: ", sum(t.M));
-  end
+  # 8.  update fluid fractions
+  # 9.  update cell states
+  update!(sim, sbounds, feq_f);
 end
 
 #! Run simulation
 function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
-                   collision_f!::Function, cbounds::Array{Int64,2},
-                   bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
-                   callbacks!::Array{Function}, k::Int = 0)
+                   collision_f!::LBXFunction, cbounds::Array{Int64,2},
+                   bcs!::Array{LBXFunction}, n_steps::Int, 
+                   test_for_term::LBXFunction,
+                   callbacks!::Array{LBXFunction}, k::Int = 0)
 
   temp_f = copy(sim.lat.f);
 
@@ -141,6 +143,57 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
       copy!(prev_msm.omega, sim.msm.omega);
       copy!(prev_msm.rho, sim.msm.rho);
       copy!(prev_msm.u, sim.msm.u);
+    
+    catch e
+
+      showerror(STDERR, e);
+      println();
+      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+      warn("Simulation interrupted at step $i !");
+      return i;
+
+    end
+  end
+
+  return n_steps;
+
+end
+
+#! Run simulation
+function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
+                   collision_f!::Function, cbounds::Array{Int64,2},
+                   bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
+                   steps_for_term::Int, callbacks!::Array{Function}, k::Int = 0)
+
+  temp_f = copy(sim.lat.f);
+
+  sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+
+  for c! in callbacks!
+    c!(sim, k+1);
+  end
+
+  prev_msms = Vector{MultiscaleMap}(steps_for_term);
+  for i=1:steps_for_term; prev_msms[i] = MultiscaleMap(sim.msm); end;
+
+  for i = k+2:n_steps
+    try
+
+      sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+
+      for c! in callbacks!
+        c!(sim, i);
+      end
+
+      # if returns true, terminate simulation
+      if test_for_term(sim.msm, prev_msms)
+        return i;
+      end
+  
+      const idx = i % steps_for_term + 1;
+      copy!(prev_msms[idx].omega, sim.msm.omega);
+      copy!(prev_msms[idx].rho,   sim.msm.rho);
+      copy!(prev_msms[idx].u,     sim.msm.u);
     
     catch e
 

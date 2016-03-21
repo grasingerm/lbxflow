@@ -5,12 +5,12 @@
 module LBXFlow
 
 include("boundary.jl");
+include("lattice.jl");
+include("multiscale.jl");
 include(joinpath("col","collision.jl"));
 include("convergence.jl");
 include("entropy.jl");
-include("lattice.jl");
 include("lbxio.jl");
-include("multiscale.jl");
 include("profile.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
