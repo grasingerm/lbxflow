@@ -36,10 +36,14 @@ function parse_and_run(infile::AbstractString, args::Dict)
     ins["version"] = eval(parse("v\"$(ins["version"])\""));
     @assert(ins["version"].major == args["LBX_VERSION"].major,
             "Major version specified in $infile, $(ins["version"]), does not " *
-            "match major version of LBXFlow, $(args["LBX_VERSION"])".); 
+            "match major version of LBXFlow, $(args["LBX_VERSION"])."); 
     if ins["version"] > args["LBX_VERSION"]
       warn("$infile recommends v$(ins["version"]), consider updating.");
     end
+
+  else
+
+    warn("$infile does not contain versioning information.");
 
   end
 
