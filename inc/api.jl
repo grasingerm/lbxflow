@@ -28,9 +28,19 @@ function parse_and_run(infile::AbstractString, args::Dict)
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
 
-  if (haskey(ins, "version") && haskey(args, "LBX_VERSION") 
-      && eval(parse("v\"$(ins["version"])\"")) > args["LBX_VERSION"])
-    warn("$infile recommends v$(ins["version"]), consider updating.");
+  # Check version is consistent with input file
+  if haskey(ins, "version")
+
+    @assert(haskey(args, "LBX_VERSION"), "LBX_VERSION should be passed from " *
+                                         "lbxflow.jl");
+    ins["version"] = eval(parse("v\"$(ins["version"])\""));
+    @assert(ins["version"].major == args["LBX_VERSION"].major,
+            "Major version specified in $infile, $(ins["version"]), does not " *
+            "match major version of LBXFlow, $(args["LBX_VERSION"])".); 
+    if ins["version"] > args["LBX_VERSION"]
+      warn("$infile recommends v$(ins["version"]), consider updating.");
+    end
+
   end
 
   if haskey(ins, "preamble")
