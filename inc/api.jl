@@ -83,7 +83,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   const DEF_DEFAULTS = Dict{AbstractString, Any}(
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
-    "rhog"    =>  (defs::Dict) -> begin; return 1.0; end,
+    "rho_g"   =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
     "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
     "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
@@ -153,7 +153,14 @@ function parse_and_run(infile::AbstractString, args::Dict)
     if defs["simtype"] == "default"; sim = Sim(lat, msm)
     elseif defs["simtype"] == "free_surface"
       if haskey(defs, "states")
-        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rhog"]);
+        if haskey(defs, "fill_x") || haskey(defs, "fill_y")
+          warn("'States' matrix was already provided. 'fill_\$D' variables " *
+               "will be ignored");
+        end
+        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
+      elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
+        sim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
+                          defs["fill_x"], defs["fill_y"]);
       else
         error("No `states` matrix provided. Cannot initialize free surface flow");
       end
