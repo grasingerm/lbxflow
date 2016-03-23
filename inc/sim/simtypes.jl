@@ -25,15 +25,18 @@ immutable Gas; end;         const GAS = Gas();
 immutable Interface; end;   const INTERFACE = Interface();
 immutable Fluid; end;       const FLUID = Fluid();
 
+#! Type alias for cell states
+typealias State Union{Gas, Interface, Fluid};
+
 #! Mass and state tracker
 immutable Tracker
-  state::Matrix{Union{Gas, Interface, Fluid}};
+  state::Matrix{State};
   M::Matrix{Float64};
   eps::Matrix{Float64};
   interfacels::DoublyLinkedList{Tuple{Int64, Int64}};
 
   function Tracker(ni::Int, nj::Int,
-                   state::Union{Gas, Interface, Fluid} = GAS) 
+                   state::State = GAS) 
     return new(convert(Matrix{Union{Gas, Interface, Fluid}}, 
                        fill(state, (ni, nj))),
                zeros(ni, nj), zeros(ni, nj),
@@ -41,7 +44,7 @@ immutable Tracker
   end
 
   function Tracker(msm::MultiscaleMap,
-                   state::Matrix{Union{Gas, Interface, Fluid}})
+                   state::Matrix{State})
 
     const ni, nj  = size(state);
     lst           = DoublyLinkedList{Tuple{Int64, Int64}}();

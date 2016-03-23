@@ -26,25 +26,25 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   msm = sim.msm;
 
   for node in t.interfacels
-    i, j = node.val;
-    @assert(t.state[i,j] == INTERFACE, "All cells in the interface list " *
+    const i, j = node.val;
+    @assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
             "should be in the 'INTERFACE' state");
     if inbounds(i, j, sbounds)
       for k=1:lat.n
-        i_nbr = i + lat.c[1,k];
-        j_nbr = j + lat.c[2,k];
-        if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr,j_nbr] == GAS
+        const i_nbr = i + lat.c[1, k];
+        const j_nbr = j + lat.c[2, k];
+        if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr, j_nbr] == GAS
           continue;
-        elseif  t.state[i_nbr,j_nbr] == FLUID
+        elseif  t.state[i_nbr, j_nbr] == FLUID
 
           const opk   = opp_lat_vec(lat, k);
-          t.M[i,j]   += lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j] # m in - m out
+          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
 
-        elseif  t.state[i_nbr,j_nbr] == INTERFACE 
+        elseif  t.state[i_nbr, j_nbr] == INTERFACE 
 
           const opk   = opp_lat_vec(lat, k);
-          t.M[i,j]   += ((t.eps[i,j] + t.eps[i_nbr,j_nbr]) / 2 * 
-                         (lat.f[opk,i_nbr,j_nbr] - lat.f[k,i,j]));
+          t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 * 
+                         (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
 
         else
           error("state not understood or invalid");
@@ -61,7 +61,7 @@ function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   new_empty_cells   = DoublyLinkedList{Tuple{Int, Int}}();
   new_fluid_cells   = DoublyLinkedList{Tuple{Int, Int}}();
   
-  for node in interfacels
+  for node in t.interfacels
     const i, j  =   node.val;
     t.eps[i, j] =   t.M[i, j] / sim.msm.rho[i, j];
 
@@ -74,6 +74,26 @@ function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   end
 
   return new_empty_cells, new_fluid_cells;
+end
+
+#! Kernal function for changing the state of a cell
+function _change_state!(t::Tracker, i::Int, j::Int, state::Fluid)
+  t.state[i, j]   =   state;
+  @assert(remove!(t.interfacels, (i, j)) != nothing,
+          "Cell ($i, $j) not found in interface list. Unable to remove.");
+end
+
+#! Kernal function for changing the state of a cell
+function _change_state!(t::Tracker, i::Int, j::Int, state::Gas)
+  t.state[i, j]   =   state;
+  @assert(remove!(t.interfacels, (i, j)) != nothing,
+          "Cell ($i, $j) not found in interface list. Unable to remove.");
+end
+
+#! Kernal function for changing the state of a cell
+function _change_state!(t::Tracker, i::Int, j::Int, state::Interface)
+  t.state[i, j]   =   state;
+  push!(t.interfacels, (i, j));
 end
 
 # Update cell states and redistribute mass to neighborhoods
@@ -91,7 +111,7 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
   for node in new_fluid_cells # First the neighborhood of all filled cells are prepared
     const i, j      =     node.val;
-    t.state[i, j]   =     FLUID;
+    _change_state!(t, i, j, FLUID);
 
     # Calculate the total density and velocity of the neighborhood
     ρ_sum           =     0.0;
@@ -126,30 +146,26 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
       # If it is already an interface cell, make sure it is not emptied
       if t.state[i_nbr, j_nbr] == INTERFACE
         remove!(new_empty_cells, (i_nbr, j_nbr));
-      elseif states[i_nbr, j_nbr] == GAS
-        t.state[i_nbr, j_nbr] = INTERFACE;
+      elseif t.state[i_nbr, j_nbr] == GAS
+        _change_state!(t, i_nbr, j_nbr, INTERFACE);
         for kk=1:nk
-          lat.f[kk, i_nbr, j_nbr]   =   feq_f(ρ_avg, lat.w[kk], lat.c[:, kk], 
-                                              u_avg);
+          lat.f[kk, i_nbr, j_nbr]   =   feq_f(lat, ρ_avg, u_avg, kk);
         end
-        push!(t.interfacels, (i_nbr, j_nbr));
       end
     end # end reflag neighbors loop
   end
 
   for node in new_empty_cells # convert emptied cells to gas cells
     const i, j      =     node.val;
-    t.state[i, j]   =     GAS;
-    remove!(t.interfacels, (i, j));
+    _change_state!(t, i, j, GAS);
 
     for k=1:nk-1
       const i_nbr     =     i + lat.c[1, k];
       const j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
-          states[i_nbr, j_nbr] == FLUID)
-        t.state[i_nbr, j_nbr] =  INTERFACE;
-        push!(t.interfacels, (i_nbr, j_nbr));
+          t.state[i_nbr, j_nbr] == FLUID)
+        _change_state!(t, i_nbr, j_nbr, INTERFACE);
       end
     end
   end
@@ -163,8 +179,8 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
-      const i_nbr     =     i + c[1, k];
-      const j_nbr     =     j + c[2, k];
+      const i_nbr     =     i + lat.c[1, k];
+      const j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
@@ -194,8 +210,8 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
-      const i_nbr     =     i + c[1, k];
-      const j_nbr     =     j + c[2, k];
+      const i_nbr     =     i + lat.c[1, k];
+      const j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
@@ -227,13 +243,21 @@ function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
   _update_cell_states!(sim, sbounds, feq_f, new_empty_cells, new_fluid_cells);
 end
 
-# kernal function for interface f reconstruction
+#! Kernal function for interface f reconstruction
+#!
+#! \param   lat     Lattice
+#! \param   msm     Multiscale map
+#! \param   feq_f   Equilibrium distribution function
+#! \param   rho_g   Gas pressure (in lattice units)
+#! \param   k       Lattice vector direction of neighbor
+#! \param   i       Index of node in ith direction
+#! \param   j       Index of node in jth direction
 function _f_reconst_ij!(lat::Lattice, msm::MultiscaleMap, feq_f::LBXFunction,
-                        rho_g::Real, k::Int)
+                        rho_g::Real, k::Int, i::Int, j::Int)
   const opp_k         =   opp_lat_vec(lat, k);
   const u_ij          =   msm.u[:, i, j];
-  lat.f[opp_k, i, j]  =   (feq_f(rho_g, lat.w[k], lat.c[:, k], u_ij) +
-                           feq_f(rho_g, lat.w[opp_k], lat.c[:, opp_k], u_ij) -
+  lat.f[opp_k, i, j]  =   (feq_f(lat, rho_g, u_ij, k) +
+                           feq_f(lat, rho_g, u_ij, opp_k) -
                            lat.f[k, i, j]);
 end
 
@@ -258,15 +282,16 @@ function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
 
     if (i_nbr < 1 || i_nbr > ni || j_nbr < 1 || j_nbr > nj ||
         t.state[i_nbr, j_nbr] == GAS)
-      _f_reconst_ij!(lat, msm, feq_f, rho_g, k);
+      _f_reconst_ij!(lat, msm, feq_f, rho_g, k, i, j);
     end
   end
 
   # reconstruct f normal to interface (conservation of linear momentum)
   for k = 1:lat.n-1
-    c = lat.c[:,k]; # TODO: consider using an ArrayView here
-    if dot(n, c) >= 0
-      _f_reconst_ij!(lat, msm, feq_f, rho_g, k);
+    c = lat.c[:,k]; #TODO consider using an ArrayView here
+    if dot(n, c) > 0
+      # NOTE: reconstructs direction OPPOSITE of k (as desired)
+      _f_reconst_ij!(lat, msm, feq_f, rho_g, k, i, j);
     end
   end
 end

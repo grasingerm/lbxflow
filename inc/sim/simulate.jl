@@ -82,31 +82,43 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # Algorithm should be:
   # 1.  mass transfer
+  #pm    = sum(t.M);
   masstransfer!(sim, sbounds); # Calculate mass transfer across interface
+  #println("masstransfer!: ΔM = $(sum(t.M) - pm)");
 
   # 2.  stream
+  #pm    = sum(t.M);
   stream!(lat, temp_f, sbounds, t);
+  #println("stream!: ΔM = $(sum(t.M) - pm)");
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
+  #pm    = sum(t.M);
   for node in t.interfacels #TODO maybe abstract out interface list...
     f_reconst!(sim, t, node.val, sbounds, feq_f, sim.rho_g);
   end
+  #println("f_reconst!: ΔM = $(sum(t.M) - pm)");
 
   # 5.  particle collisions
+  #pm    = sum(t.M);
   collision_f!(sim, cbounds);
+  #println("collision_f!: ΔM = $(sum(t.M) - pm)");
   
   # 6.  enforce boundary conditions
+  #pm    = sum(t.M);
   for bc! in bcs!
     bc!(lat);
   end
+  #println("bcs!: ΔM = $(sum(t.M) - pm)");
 
   # 7.  calculate macroscopic variables
   map_to_macro!(lat, msm);
 
   # 8.  update fluid fractions
   # 9.  update cell states
+  #pm    = sum(t.M);
   update!(sim, sbounds, feq_f);
+  #println("update!: ΔM = $(sum(t.M) - pm)");
 end
 
 #! Run simulation
@@ -146,10 +158,12 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
     
     catch e
 
-      showerror(STDERR, e);
+      const bt = catch_backtrace(); 
+      showerror(STDERR, e, bt);
       println();
       println("Showing backtrace:");
-      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+      Base.show_backtrace(STDERR, backtrace()); # display callstack
+      println();
       warn("Simulation interrupted at step $i !");
       return i;
 
@@ -198,10 +212,12 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
     
     catch e
 
-      showerror(STDERR, e);
+      const bt = catch_backtrace(); 
+      showerror(STDERR, e, bt);
       println();
       println("Showing backtrace:");
-      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+      Base.show_backtrace(STDERR, backtrace()); # display callstack
+      println();
       warn("Simulation interrupted at step $i !");
       return i;
 
@@ -230,10 +246,12 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 
     catch e
 
-      showerror(STDERR, e);
+      const bt = catch_backtrace(); 
+      showerror(STDERR, e, bt);
       println();
       println("Showing backtrace:");
-      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+      Base.show_backtrace(STDERR, backtrace()); # display callstack
+      println();
       warn("Simulation interrupted at step $i !");
       return i;
 
@@ -253,12 +271,16 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
   for i = k+1:n_step
     try; sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
     catch e
-      showerror(STDERR, e);
+
+      const bt = catch_backtrace(); 
+      showerror(STDERR, e, bt);
       println();
       println("Showing backtrace:");
-      Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
+      Base.show_backtrace(STDERR, backtrace()); # display callstack
+      println();
       warn("Simulation interrupted at step $i !");
       return i;
+
     end
   end
 

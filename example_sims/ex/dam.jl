@@ -5,7 +5,7 @@ preamble: >
   const datadir       =   joinpath("data","dam");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
-  const F             =   [0.0; -5.0e-4];
+  const F             =   [0.0; -1.0e-6];
   const forcing_kf    =   init_guo_Fk(F);
   const ni            =   50;
   const nj            =   50;
@@ -54,7 +54,7 @@ fill_y: { value: 1.0, expr: false }
 callbacks:
   - plot_mass_contours_callback(100, "mass")
   - print_step_callback(50, "free-surf")
-  - write_jld_file_callback(datadir, 500)
+#  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 #finally:
