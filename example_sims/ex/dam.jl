@@ -52,7 +52,7 @@ fill_y: { value: 1.0, expr: false }
 
 # callback functions
 callbacks:
-  - plot_mass_contours_callback(100, "mass")
+  - plot_mass_contours_callback(100, joinpath(datadir, "mass"))
   - print_step_callback(50, "free-surf")
 #  - write_jld_file_callback(datadir, 500)
 
