@@ -13,7 +13,7 @@ test_results              = fill(true, length(test_input_files));
 for (i, test_input_file) in enumerate(test_input_files)
   full_path_to_input_file = joinpath(__run_tests_root__, test_input_file);
   try
-    run(`julia $main -vf $full_path_to_input_file`);
+    run(`julia --color=yes $main -vf $full_path_to_input_file`);
   catch e
     test_results[i] = false; 
   end
@@ -21,7 +21,7 @@ end
 
 println("Test results");
 println("============");
-for (test, result) in zip(test_input_files, tests_results)
+for (test, result) in zip(test_input_files, test_results)
   @printf("%40s: ", test);
   if result
     print_with_color(:green, "Passed.");
