@@ -5,4 +5,5 @@
 include("freecol.jl"); # free surface collisions
 include("modcol.jl");  # "modular" collisions
 include("pmodcol.jl"); # parallel mod collisions
-include("stdcol.jl");  # "standard" collisions
+include("bgk.jl");
+include("mrt.jl");
