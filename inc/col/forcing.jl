@@ -50,11 +50,12 @@ function _sukop_gravity(g::Vector{Float64}, sim::AbstractSim,
           dot(g, sim.lat.c[:, k]));
 end
 
+#TODO should this just be M? or will M not be the actual mass for fluid cells?
 #! Sukop forcing function but with gravitation acceleration instead of force
 function _sukop_gravity(g::Vector{Float64}, sim::FreeSurfSim, 
                         k::Int, i::Int, j::Int)
   return (sim.lat.w[k] * sim.lat.dt / sim.lat.cssq * sim.msm.rho[i, j] * 
-          sim.t.eps[i, j] * dot(g, sim.lat.c[:, k]));
+          sim.tracker.eps[i, j] * dot(g, sim.lat.c[:, k]));
 end
 
 #! Initialize a Sukop forcing function with gravitation acceleration

@@ -12,8 +12,9 @@ type MRT <: ColFunction
 
   function MRT(constit_relation_f::LBXFunction; feq_f::LBXFunction=feq_incomp,
                S::LBXFunction=S_fallah)
-    return new(feq_f, constit_relation_f, @DEFAULT_MRT_M(), @DEFAULT_MRT_IM(), 
-               S);
+    const M   = @DEFAULT_MRT_M;
+    const iM  = @DEFAULT_MRT_IM;
+    return new(feq_f, constit_relation_f, M, iM, S);
   end
 end
 
@@ -26,11 +27,12 @@ type MRT_F <: ColFunction
   iM::Matrix{Float64};
   S::LBXFunction;
 
-  function MRT(constit_relation_f::LBXFunction
-               forcing_f::Force; 
-               feq_f::LBXFunction=feq_incomp, S::LBXFunction=S_fallah)
-    return new(feq_f, constit_relation_f, forcing_f, 
-               @DEFAULT_MRT_M(), @DEFAULT_MRT_IM(), S);
+  function MRT_F(constit_relation_f::LBXFunction,
+                 forcing_f::Force; 
+                 feq_f::LBXFunction=feq_incomp, S::LBXFunction=S_fallah)
+    const M   = @DEFAULT_MRT_M;
+    const iM  = @DEFAULT_MRT_IM;
+    return new(feq_f, constit_relation_f, forcing_f, M, iM, S);
   end
 end
 
@@ -61,7 +63,7 @@ function call(col_f::MRT, sim::AbstractSim, bounds::Matrix{Int64})
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
-      lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
+      lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
 
       # update collision frequency matrix
       msm.omega[i,j] = @omega(mu, lat.cssq, lat.dt);
@@ -95,13 +97,14 @@ function call(col_f::MRT_F, sim::AbstractSim, bounds::Matrix{Int64})
       end
 
       const mu    =   col_f.constit_relation_f(sim, fneq, i, j);
+      const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-      const F     =   map(k -> col_f.forcing_f[2](sim, mu, k, i, j), 1:lat.n);
+      const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-      lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq + F;
+      lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
       # update collision frequency matrix
-      msm.omega[i,j] = @omega(mu, lat.cssq, lat.dt);
+      msm.omega[i,j] = omega;
 
     end
   end
@@ -121,7 +124,7 @@ function call(col_f::MRT, sim::FreeSurfSim, bounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      if sim.t.state[i, j] != GAS
+      if sim.tracker.state[i, j] != GAS
 
         rhoij       =   msm.rho[i,j];
         uij         =   msm.u[:,i,j];
@@ -161,7 +164,7 @@ function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      if sim.t.state[i, j] != GAS
+      if sim.tracker.state[i, j] != GAS
 
         rhoij       =   msm.rho[i,j];
         uij         =   col_f.forcing_f[1](sim, i, j);
@@ -174,13 +177,14 @@ function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64})
         end
 
         const mu    =   col_f.constit_relation_f(sim, fneq, i, j);
+        const omega =   @omega(mu, lat.cssq, lat.dt);
         const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-        const F     =   map(k -> col_f.forcing_f[2](sim, mu, k, i, j), 1:lat.n);
+        const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-        lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq + F;
+        lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
         # update collision frequency matrix
-        msm.omega[i,j] = @omega(mu, lat.cssq, lat.dt);
+        msm.omega[i,j] = omega;
 
       end
 

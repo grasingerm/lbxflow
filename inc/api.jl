@@ -14,15 +14,15 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
-                                           :type => Function ),
+                                           :type => ColFunction ),
     "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "callbacks"     =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "finally"       =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "test_for_term" =>  Dict{Symbol, Any}( :store => true,  :array => false, 
-                                           :type => Function )
+                                           :type => LBXFunction )
   );
 
   if args["verbose"]; info("parsing $infile from yaml..."); end

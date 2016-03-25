@@ -89,7 +89,7 @@ function call(col_f::BGK_F, sim::AbstractSim, bounds::Matrix{Int64})
 
       for k = 1:lat.n
         lat.f[k,i,j]    =   ((omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]) +
-                             col_f.forcing_f[2](sim, mu, k, i, j));
+                             col_f.forcing_f[2](sim, omega, k, i, j));
       end
 
       msm.omega[i,j]  =   omega;
@@ -112,7 +112,7 @@ function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      if sim.t.state[i, j] != GAS
+      if sim.tracker.state[i, j] != GAS
 
         rhoij       =   msm.rho[i,j];
         uij         =   msm.u[:,i,j];
@@ -153,7 +153,7 @@ function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      if sim.t.state[i, j] != GAS
+      if sim.tracker.state[i, j] != GAS
 
         rhoij       =   msm.rho[i,j];
         uij         =   col_f.forcing_f[1](sim, i, j);
@@ -170,7 +170,7 @@ function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64})
 
         for k = 1:lat.n
           lat.f[k,i,j]    =   ((omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]) +
-                               col_f.forcing_f[2](sim, k, i, j));
+                               col_f.forcing_f[2](sim, omega, k, i, j));
         end
 
         msm.omega[i,j]  =   omega;
