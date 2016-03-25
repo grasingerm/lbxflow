@@ -2,12 +2,11 @@ version: 0.2.5
 
 # code to execute before parsing
 preamble: >
-  @init_plot_env();
   const id = "lid";
   const datadir = joinpath("data","ex-lid");
-  const ni  = 256;
-  const nj  = 256;
-  const U   = 0.01;
+  const ni  = 50;
+  const nj  = 50;
+  const U   = 0.001;
   const mu  = 0.25;
   const Re  = U * ni / mu;
   info("Re = $Re");
@@ -29,7 +28,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 simtype:    default
-nsteps:     { value: 40000,   expr: false }
+nsteps:     { value: 60000,   expr: false }
 col_f:      init_col_srt(constit_rel_f)
 
 # boundaries
@@ -56,19 +55,11 @@ bcs:
 callbacks:
   - print_step_callback(50, id)
   - write_jld_file_callback(datadir, 500)
-  - plot_streamlines_callback(15, 0.0)
+
+test_for_term:        is_steadystate
+test_for_term_steps:  100
 
 # clean-up, backup, write out
 finally:
-  - >
-    (sim::Sim, k::Int) -> begin
-      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
-      const xs = linspace(0, 1.0, ni);
-      const ys = linspace(0, 1.0, nj);
-      writedlm(joinpath(datadir, "u.dsv"), transpose(sim.msm.u[1,:,:]), ",");
-      writedlm(joinpath(datadir, "v.dsv"), transpose(sim.msm.u[2,:,:]), ",");
-      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,round(ni/2),:]) ys], ",");
-      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,round(nj/2)])], ",");
-    end
   - write_jld_file_callback(datadir)
   - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
