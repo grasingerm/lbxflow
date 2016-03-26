@@ -22,7 +22,7 @@ end
 println("Test results");
 println("============");
 for (test, result) in zip(test_input_files, test_results)
-  @printf("%40s: ", test);
+  @printf("%60s: ", test);
   if result
     print_with_color(:green, "Passed.");
   else

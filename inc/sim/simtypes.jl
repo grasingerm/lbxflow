@@ -6,9 +6,10 @@ using List
 
 #using FastAnonymous;
 #typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure};
-typealias LBXFunction Function;
+abstract ColFunction;
+typealias LBXFunction Union{Function, ColFunction};
 
-abstract AbstractSim
+abstract AbstractSim;
 
 #! Simulation object
 #! lat Lattice

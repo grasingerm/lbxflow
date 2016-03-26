@@ -4,23 +4,19 @@
 
 module LBXFlow
 
-include("boundary.jl");
 include("lattice.jl");
 include("multiscale.jl");
-include(joinpath("col","collision.jl"));
-include("convergence.jl");
-include("entropy.jl");
-include("lbxio.jl");
-include("profile.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
 include(joinpath("sim","simulate.jl"));
+include("entropy.jl");
+include(joinpath("col","collision.jl"));
+include("boundary.jl");
+include("convergence.jl");
+include("lbxio.jl");
+include("profile.jl");
 include("stability.jl");
 include("api.jl");
-
-include(joinpath("col","entropic.jl"));
-include(joinpath("col","filtering.jl"));
-
 include("analytical.jl");
 
 end

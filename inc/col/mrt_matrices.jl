@@ -40,8 +40,7 @@ end
 #! \param c_ssq Lattice speed of sound squared
 #! \param dt Change in time
 #! \return Chen relaxation matix
-function S_LBGK(mu::Number, rho::Number, cssq::Number,
-	              dt::Number)
+function S_LBGK(mu::Number, rho::Number, cssq::Number, dt::Number)
   omega = @omega(mu, cssq, dt);
   return spdiagm([omega; omega; omega; omega; omega; omega; omega; omega; omega]);
 end
@@ -53,8 +52,7 @@ end
 #! \param c_ssq Lattice speed of sound squared
 #! \param dt Change in time
 #! \return Fallah relaxation matix
-function S_fallah(mu::Number, rho::Number, cssq::Number,
-	                dt::Number)
+function S_fallah(mu::Number, rho::Number, cssq::Number, dt::Number)
 	const s_8 = @fallah_8(mu, rho, cssq, dt);
 	return spdiagm([0.0; 1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8]);
 end
@@ -66,8 +64,7 @@ end
 #! \param c_ssq Lattice speed of sound squared
 #! \param dt Change in time
 #! \return Luo relaxation matix
-function S_luo(mu::Number, rho::Number, cssq::Number,
-	             dt::Number)
+function S_luo(mu::Number, rho::Number, cssq::Number, dt::Number)
   omega = @omega(mu, cssq, dt);
   return spdiagm([0.0; 1.1; 1.0; 0.0; 1.2; 0.0; 1.2; omega; omega]);
 end

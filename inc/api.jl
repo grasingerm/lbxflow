@@ -14,23 +14,37 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
-                                           :type => Function ),
+                                           :type => ColFunction ),
     "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "callbacks"     =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "finally"       =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "test_for_term" =>  Dict{Symbol, Any}( :store => true,  :array => false, 
-                                           :type => Function )
+                                           :type => LBXFunction )
   );
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
   ins = yaml.load(readall(infile));
 
-  if (haskey(ins, "version") && haskey(args, "LBX_VERSION") 
-      && eval(parse("v\"$(ins["version"])\"")) > args["LBX_VERSION"])
-    warn("$infile recommends v$(ins["version"]), consider updating.");
+  # Check version is consistent with input file
+  if haskey(ins, "version")
+
+    @assert(haskey(args, "LBX_VERSION"), "LBX_VERSION should be passed from " *
+                                         "lbxflow.jl");
+    ins["version"] = eval(parse("v\"$(ins["version"])\""));
+    @assert(ins["version"].major == args["LBX_VERSION"].major,
+            "Major version specified in $infile, $(ins["version"]), does not " *
+            "match major version of LBXFlow, $(args["LBX_VERSION"])."); 
+    if ins["version"] > args["LBX_VERSION"]
+      warn("$infile recommends v$(ins["version"]), consider updating.");
+    end
+
+  else
+
+    warn("$infile does not contain versioning information.");
+
   end
 
   if haskey(ins, "preamble")

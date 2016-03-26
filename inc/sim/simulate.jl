@@ -56,8 +56,8 @@ end
 
 #! Simulate a single step
 function sim_step!(sim::Sim, temp_f::Array{Float64,3},
-                   sbounds::Array{Int64,2}, collision_f!::Function, 
-                   cbounds::Array{Int64,2}, bcs!::Array{Function})
+                   sbounds::Matrix{Int64}, collision_f!::LBXFunction, 
+                   cbounds::Matrix{Int64}, bcs!::Vector{LBXFunction})
   lat = sim.lat;
   msm = sim.msm;
 
@@ -73,60 +73,48 @@ end
 
 #! Simulate a single step free surface flow step
 function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
-                   sbounds::Array{Int64,2}, collision_f!::LBXFunction, 
-                   cbounds::Array{Int64,2}, 
-                   bcs!::Array{LBXFunction}; feq_f::LBXFunction=feq_incomp)
+                   sbounds::Matrix{Int64}, collision_f!::ColFunction, 
+                   cbounds::Matrix{Int64}, 
+                   bcs!::Vector{LBXFunction})
   lat   = sim.lat;
   msm   = sim.msm;
   t     = sim.tracker;
 
   # Algorithm should be:
   # 1.  mass transfer
-  #pm    = sum(t.M);
   masstransfer!(sim, sbounds); # Calculate mass transfer across interface
-  #println("masstransfer!: ΔM = $(sum(t.M) - pm)");
 
   # 2.  stream
-  #pm    = sum(t.M);
   stream!(lat, temp_f, sbounds, t);
-  #println("stream!: ΔM = $(sum(t.M) - pm)");
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
-  #pm    = sum(t.M);
   for node in t.interfacels #TODO maybe abstract out interface list...
-    f_reconst!(sim, t, node.val, sbounds, feq_f, sim.rho_g);
+    f_reconst!(sim, t, node.val, sbounds, collision_f!.feq_f, sim.rho_g);
   end
-  #println("f_reconst!: ΔM = $(sum(t.M) - pm)");
 
   # 5.  particle collisions
-  #pm    = sum(t.M);
   collision_f!(sim, cbounds);
-  #println("collision_f!: ΔM = $(sum(t.M) - pm)");
   
   # 6.  enforce boundary conditions
-  #pm    = sum(t.M);
   for bc! in bcs!
     bc!(lat);
   end
-  #println("bcs!: ΔM = $(sum(t.M) - pm)");
 
   # 7.  calculate macroscopic variables
   map_to_macro!(lat, msm);
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  #pm    = sum(t.M);
-  update!(sim, sbounds, feq_f);
-  #println("update!: ΔM = $(sum(t.M) - pm)");
+  update!(sim, sbounds, collision_f!.feq_f);
 end
 
 #! Run simulation
-function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
-                   collision_f!::LBXFunction, cbounds::Array{Int64,2},
-                   bcs!::Array{LBXFunction}, n_steps::Int, 
+function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
+                   collision_f!::LBXFunction, cbounds::Matrix{Int64},
+                   bcs!::Vector{LBXFunction}, n_steps::Int, 
                    test_for_term::LBXFunction,
-                   callbacks!::Array{LBXFunction}, k::Int = 0)
+                   callbacks!::Vector{LBXFunction}, k::Int = 0)
 
   temp_f = copy(sim.lat.f);
 
@@ -175,10 +163,12 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 end
 
 #! Run simulation
-function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
-                   collision_f!::Function, cbounds::Array{Int64,2},
-                   bcs!::Array{Function}, n_steps::Int, test_for_term::Function,
-                   steps_for_term::Int, callbacks!::Array{Function}, k::Int = 0)
+function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
+                   collision_f!::LBXFunction, cbounds::Matrix{Int64},
+                   bcs!::Vector{LBXFunction}, n_steps::Int, 
+                   test_for_term::LBXFunction,
+                   steps_for_term::Int, callbacks!::Vector{LBXFunction}, 
+                   k::Int = 0)
 
   temp_f = copy(sim.lat.f);
 
@@ -229,10 +219,10 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 end
 
 #! Run simulation
-function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
-                   collision_f!::Function, cbounds::Array{Int64,2},
-                   bcs!::Array{Function}, n_steps::Int,
-                   callbacks!::Array{Function}, k::Int = 0)
+function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
+                   collision_f!::LBXFunction, cbounds::Matrix{Int64},
+                   bcs!::Vector{LBXFunction}, n_steps::Int,
+                   callbacks!::Vector{LBXFunction}, k::Int = 0)
 
   temp_f = copy(sim.lat.f);
   for i = k+1:n_steps
@@ -263,9 +253,9 @@ function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
 end
 
 #! Run simulation
-function simulate!(sim::AbstractSim, sbounds::Array{Int64,2},
-                   collision_f!::Function, cbounds::Array{Int64,2},
-                   bcs!::Array{Function}, n_steps::Int, k::Int = 0)
+function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
+                   collision_f!::LBXFunction, cbounds::Matrix{Int64},
+                   bcs!::Vector{LBXFunction}, n_steps::Int, k::Int = 0)
 
   temp_f = copy(sim.lat.f);
   for i = k+1:n_step
