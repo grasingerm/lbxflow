@@ -89,8 +89,8 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
-  for node in t.interfacels #TODO maybe abstract out interface list...
-    f_reconst!(sim, t, node.val, sbounds, collision_f!.feq_f, sim.rho_g);
+  for (i, j) in t.interfacels #TODO maybe abstract out interface list...
+    f_reconst!(sim, t, (i, j), sbounds, collision_f!.feq_f, sim.rho_g);
   end
 
   # 5.  particle collisions

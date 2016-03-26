@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-using List
-
 #using FastAnonymous;
 #typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure};
 abstract ColFunction;
@@ -34,21 +32,21 @@ immutable Tracker
   state::Matrix{State};
   M::Matrix{Float64};
   eps::Matrix{Float64};
-  interfacels::DoublyLinkedList{Tuple{Int64, Int64}};
+  interfacels::Set{Tuple{Int64, Int64}};
 
   function Tracker(ni::Int, nj::Int,
                    state::State = GAS) 
     return new(convert(Matrix{Union{Gas, Interface, Fluid}}, 
                        fill(state, (ni, nj))),
                zeros(ni, nj), zeros(ni, nj),
-               DoublyLinkedList{Tuple{Int64, Int64}}());
+               Set{Tuple{Int64, Int64}}());
   end
 
   function Tracker(msm::MultiscaleMap,
                    state::Matrix{State})
 
     const ni, nj  = size(state);
-    lst           = DoublyLinkedList{Tuple{Int64, Int64}}();
+    lst           = Set{Tuple{Int64, Int64}}();
     M             = Array{Float64}(ni, nj);
     eps           = Array{Float64}(ni, nj);
 
