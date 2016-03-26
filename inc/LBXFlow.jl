@@ -17,10 +17,6 @@ include(joinpath("sim","tracking.jl"));
 include(joinpath("sim","simulate.jl"));
 include("stability.jl");
 include("api.jl");
-
-include(joinpath("col","entropic.jl"));
-include(joinpath("col","filtering.jl"));
-
 include("analytical.jl");
 
 end
