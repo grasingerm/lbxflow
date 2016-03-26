@@ -17,7 +17,7 @@ function did_pass(file::AbstractString)
   println("Parsing and running input file: ", full_path_to_input_file);
   passed = true;
   try
-    run(`julia $main -vf $full_path_to_input_file`);
+    run(`julia --color=yes $main -vf $full_path_to_input_file`);
   catch e
     passed = false;
   end
@@ -30,7 +30,7 @@ test_results              = pmap(did_pass, test_input_files);
 println("Test results");
 println("============");
 for (test, result) in zip(test_input_files, test_results)
-  @printf("%40s: ", test);
+  @printf("%60s: ", test);
   if result
     print_with_color(:green, "Passed.");
   else

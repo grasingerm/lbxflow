@@ -4,14 +4,6 @@
 
 import Roots;
 
-include("constitutive.jl");
-include("forcing.jl");
-include("equilibrium.jl");
-include(joinpath("..", "lattice.jl"));
-include("mrt_matrices.jl");
-include(joinpath("..", "multiscale.jl"));
-include(joinpath("..", "numerics.jl"));
-
 const __KAPPA_ERROR_MSG__ = ("Entropic relaxation factor, kappa, must be "  *
                              "greater than or equal to zero and less than " *
                              "or equal to one for the collision operator "  *
