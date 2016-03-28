@@ -25,8 +25,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
 
-  for node in t.interfacels
-    const i, j = node.val;
+  for (i, j) in t.interfacels
     @assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
             "should be in the 'INTERFACE' state");
     if inbounds(i, j, sbounds)
@@ -58,11 +57,10 @@ end
 function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   t                 = sim.tracker;
   const ni, nj      = size(t.state);
-  new_empty_cells   = DoublyLinkedList{Tuple{Int, Int}}();
-  new_fluid_cells   = DoublyLinkedList{Tuple{Int, Int}}();
+  new_empty_cells   = Set{Tuple{Int, Int}}();
+  new_fluid_cells   = Set{Tuple{Int, Int}}();
   
-  for node in t.interfacels
-    const i, j  =   node.val;
+  for (i, j) in t.interfacels
     t.eps[i, j] =   t.M[i, j] / sim.msm.rho[i, j];
 
     if      t.M[i, j] > (1 + kappa) * sim.msm.rho[i, j]
@@ -79,14 +77,14 @@ end
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Fluid)
   t.state[i, j]   =   state;
-  @assert(remove!(t.interfacels, (i, j)) != nothing,
+  @assert(delete!(t.interfacels, (i, j)) != nothing,
           "Cell ($i, $j) not found in interface list. Unable to remove.");
 end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Gas)
   t.state[i, j]   =   state;
-  @assert(remove!(t.interfacels, (i, j)) != nothing,
+  @assert(delete!(t.interfacels, (i, j)) != nothing,
           "Cell ($i, $j) not found in interface list. Unable to remove.");
 end
 
@@ -99,8 +97,8 @@ end
 # Update cell states and redistribute mass to neighborhoods
 function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
                               feq_f::LBXFunction,
-                              new_empty_cells::DoublyLinkedList{Tuple{Int, Int}},
-                              new_fluid_cells::DoublyLinkedList{Tuple{Int, Int}})
+                              new_empty_cells::Set{Tuple{Int, Int}},
+                              new_fluid_cells::Set{Tuple{Int, Int}})
 
   lat           = sim.lat;
   msm           = sim.msm;
@@ -109,8 +107,7 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
   const ni, nj  = size(t.state);
   const nk      = length(lat.w);
 
-  for node in new_fluid_cells # First the neighborhood of all filled cells are prepared
-    const i, j      =     node.val;
+  for (i, j) in new_fluid_cells # First the neighborhood of all filled cells are prepared
     _change_state!(t, i, j, FLUID);
 
     # Calculate the total density and velocity of the neighborhood
@@ -145,7 +142,7 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
       # If it is already an interface cell, make sure it is not emptied
       if t.state[i_nbr, j_nbr] == INTERFACE
-        remove!(new_empty_cells, (i_nbr, j_nbr));
+        delete!(new_empty_cells, (i_nbr, j_nbr));
       elseif t.state[i_nbr, j_nbr] == GAS
         _change_state!(t, i_nbr, j_nbr, INTERFACE);
         for kk=1:nk
@@ -155,8 +152,7 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
     end # end reflag neighbors loop
   end
 
-  for node in new_empty_cells # convert emptied cells to gas cells
-    const i, j      =     node.val;
+  for (i, j) in new_empty_cells # convert emptied cells to gas cells
     _change_state!(t, i, j, GAS);
 
     for k=1:nk-1
@@ -171,10 +167,8 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
   end
 
   # Redistribute excess mass
-  for node in new_fluid_cells # Redistribute excess mass from new fluid cells
-    const i, j      =     node.val;
-    
-    cells_to_redist_to  =     DoublyLinkedList{Tuple{Int, Int}}();
+  for (i, j) in new_fluid_cells # Redistribute excess mass from new fluid cells
+    cells_to_redist_to  =     Set{Tuple{Int, Int}}();
     counter::UInt       =     0;
 
     # Construct interface cells from neighborhood average at equilibrium
@@ -191,8 +185,7 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j] - msm.rho[i, j];
-    for node in cells_to_redist_to
-      const ii, jj      =   node.val;
+    for (ii, jj) in cells_to_redist_to
       t.M[ii, jj]      +=   mex; 
       t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
     end
@@ -202,10 +195,8 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
   end
 
   # TODO consider putting mass distribution in a kernal function
-  for node in new_empty_cells # Redistribute excess mass from emptied cells
-    const i, j      =     node.val;
-    
-    cells_to_redist_to  =     DoublyLinkedList{Tuple{Int, Int}}();
+  for (i, j) in new_empty_cells # Redistribute excess mass from emptied cells
+    cells_to_redist_to  =     Set{Tuple{Int, Int}}();
     counter::UInt       =     0;
 
     # Construct interface cells from neighborhood average at equilibrium
@@ -222,8 +213,7 @@ function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
 
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j];
-    for node in cells_to_redist_to
-      const ii, jj      =   node.val;
+    for (ii, jj) in cells_to_redist_to
       t.M[ii, jj]      +=   mex;
       t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
     end

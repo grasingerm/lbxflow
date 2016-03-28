@@ -55,6 +55,7 @@ fill_y: { value: 1.0, expr: false }
 callbacks:
   - print_step_callback(50, "free-surf")
   - plot_mass_contours_callback(250, joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
 finally:
@@ -79,3 +80,4 @@ finally:
       print_with_color(:green, "TEST PASSED\n");
     end
   - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir)
