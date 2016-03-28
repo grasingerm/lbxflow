@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("lattice.jl");
-
 #! Bounceback boundary condition for north boundary
 function north_bounce_back!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
   for i=i_begin:i_end
@@ -61,6 +59,65 @@ end
 function west_bounce_back!(lat::Lattice)
   const nj = size(lat.f, 3);
   west_bounce_back!(lat, 1, 1, nj);
+end
+
+#! Bounceback boundary condition for north boundary
+function north_reflect!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
+  for i=i_begin:i_end
+    lat.f[4,i,j] = lat.f[2,i,j];
+    lat.f[8,i+1,j] = lat.f[5,i,j];
+    lat.f[7,i-1,j] = lat.f[6,i,j];
+  end
+end
+
+#! Bounceback boundary condition for north boundary of domain
+function north_reflect!(lat::Lattice)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  north_reflect!(lat, 2, ni-1, nj);
+end
+
+#! Bounceback boundary condition for south boundary
+function south_reflect!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
+  for i=i_begin:i_end
+    lat.f[2,i,j] = lat.f[4,i,j];
+    lat.f[5,i+1,j] = lat.f[8,i,j];
+    lat.f[6,i-1,j] = lat.f[7,i,j];
+  end
+end
+
+#! Bounceback boundary condition for south boundary of domain
+function south_reflect!(lat::Lattice)
+  south_reflect!!(lat, 2, size(lat.f, 2)-1, 1);
+end
+
+#! Bounceback boundary condition for east boundary
+function east_reflect!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
+  for j=j_begin:j_end
+    lat.f[3,i,j] = lat.f[1,i,j];
+    lat.f[7,i,j-1] = lat.f[8,i,j];
+    lat.f[6,i,j+1] = lat.f[5,i,j];
+  end
+end
+
+#! Bounceback boundary condition for east boundary of domain
+function east_reflect!(lat::Lattice)
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  east_reflect!(lat, ni, 2, nj-1);
+end
+
+#! Bounceback boundary condition for west boundary
+function west_reflect!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
+  for j=j_begin:j_end
+    lat.f[1,i,j] = lat.f[3,i,j];
+    lat.f[5,i,j+1] = lat.f[6,i,j];
+    lat.f[8,i,j-1] = lat.f[7,i,j];
+  end
+end
+
+#! Bounceback boundary condition for west boundary of domain
+function west_reflect!(lat::Lattice)
+  const nj = size(lat.f, 3);
+  west_reflect!(lat, 1, 2, nj-1);
 end
 
 # TODO: refactor half bounce back boundary schemes

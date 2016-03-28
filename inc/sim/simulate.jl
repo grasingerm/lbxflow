@@ -2,7 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#! stream particle densities
+#! Stream particle densities
+#!
+#! \param lat Lattice to stream on
+#! \param temp_f Temp lattice to store streamed particle distributions on
+#! \param bounds Boundaries enclosing active streaming regions
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
   const nbounds = size(bounds, 2);
   #! Stream
@@ -31,6 +35,61 @@ end
 #! \param t Mass tracker
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
                  t::Tracker)
+  const nbounds = size(bounds, 2);
+  #! Stream
+  for r = 1:nbounds
+    i_min, i_max, j_min, j_max = bounds[:,r];
+    for j = j_min:j_max, i = i_min:i_max
+      if t.state[i,j] != GAS
+        for k = 1:lat.n
+          i_new = i + lat.c[1,k];
+          j_new = j + lat.c[2,k];
+
+          if (i_new > i_max || j_new > j_max || i_new < i_min || j_new < j_min 
+              || t.state[i_new,j_new] == GAS)
+            continue;
+          end
+          temp_f[k,i_new,j_new] = lat.f[k,i,j];
+        end
+      end
+    end
+  end
+
+  copy!(lat.f, temp_f);
+end
+
+#! Stream particle densities around obstacles
+#!
+#! \param lat Lattice to stream on
+#! \param temp_f Temp lattice to store streamed particle distributions on
+#! \param obsts Array of obstacles
+function stream!(lat::Lattice, temp_f::Array{Float64,3}, 
+                 obsts::Vector{Obstacle})
+  error("Not yet implemented!");
+  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+
+  #! Stream
+  for j = 1:nj, i = 1:nk, k = 1:lat.n
+    i_new = i + lat.c[1,k];
+    j_new = j + lat.c[2,k];
+
+    if i_new < ni && j_new < nj && i_new > 1 && j_new > 1
+      temp_f[k,i_new,j_new] = lat.f[k,i,j];
+    end
+  end
+
+  copy!(lat.f, temp_f);
+end
+
+#! Stream particle densities in free surface conditions
+#!
+#! \param lat Lattice to stream on
+#! \param temp_f Temp lattice to store streamed particle distributions on
+#! \param obsts Array of obstacles
+#! \param t Mass tracker
+function stream!(lat::Lattice, temp_f::Array{Float64,3}, 
+                 obsts::Vector{Obstacle}, t::Tracker)
+  error("Not yet implemented!");
   const nbounds = size(bounds, 2);
   #! Stream
   for r = 1:nbounds

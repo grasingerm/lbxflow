@@ -6,6 +6,7 @@ module LBXFlow
 
 include("lattice.jl");
 include("multiscale.jl");
+include("obstacle.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
 include(joinpath("sim","simulate.jl"));
