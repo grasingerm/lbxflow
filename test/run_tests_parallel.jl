@@ -17,7 +17,7 @@ function did_pass(file::AbstractString)
   println("Parsing and running input file: ", full_path_to_input_file);
   passed = true;
   try
-    run(`julia $main -vf $full_path_to_input_file`);
+    run(`julia --color=yes $main -vf $full_path_to_input_file`);
   catch e
     passed = false;
   end
