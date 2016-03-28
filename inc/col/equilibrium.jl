@@ -38,8 +38,7 @@ end
 
 #! Binds rho_0 to an HL equilibrium function
 function init_feq_incomp_HL(rho_0::AbstractFloat)
-  return ((lat::Lattice, rho::AbstractFloat, u::Vector{Float64},
-          k::Int) -> feq_incomp_HL(lat, rho, rho_0, u, k));
+  return (@anon (lat, rho, u, k) -> feq_incomp_HL(lat, rho, rho_0, u, k));
 end
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow

@@ -1,0 +1,65 @@
+version: 1.0.0
+
+# code to execute before parsing
+preamble: >
+  using Base.Test;
+  const pgrad = -1.102e-4;
+  const F = [-pgrad; 0.0];
+  const datadir = "data";
+  const ni = 128;
+  const nj = 64;
+  const mu = 3/6;
+  const constit_rel_f = init_constit_srt_const(mu);
+  const forcing_kf = init_sukop_Fk(F);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,     expr: false }
+nu:       { value: mu,     expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+nsteps:   { value: 10000,   expr: false }
+col_f:    BGK_F(constit_rel_f, forcing_kf);
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+callbacks:
+  - print_step_callback(25) 
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      us = analytical_poise_newton(mu, pgrad, nj);
+      i = convert(Int, round(ni/2));
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+      end
+      println("TEST PASSED");
+    end 
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x

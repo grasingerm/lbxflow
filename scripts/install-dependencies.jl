@@ -38,7 +38,7 @@ if confirm("Would you like to update Julia packages (Y/N)?: ")
   end
 end
 
-if confirm("Would you like to add LBXFlow.jl module to your load path (Y/N)? (recommended): ")
+if confirm("Would you like to add LBXFlow.jl module to your load path (Y/N)? (NOT recommended): ")
   function add_lbxflow_to_load_path(fp::AbstractString)
     const defhome = homedir();
     println("What is your home directory? (Enter for default: $defhome) ");

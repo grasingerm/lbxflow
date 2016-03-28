@@ -2,10 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#using FastAnonymous;
-#typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure};
+using FastAnonymous;
 abstract ColFunction;
-typealias LBXFunction Union{Function, ColFunction};
+typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction};
 
 abstract AbstractSim;
 
