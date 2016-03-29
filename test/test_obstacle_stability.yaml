@@ -1,0 +1,67 @@
+version: 1.0.0
+
+# code to execute before parsing
+preamble: >
+  @init_plot_env();
+  using Base.Test;
+  const pgrad = -1.102e-3;
+  const F = [-pgrad; 0.0];
+  const nsteps  = 20000;
+  const datadir = "data";
+  const ni = 256;
+  const nj = 64;
+  const mu = 1/6;
+  const constit_rel_f = init_constit_srt_const(mu);
+  const forcing_kf = init_sukop_Fk(F);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,     expr: false }
+nu:       { value: mu,     expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+nsteps:   { value: nsteps,   expr: true }
+col_f:    BGK_F(constit_rel_f, forcing_kf);
+
+# obstacles
+obstacles:
+  - type:   bounce_back
+    coords: "[24; 32; 28; 36]" 
+
+# boundary conditions
+bcs:
+  - "@anon lat -> east_velocity!(lat, 0.05)"
+  - "@anon lat -> west_velocity!(lat, 0.05)"
+  - north_open!
+  - south_open!
+
+callbacks:
+  - print_step_callback(100) 
+  - plot_streamlines_callback(100, [(28, 36, 24/ni, 32/ni)]) 
+
+# clean-up, backup, write out
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::AbstractSim, k::Int) -> begin
+      @assert(k == nsteps, "There was an error that ended the simulation early");
+      for u in sim.msm.u
+        @assert(-100 < u < 100, "Velocity was numerically unstable");
+      end
+      for ρ in sim.msm.rho
+        @assert(-100 < ρ < 100, "ρ was numerically unstable");
+      end
+      for f in sim.lat.f
+        @assert(-100 < f < 100, "f was numerically unstable");
+      end
+      print_with_color(:green, "TEST PASSED\n");
+    end 

@@ -127,6 +127,25 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["finally"][end] = write_jld_file_callback(defs["datadir"], 1);
   end
 
+  # syntactic sugar for adding obstacles
+  if haskey(defs, "obstacles")
+    defs["active_cells"]  =   fill(true, defs["ni"], defs["nj"]);
+    for obstacle_array in defs["obstacles"]
+      obs_type      =   parse(obstacle_array["type"]);
+      obs_locs      =   eval(parse(obstacle_array["coords"]));
+
+      @assert(size(obs_locs, 1) == 4, "Obstacle coordinates should be "      *
+              "organized in columns, i.e. coords[:, ...] = i_min, i_max, "   *
+              "j_min, j_max. Obstacle coordinate matrix should have exactly "*
+              "4 rows. $(size(obs_locs, 1)) != 4");
+
+      for j = 1:size(obs_locs, 2)
+        add_obstacle!(defs["active_cells"], defs["bcs"], obs_locs[1, j], 
+                      obs_locs[2, j], obs_locs[3, j], obs_locs[4, j], obs_type); 
+      end
+    end
+  end
+
   if args["verbose"]; println("$infile definitions:"); println(defs); end
 
   # if datadir does not exist, create it
@@ -195,38 +214,75 @@ function parse_and_run(infile::AbstractString, args::Dict)
   try
     tic();
 
-    if !haskey(defs, "test_for_term")
-      # this simulate should be more memory and computationally efficient
-      @profif(args["profile"],
-        begin;
-          global nsim;
-          nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                           defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
-        end;
-      );
-    else
-      if haskey(defs, "test_for_term_steps")
-        @assert(defs["test_for_term_steps"] > 1, 
-                "'test_for_term_steps', i.e. the number of steps to average " *
-                "over when checking for steady-state conditions, should be "  *
-                "greater than 1 (or not specified).");
+    if !haskey(defs, "obstacles")
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin;
             global nsim;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                             defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                             defs["test_for_term_steps"], defs["callbacks"], k); 
+                             defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
           end;
         );
       else
+        if haskey(defs, "test_for_term_steps")
+          @assert(defs["test_for_term_steps"] > 1, 
+                  "'test_for_term_steps', i.e. the number of steps to average " *
+                  "over when checking for steady-state conditions, should be "  *
+                  "greater than 1 (or not specified).");
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["test_for_term_steps"], defs["callbacks"], k); 
+            end;
+          );
+        else
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["callbacks"], k); 
+            end;
+          );
+        end
+      end
+    else
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin;
             global nsim;
-            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                             defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                             defs["callbacks"], k); 
+            nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                             defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
           end;
         );
+      else
+        if haskey(defs, "test_for_term_steps")
+          @assert(defs["test_for_term_steps"] > 1, 
+                  "'test_for_term_steps', i.e. the number of steps to average " *
+                  "over when checking for steady-state conditions, should be "  *
+                  "greater than 1 (or not specified).");
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["test_for_term_steps"], defs["callbacks"], k); 
+            end;
+          );
+        else
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["callbacks"], k); 
+            end;
+          );
+        end
       end
     end
 

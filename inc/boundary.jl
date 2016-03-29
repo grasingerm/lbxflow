@@ -615,9 +615,9 @@ end
 #! North open boundary
 function north_open!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
   for i=i_begin:i_end
-    lat.f[6,i,j] = 2.0 * lat.f[6,i-1,j] - lat.f[6,i-2,j];
-    lat.f[2,i,j] = 2.0 * lat.f[2,i-1,j] - lat.f[2,i-2,j];
-    lat.f[5,i,j] = 2.0 * lat.f[5,i-1,j] - lat.f[5,i-2,j];
+    lat.f[6,i,j] = 2.0 * lat.f[6,i,j-1] - lat.f[6,i,j-2];
+    lat.f[2,i,j] = 2.0 * lat.f[2,i,j-1] - lat.f[2,i,j-2];
+    lat.f[5,i,j] = 2.0 * lat.f[5,i,j-1] - lat.f[5,i,j-2];
   end
 end
 
@@ -630,9 +630,9 @@ end
 #! South open boundary
 function south_open!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
   for i=i_begin:i_end
-    lat.f[7,i,j] = 2.0 * lat.f[7,i-1,j] - lat.f[7,i-2,j];
-    lat.f[4,i,j] = 2.0 * lat.f[4,i-1,j] - lat.f[4,i-2,j];
-    lat.f[8,i,j] = 2.0 * lat.f[8,i-1,j] - lat.f[8,i-2,j];
+    lat.f[7,i,j] = 2.0 * lat.f[7,i,j+1] - lat.f[7,i,j+2];
+    lat.f[4,i,j] = 2.0 * lat.f[4,i,j+1] - lat.f[4,i,j+2];
+    lat.f[8,i,j] = 2.0 * lat.f[8,i,j+1] - lat.f[8,i,j+2];
   end
 end
 
@@ -646,9 +646,9 @@ end
 function east_open!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
 
   for j=j_begin:j_end
-    lat.f[1,i,j] = 2.0 * lat.f[1,i-1,j] - lat.f[1,i-2,j];
-    lat.f[5,i,j] = 2.0 * lat.f[5,i-1,j] - lat.f[5,i-2,j];
-    lat.f[8,i,j] = 2.0 * lat.f[8,i-1,j] - lat.f[8,i-2,j];
+    lat.f[1,i,j] = 2.0 * lat.f[1,i+1,j] - lat.f[1,i+2,j];
+    lat.f[5,i,j] = 2.0 * lat.f[5,i+1,j] - lat.f[5,i+2,j];
+    lat.f[8,i,j] = 2.0 * lat.f[8,i+1,j] - lat.f[8,i+2,j];
   end
 end
 

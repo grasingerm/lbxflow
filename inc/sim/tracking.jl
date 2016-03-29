@@ -53,6 +53,43 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   end
 end
 
+#! Simulate mass transfer across interface cells
+#!
+#! \param   sim           FreeSurfSim object
+#! \param   active_cells  Flags of active cells in the domain
+function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
+  t   = sim.tracker;
+  lat = sim.lat;
+  msm = sim.msm;
+
+  for (i, j) in t.interfacels
+    @assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
+            "should be in the 'INTERFACE' state");
+    if active_cells[i, j]
+      for k=1:lat.n
+        const i_nbr = i + lat.c[1, k];
+        const j_nbr = j + lat.c[2, k];
+        if !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS
+          continue;
+        elseif  t.state[i_nbr, j_nbr] == FLUID
+
+          const opk   = opp_lat_vec(lat, k);
+          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
+
+        elseif  t.state[i_nbr, j_nbr] == INTERFACE 
+
+          const opk   = opp_lat_vec(lat, k);
+          t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 * 
+                         (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+
+        else
+          error("state not understood or invalid");
+        end
+      end
+    end
+  end
+end
+
 # Update fluid fraction of each interface cell
 function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   t                 = sim.tracker;
@@ -95,7 +132,7 @@ function _change_state!(t::Tracker, i::Int, j::Int, state::Interface)
 end
 
 # Update cell states and redistribute mass to neighborhoods
-function _update_cell_states!(sim::FreeSurfSim, sbounds::Matrix{Int64},
+function _update_cell_states!(sim::FreeSurfSim,
                               feq_f::LBXFunction,
                               new_empty_cells::Set{Tuple{Int, Int}},
                               new_fluid_cells::Set{Tuple{Int, Int}})
@@ -225,12 +262,12 @@ end
 
 #! Update cell states of tracker
 #!
-#! \param sim FreeSurfSim object
-#! \param sbounds Bounds where fluid can be streaming
-function update!(sim::FreeSurfSim, sbounds::Matrix{Int64},
-                 feq_f::LBXFunction, kappa=1.0e-3)
+#! \param   sim   FreeSurfSim object
+#! \param   feq_f Equilibrium distribution function
+#! \param   kappa Constant for determining threshold of state change
+function update!(sim::FreeSurfSim, feq_f::LBXFunction, kappa=1.0e-3)
   new_empty_cells, new_fluid_cells  =   _update_fluid_fraction!(sim, kappa);
-  _update_cell_states!(sim, sbounds, feq_f, new_empty_cells, new_fluid_cells);
+  _update_cell_states!(sim, feq_f, new_empty_cells, new_fluid_cells);
 end
 
 #! Kernal function for interface f reconstruction
@@ -256,10 +293,10 @@ end
 #! \param sim       Free surface simulation object
 #! \param t         Mass tracker
 #! \param ij        Tuple of i and j indices on grid
-#! \param sbounds   Bounds where fluid can be streaming
+#! \param feq_f     Equilibrium distribution function
 #! \param rho_g     Atmospheric pressure
 function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
-                    sbounds::Matrix{Int64}, feq_f::LBXFunction, rho_g::Real)
+                    feq_f::LBXFunction, rho_g::Real)
   const n     = _unit_normal(t, ij);
   const i, j  = ij;
   lat         = sim.lat;

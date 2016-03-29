@@ -1071,3 +1071,31 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   end
 
 end
+
+#! Plot streamlines for the domain
+function plot_streamlines_callback(iters_per_frame::Int,
+                                   rects::Vector,
+                                   pause::AbstractFloat = 0.025)
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const ni, nj = size(sim.msm.rho);
+      x = collect(1:ni);
+      y = collect(1:nj);
+
+      PyPlot.clf();
+      PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
+                        transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
+      for rect in rects
+        PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
+                       facecolor="black");
+      end
+      PyPlot.ylim(1, nj);
+      PyPlot.xlim(1, ni);
+      PyPlot.draw();
+      PyPlot.pause(0.001);
+      sleep(pause);
+    end
+  end
+
+end
