@@ -16,6 +16,15 @@ function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   return true;
 end
 
+#! Check to see if a pair of indices fall inside a bounds
+function inbounds(i::Int, j::Int, sbound::Vector{Int64})
+  if i < sbound[1]; return false; end
+  if i > sbound[2]; return false; end
+  if j < sbound[3]; return false; end
+  if j > sbound[4]; return false; end
+  return true;
+end
+
 #! Simulate mass transfer across interface cells
 #!
 #! \param sim FreeSurfSim object
@@ -69,7 +78,8 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
       for k=1:lat.n
         const i_nbr = i + lat.c[1, k];
         const j_nbr = j + lat.c[2, k];
-        if !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS
+        if (!inbounds(i_nbr, j_nbr, [1, ni, 1, nj]) || 
+            !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS)
           continue;
         elseif  t.state[i_nbr, j_nbr] == FLUID
 

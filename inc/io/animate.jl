@@ -1014,13 +1014,14 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int, 
                                      fname::AbstractString,
-                                     levs::Vector, rects::Vector,
-                                     pause::AbstractFloat = 0.025)
+                                     rects::Vector,
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
+      cs = PyPlot.contourf(transpose(sim.tracker.M), levels=levs);
       PyPlot.colorbar(cs);
       for rect in rects
         PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
