@@ -26,7 +26,7 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      MRT_F(constit_rel_f, forcing_kf);
+col_f:      MRT_F(constit_rel_f, forcing_kf; S=S_luo);
 nsteps:     {   value: nsteps,        expr: true   }
 
 # boundaries
