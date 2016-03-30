@@ -141,3 +141,10 @@ immutable FreeSurfSim <: AbstractSim
   end
 
 end
+
+type AdaptiveTimestepSim <: AbstractSim
+  isim::AbstractSim
+  xi::Real
+
+  AdaptiveTimestepSim(isim::AbstractSim, xi::Real) = new(isim, xi);
+end

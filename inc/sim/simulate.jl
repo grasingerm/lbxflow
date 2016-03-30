@@ -215,6 +215,18 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 end
 
 #TODO clean up simulate! code with some kernal functions...
+macro _report_and_exit(e, i)
+  return quote
+    const bt = catch_backtrace(); 
+    showerror(STDERR, $e, bt);
+    println();
+    println("Showing backtrace:");
+    Base.show_backtrace(STDERR, backtrace()); # display callstack
+    println();
+    warn("Simulation interrupted at step ", $i, "!");
+    return $i;
+  end
+end
 
 #! Run simulation
 function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
@@ -253,14 +265,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
     
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
   end
@@ -307,18 +312,13 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
       copy!(prev_msms[idx].rho,   sim.msm.rho);
       copy!(prev_msms[idx].u,     sim.msm.u);
     
+    
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
+
   end
 
   return n_steps;
@@ -341,18 +341,13 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
         c!(sim, i);
       end
 
+    
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
+
   end
 
   return n_steps;
@@ -369,14 +364,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
     try; sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
   end
@@ -422,14 +410,7 @@ function simulate!(sim::AbstractSim, collision_f!::LBXFunction,
     
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
   end
@@ -478,14 +459,7 @@ function simulate!(sim::AbstractSim,
     
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
   end
@@ -512,14 +486,7 @@ function simulate!(sim::AbstractSim,
 
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
   end
@@ -538,14 +505,7 @@ function simulate!(sim::AbstractSim,
     try; sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
     catch e
 
-      const bt = catch_backtrace(); 
-      showerror(STDERR, e, bt);
-      println();
-      println("Showing backtrace:");
-      Base.show_backtrace(STDERR, backtrace()); # display callstack
-      println();
-      warn("Simulation interrupted at step $i !");
-      return i;
+      @_report_and_exit(e, i);
 
     end
   end
