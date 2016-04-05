@@ -67,29 +67,31 @@ end
 #! \param   sim           FreeSurfSim object
 #! \param   active_cells  Flags of active cells in the domain
 function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
-  t   = sim.tracker;
-  lat = sim.lat;
-  msm = sim.msm;
+  t             =   sim.tracker;
+  lat           =   sim.lat;
+  msm           =   sim.msm;
+  const ni, nj  =   size(msm.rho);
 
   ΔM  = zeros(lat.n, size(msm.rho, 1), size(msm.rho, 2));
 
-  for (i, j) in t.interfacels
-    @assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
-            "should be in the 'INTERFACE' state");
-    if active_cells[i, j]
+  for j=1:nj, i=1:ni
+    #@assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
+    #        "should be in the 'INTERFACE' state");
+    if t.state[i, j] != GAS && active_cells[i, j]
       for k=1:lat.n
         const i_nbr = i + lat.c[1, k];
         const j_nbr = j + lat.c[2, k];
         if (!inbounds(i_nbr, j_nbr, [1, ni, 1, nj]) || 
             !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS)
           continue;
-        elseif  t.state[i_nbr, j_nbr] == FLUID
+        elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
 
           const opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
           ΔM[k, i, j] = lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]; 
 
-        elseif  t.state[i_nbr, j_nbr] == INTERFACE 
+        elseif  (t.state[i_nbr, j_nbr] == INTERFACE && 
+                 t.state[i_nbr, j_nbr] == INTERFACE)
 
           const opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 * 
@@ -114,8 +116,8 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
                     "are at a boundary.");
     else
         @checkdebug(abs(ΔM[k, i, j] + ΔM[opk, i_new, j_new]) < 1e-12, 
-                    "ΔM[$k, $i, $j] != ΔM[$opk, $i_new, $j_new] => "*
-                    "$(ΔM[k, i, j]) != $(ΔM[opk, i_new, j_new]). ($i, $j) is "*
+                    "ΔM[$k, $i, $j] != -ΔM[$opk, $i_new, $j_new] => "*
+                    "$(ΔM[k, i, j]) != $(-ΔM[opk, i_new, j_new]). ($i, $j) is "*
                     "a $(t.state[i, j]) cell, and ($i_new, $j_new) is a "      *
                     "$(t.state[i_new, j_new]) cell.");
     end
@@ -238,7 +240,6 @@ function _update_cell_states!(sim::FreeSurfSim,
   # Redistribute excess mass
   for (i, j) in new_fluid_cells # Redistribute excess mass from new fluid cells
     cells_to_redist_to  =     Set{Tuple{Int, Int}}();
-    counter::UInt       =     0;
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
@@ -248,12 +249,11 @@ function _update_cell_states!(sim::FreeSurfSim,
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
         push!(cells_to_redist_to, (i_nbr, j_nbr));
-        counter +=  1;
       end
     end # find inteface loop
 
     # redistribute mass amoung valid neighbors
-    const mex = t.M[i, j] - msm.rho[i, j];
+    const mex = (t.M[i, j] - msm.rho[i, j]) / length(cells_to_redist_to);
     for (ii, jj) in cells_to_redist_to
       t.M[ii, jj]      +=   mex; 
       t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
@@ -266,7 +266,6 @@ function _update_cell_states!(sim::FreeSurfSim,
   # TODO consider putting mass distribution in a kernal function
   for (i, j) in new_empty_cells # Redistribute excess mass from emptied cells
     cells_to_redist_to  =     Set{Tuple{Int, Int}}();
-    counter::UInt       =     0;
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
@@ -276,12 +275,11 @@ function _update_cell_states!(sim::FreeSurfSim,
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
         push!(cells_to_redist_to, (i_nbr, j_nbr));
-        counter +=  1;
       end
     end # find inteface loop
 
     # redistribute mass amoung valid neighbors
-    const mex = t.M[i, j];
+    const mex = t.M[i, j] / length(cells_to_redist_to);
     for (ii, jj) in cells_to_redist_to
       t.M[ii, jj]      +=   mex;
       t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
