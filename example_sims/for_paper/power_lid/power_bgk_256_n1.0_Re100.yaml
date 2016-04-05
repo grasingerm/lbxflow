@@ -7,13 +7,13 @@ version: 0.2.5
 # Reynolds number is 100
 # No filtering, BGK operator
 preamble: >
-  const id      =   "power_bgk_100_n1.0_Re100";
+  const id      =   "power_bgk_256_n1.0_Re100";
   const datadir =   joinpath("data","paper-tests", id);
   const nsteps  =   50000;
-  const ni      =   100;
-  const nj      =   100;
+  const ni      =   256;
+  const nj      =   256;
   const U       =   0.1;
-  const m       =   0.1; 
+  const m       =   0.256; 
   const n       =   1.0;
   const rho_0   =   1.0; 
   const Re      =   U ^ (2 - n) * (ni ^ n) / (m);
