@@ -8,10 +8,10 @@ using ArrayViews
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   const nbounds = size(sbounds, 2);
   for n=1:nbounds
-    if i < sbounds[1,n]; return false; end
-    if i > sbounds[2,n]; return false; end
-    if j < sbounds[3,n]; return false; end
-    if j > sbounds[4,n]; return false; end
+    if i < sbounds[1, n]; return false; end
+    if i > sbounds[2, n]; return false; end
+    if j < sbounds[3, n]; return false; end
+    if j > sbounds[4, n]; return false; end
   end
   return true;
 end
@@ -71,6 +71,8 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat = sim.lat;
   msm = sim.msm;
 
+  ΔM  = zeros(lat.n, size(msm.rho, 1), size(msm.rho, 2));
+
   for (i, j) in t.interfacels
     @assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
             "should be in the 'INTERFACE' state");
@@ -84,18 +86,38 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
         elseif  t.state[i_nbr, j_nbr] == FLUID
 
           const opk   = opp_lat_vec(lat, k);
-          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
+          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
+          ΔM[k, i, j] = lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]; 
 
         elseif  t.state[i_nbr, j_nbr] == INTERFACE 
 
           const opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 * 
                          (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+          ΔM[k, i, j] = ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 * 
+                         (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
 
         else
           error("state not understood or invalid");
         end
       end
+    end
+  end
+
+  for j=1:(size(msm.rho, 2)), i=1:(size(msm.rho, 1)), k=1:lat.n
+    const opk   =   opp_lat_vec(lat, k);
+    const i_new =   i + lat.c[1, k];
+    const j_new =   j + lat.c[2, k];
+    if (i_new > size(msm.rho, 1) || i_new < 1 || j_new > size(msm.rho, 2) 
+        || j_new < 1)
+        @checkdebug(ΔM[k, i, j] == 0.0, "ΔM[$k, $i, $j] should be zero as we "*
+                    "are at a boundary.");
+    else
+        @checkdebug(abs(ΔM[k, i, j] + ΔM[opk, i_new, j_new]) < 1e-12, 
+                    "ΔM[$k, $i, $j] != ΔM[$opk, $i_new, $j_new] => "*
+                    "$(ΔM[k, i, j]) != $(ΔM[opk, i_new, j_new]). ($i, $j) is "*
+                    "a $(t.state[i, j]) cell, and ($i_new, $j_new) is a "      *
+                    "$(t.state[i_new, j_new]) cell.");
     end
   end
 end

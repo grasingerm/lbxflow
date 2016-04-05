@@ -2,6 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Debugging macros
+macro _mdebug_mass_cons(opname, M, block)
+  if @NDEBUG()
+    return block;
+  else
+    return quote
+      _init_mass = sum($M);
+      $block;
+      @mdebug($opname * ": ΔM = $(sum($M) - _init_mass)");
+    end
+  end
+end
+
+# Debugging macros
+macro _checkdebug_mass_cons(opname, M, block, ϵ)
+  if @NDEBUG()
+    return block;
+  else
+    return quote
+      _init_mass = sum($M);
+      $block;
+      @checkdebug(abs(sum($M) - _init_mass) < ϵ,
+                  $opname * ": ΔM = $(sum($M) - _init_mass)");
+    end
+  end
+end
+
 #! Stream particle densities
 #!
 #! \param lat Lattice to stream on
@@ -133,31 +160,31 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # Algorithm should be:
   # 1.  mass transfer
-  masstransfer!(sim, sbounds); # Calculate mass transfer across interface
+  @_mdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, sbounds));
 
   # 2.  stream
-  stream!(lat, temp_f, sbounds, t);
+  @_mdebug_mass_cons("stream!", t.M, stream!(lat, temp_f, sbounds, t));
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
-  for (i, j) in t.interfacels #TODO maybe abstract out interface list...
+  @_mdebug_mass_cons("f_reconst!", t.M, for (i, j) in t.interfacels
     f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
-  end
+  end);
 
   # 5.  particle collisions
-  collision_f!(sim, cbounds);
+  @_mdebug_mass_cons("collision_f!", t.M, collision_f!(sim, cbounds));
   
   # 6.  enforce boundary conditions
-  for bc! in bcs!
+  @_mdebug_mass_cons("bcs!", t.M, for bc! in bcs!
     bc!(lat);
-  end
+  end);
 
   # 7.  calculate macroscopic variables
-  map_to_macro!(lat, msm);
+  @_mdebug_mass_cons("map_to_macro!", t.M, map_to_macro!(lat, msm));
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  update!(sim, collision_f!.feq_f);
+  @_mdebug_mass_cons("update!", t.M, update!(sim, collision_f!.feq_f));
 end
 
 #! Simulate a single step
@@ -187,31 +214,32 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # Algorithm should be:
   # 1.  mass transfer
-  masstransfer!(sim, active_cells); # Calculate mass transfer across interface
+  @_mdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, active_cells));
 
   # 2.  stream
-  stream!(lat, temp_f, active_cells, t);
+  @_mdebug_mass_cons("stream!", t.M, stream!(lat, temp_f, active_cells, t));
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
+  @_mdebug_mass_cons("f_reconst!", t.M,
   for (i, j) in t.interfacels #TODO maybe abstract out interface list...
     f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
-  end
+  end);
 
   # 5.  particle collisions
-  collision_f!(sim, active_cells);
+  @_mdebug_mass_cons("collision_f!", t.M, collision_f!(sim, active_cells));
   
   # 6.  enforce boundary conditions
-  for bc! in bcs!
+  @_mdebug_mass_cons("bcs!", t.M, for bc! in bcs!
     bc!(lat);
-  end
+  end);
 
   # 7.  calculate macroscopic variables
-  map_to_macro!(lat, msm);
+  @_mdebug_mass_cons("map_to_macro!", t.M, map_to_macro!(lat, msm));
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  update!(sim, collision_f!.feq_f);
+  @_mdebug_mass_cons("update!", t.M, update!(sim, collision_f!.feq_f));
 end
 
 #TODO clean up simulate! code with some kernal functions...
