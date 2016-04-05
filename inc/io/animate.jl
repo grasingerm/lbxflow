@@ -26,7 +26,7 @@ function print_step_callback(step::Int, name::AbstractString)
   return (sim::AbstractSim, k::Int) -> begin
     if k % step == 0
       println(name * ":\tstep $k");
-   end
+    end
   end
 end
 

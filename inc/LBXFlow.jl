@@ -4,6 +4,7 @@
 
 module LBXFlow
 
+include("debug.jl");
 include("lattice.jl");
 include("multiscale.jl");
 include(joinpath("sim","simtypes.jl"));

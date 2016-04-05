@@ -53,7 +53,9 @@ fill_y: { value: 1.0, expr: false }
 # callback functions
 callbacks:
   - print_step_callback(50, "free-surf")
-  - plot_mass_contours_callback(250, joinpath(datadir, "mass"), [(8, 16, 48/ni, 54/ni)])
+  - plot_mass_contours_callback(200, joinpath(datadir, "mass"), [(8, 16, 48/ni, 54/ni)])
+  - write_jld_file_callback(datadir, 500)
+  - pause_sim_callback(200);
 
 # clean-up, backup, write out
 finally:
