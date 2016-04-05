@@ -12,8 +12,8 @@ preamble: >
   const nsteps  =   50000;
   const ni      =   100;
   const nj      =   100;
-  const U       =   1.0;
-  const m       =   1.0; 
+  const U       =   0.1;
+  const m       =   0.1; 
   const n       =   1.0;
   const rho_0   =   1.0; 
   const Re      =   U ^ (2 - n) * (ni ^ n) / (m);
@@ -66,6 +66,10 @@ bcs:
 callbacks:
   - print_step_callback(100, id)
   - write_jld_file_callback(datadir, convert(Int, nsteps/100))
+
+# test for steady state
+test_for_term:          init_is_steadystate(1e-7)
+test_for_term_steps:    100
 
 # clean-up, backup, write out
 finally:
