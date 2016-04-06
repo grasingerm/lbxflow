@@ -105,8 +105,11 @@ function opp_lat_vec(lat::LatticeD2Q9, k::Int)
     return 5;
   elseif k == 8
     return 6;
+  elseif k == 9
+    return 9;
+  else
+    error("$k > 9 for a D2Q9 lattice. Only nine vectors (1-9) possible");
   end
-  return 9;
 end
 
 #! Opposite direction lattice vector index

@@ -113,9 +113,9 @@ function u_mag(msm::MultiscaleMap)
   u_mag_res = Array(Float64, (ni, nj));
 
   for j = 1:nj, i = 1:ni
-    u = msm.u[1,i,j];
-    v = msm.u[2,i,j];
-    u_mag_res[i,j] = sqrt(u*u + v*v);
+    u = msm.u[1, i, j];
+    v = msm.u[2, i, j];
+    u_mag_res[i, j] = sqrt(u*u + v*v);
   end
 
   return u_mag_res;
