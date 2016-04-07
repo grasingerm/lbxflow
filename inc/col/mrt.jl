@@ -124,7 +124,7 @@ function call(col_f::MRT, sim::FreeSurfSim, bounds::Matrix{Int64})
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      if @inbounds sim.tracker.state[i, j] != GAS
+      @inbounds if sim.tracker.state[i, j] != GAS
 
         @inbounds rhoij =   msm.rho[i,j];
         @inbounds uij   =   msm.u[:,i,j];
@@ -181,7 +181,7 @@ function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64})
         const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
         const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-        @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
+        @inbounds lat.f[:, i, j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
         # update collision frequency matrix
         @inbounds msm.omega[i,j] = omega;

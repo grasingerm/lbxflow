@@ -9,6 +9,7 @@ include("lattice.jl");
 include("multiscale.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
+include(joinpath("sim","adapt.jl"));
 include(joinpath("sim","simulate.jl"));
 include("entropy.jl");
 include(joinpath("col","collision.jl"));
