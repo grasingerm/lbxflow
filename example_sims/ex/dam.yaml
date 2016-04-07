@@ -5,7 +5,7 @@ preamble: >
   const datadir       =   joinpath("data", "dam");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
-  const F             =   [0.0; -1.0e-6];
+  const F             =   [0.0; -5.0e-6];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   50;
   const nj            =   50;

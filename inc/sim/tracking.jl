@@ -34,21 +34,22 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
 
-  for (i, j) in t.interfacels
-    @assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
-            "should be in the 'INTERFACE' state");
-    if inbounds(i, j, sbounds)
+  for j=1:nj, i=1:ni
+    #@assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
+    #        "should be in the 'INTERFACE' state");
+    if t.state[i, j] != GAS && inbounds(i, j, sbounds)
       for k=1:lat.n
         const i_nbr = i + lat.c[1, k];
         const j_nbr = j + lat.c[2, k];
         if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr, j_nbr] == GAS
           continue;
-        elseif  t.state[i_nbr, j_nbr] == FLUID
+        elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
 
           const opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
 
-        elseif  t.state[i_nbr, j_nbr] == INTERFACE 
+        elseif  (t.state[i, j] == INTERFACE && 
+                 t.state[i_nbr, j_nbr] == INTERFACE) 
 
           const opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 * 

@@ -55,7 +55,6 @@ callbacks:
   - print_step_callback(50, "free-surf")
   - plot_mass_contours_callback(200, joinpath(datadir, "mass"), [(8, 16, 48/ni, 54/ni)])
   - write_jld_file_callback(datadir, 500)
-  - pause_sim_callback(5000);
 
 # clean-up, backup, write out
 finally:
