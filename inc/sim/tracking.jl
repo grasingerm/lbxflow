@@ -148,6 +148,7 @@ end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Fluid)
+  info("($i, $j) changing from Interface to Fluid");
   t.state[i, j]   =   state;
   @assert(delete!(t.interfacels, (i, j)) != nothing,
           "Cell ($i, $j) not found in interface list. Unable to remove.");
@@ -155,6 +156,7 @@ end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Gas)
+  info("($i, $j) changing from Interface to Fluid");
   t.state[i, j]   =   state;
   @assert(delete!(t.interfacels, (i, j)) != nothing,
           "Cell ($i, $j) not found in interface list. Unable to remove.");
@@ -162,6 +164,7 @@ end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Interface)
+  info("($i, $j) changing from $(t.state[i, j]) to Interface");
   t.state[i, j]   =   state;
   push!(t.interfacels, (i, j));
 end
@@ -238,9 +241,12 @@ function _update_cell_states!(sim::FreeSurfSim,
     end
   end
 
-  # Redistribute excess mass
-  for (i, j) in new_fluid_cells # Redistribute excess mass from new fluid cells
-    cells_to_redist_to  =     Set{Tuple{Int, Int}}();
+  # Redistribute excess mass from new fluid cells 
+  @_checkdebug_mass_cons("redist mass from filled cells", t.M,
+  for (i, j) in new_fluid_cells 
+    cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
+    const unit_norm     =     _unit_normal(t, (i, j));
+    v_sum               =     0.0;
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
@@ -249,24 +255,40 @@ function _update_cell_states!(sim::FreeSurfSim,
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
-        push!(cells_to_redist_to, (i_nbr, j_nbr));
+        const v_i        =     max(dot(unit_norm, lat.c[:, k]), 0.0);
+        if v_i != 0.0
+          push!(cells_to_redist_to, (i_nbr, j_nbr, v_i));
+          v_sum           +=     v_i;
+        end
       end
     end # find inteface loop
+    @assert(length(cells_to_redist_to) != 0, 
+            "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
+            "is empty. Unit normal to interface is $(unit_norm). What the "  *
+            "shit happened?");
+    @assert(v_sum != 0.0, 
+            "No cells to redist. to at ($i, $j). Sum of weights "            *
+            "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
+            "shit happened?");
 
     # redistribute mass amoung valid neighbors
-    const mex = (t.M[i, j] - msm.rho[i, j]) / length(cells_to_redist_to);
-    for (ii, jj) in cells_to_redist_to
-      t.M[ii, jj]      +=   mex; 
+    const mex = t.M[i, j] - msm.rho[i, j];
+    for (ii, jj, v_i) in cells_to_redist_to
+      t.M[ii, jj]      +=   v_i / v_sum * mex; 
       t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
     end
 
     t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
     t.eps[i, j] = 1.0;
-  end
+  end, 1e-9);
 
   # TODO consider putting mass distribution in a kernal function
-  for (i, j) in new_empty_cells # Redistribute excess mass from emptied cells
-    cells_to_redist_to  =     Set{Tuple{Int, Int}}();
+  # Redistribute excess mass from emptied cells
+  @_checkdebug_mass_cons("redist mass from emptied cells", t.M,
+  for (i, j) in new_empty_cells 
+    cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
+    const unit_norm     =     _unit_normal(t, (i, j));
+    v_sum               =     0.0;
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
@@ -275,20 +297,32 @@ function _update_cell_states!(sim::FreeSurfSim,
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
-        push!(cells_to_redist_to, (i_nbr, j_nbr));
+        const v_i        =     -min(dot(unit_norm, lat.c[:, k]), 0.0);
+        if v_i != 0.0
+          push!(cells_to_redist_to, (i_nbr, j_nbr, v_i));
+          v_sum           +=     v_i;
+        end
       end
     end # find inteface loop
+    @assert(length(cells_to_redist_to) != 0, 
+            "No cells to redist. to at ($i, $j). cells_to_redist_to Set is " *
+            "is empty. Unit normal to interface is $(unit_norm). What the "  *
+            "shit happened?");
+    @assert(v_sum != 0.0, 
+            "No cells to redist. to at ($i, $j). Sum of weights "            *
+            "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
+            "shit happened?");
 
     # redistribute mass amoung valid neighbors
-    const mex = t.M[i, j] / length(cells_to_redist_to);
-    for (ii, jj) in cells_to_redist_to
-      t.M[ii, jj]      +=   mex;
+    const mex = t.M[i, j];
+    for (ii, jj, v_i) in cells_to_redist_to
+      t.M[ii, jj]      +=   v_i / v_sum * mex;
       t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
     end
 
     t.M[i, j]   = 0.0;
     t.eps[i, j] = 0.0;
-  end
+  end, 1e-9);
 end
 
 #! Update cell states of tracker

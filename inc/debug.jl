@@ -25,3 +25,30 @@ macro checkdebug(condition, message)
     end;
   end
 end
+
+# Debugging macros
+macro _mdebug_mass_cons(opname, M, block)
+  if @NDEBUG()
+    return block;
+  else
+    return quote
+      _init_mass = sum($M);
+      $block;
+      @mdebug($opname * ": ΔM = $(sum($M) - _init_mass)");
+    end
+  end
+end
+
+# Debugging macros
+macro _checkdebug_mass_cons(opname, M, block, eps)
+  if @NDEBUG()
+    return block;
+  else
+    return quote
+      _init_mass = sum($M);
+      $block;
+      @checkdebug(abs(sum($M) - _init_mass) < $eps,
+                  $opname * ": ΔM = $(sum($M) - _init_mass)");
+    end
+  end
+end
