@@ -72,7 +72,7 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3},
     i_new = i + lat.c[1,k];
     j_new = j + lat.c[2,k];
 
-    if (i_new < ni && j_new < nj && i_new > 1 && j_new > 1 
+    if (i_new <= ni && j_new <= nj && i_new >= 1 && j_new >= 1 
         && active_cells[i_new, j_new])
       temp_f[k,i_new,j_new] = lat.f[k,i,j];
     end
@@ -81,6 +81,7 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3},
   copy!(lat.f, temp_f);
 end
 
+# TODO use same `inbounds` function or macro throughout code
 #! Stream particle densities in free surface conditions
 #!
 #! \param   lat             Lattice to stream on
@@ -93,10 +94,10 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3},
 
   #! Stream
   for j = 1:nj, i = 1:ni, k = 1:lat.n
-    i_new = i + lat.c[1,k];
-    j_new = j + lat.c[2,k];
+    i_new = i + lat.c[1, k];
+    j_new = j + lat.c[2, k];
 
-    if (i_new < ni && j_new < nj && i_new > 1 && j_new > 1 
+    if (i_new <= ni && j_new <= nj && i_new >= 1 && j_new >= 1 
         && active_cells[i_new, j_new] && t.state[i_new, j_new] != GAS)
       temp_f[k,i_new,j_new] = lat.f[k,i,j];
     end

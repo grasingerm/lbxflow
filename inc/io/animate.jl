@@ -212,13 +212,14 @@ const _DEFAULT_MASS_LEVELS = [-0.25; 0.0; 0.25; 0.50; 0.75; 1.0; 1.25];
 
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.draw();
       PyPlot.pause(0.001);
@@ -393,13 +394,14 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int, 
                                      fname::AbstractString,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
@@ -612,13 +614,14 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
                                      xy::Tuple{Number, Number},
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.draw();
@@ -812,13 +815,14 @@ end
 function plot_mass_contours_callback(iters_per_frame::Int,
                                      xy::Tuple{Number, Number},
                                      fname::AbstractString,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));

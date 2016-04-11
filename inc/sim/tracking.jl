@@ -8,10 +8,7 @@ using ArrayViews
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   const nbounds = size(sbounds, 2);
   for n=1:nbounds
-    if i < sbounds[1, n]; return false; end
-    if i > sbounds[2, n]; return false; end
-    if j < sbounds[3, n]; return false; end
-    if j > sbounds[4, n]; return false; end
+    if !inbounds(i, j, sbounds[:, n]); return false; end
   end
   return true;
 end
@@ -33,20 +30,62 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   t   = sim.tracker;
   lat = sim.lat;
   msm = sim.msm;
+  const nbounds = size(sbounds, 2);
+
+  for r = 1:nbounds
+    i_min, i_max, j_min, j_max = sbounds[:,r];
+    for j=j_min:j_max, i=i_min:i_max
+      # TODO inbounds check is kind of redundant
+      if t.state[i, j] != GAS && inbounds(i, j, sbounds)
+        for k=1:lat.n-1
+          const i_nbr = i + lat.c[1, k];
+          const j_nbr = j + lat.c[2, k];
+          if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr, j_nbr] == GAS
+            continue;
+          elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
+
+            const opk   = opp_lat_vec(lat, k);
+            t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
+
+          elseif  (t.state[i, j] == INTERFACE &&
+                   t.state[i_nbr, j_nbr] == INTERFACE)
+
+            const opk   = opp_lat_vec(lat, k);
+            t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                           (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+
+          else
+            error("state not understood or invalid");
+          end
+        end
+      end
+    end
+  end
+
+end
+
+#! Simulate mass transfer across interface cells
+#!
+#! \param   sim           FreeSurfSim object
+#! \param   active_cells  Flags of active cells in the domain
+function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
+  t             =   sim.tracker;
+  lat           =   sim.lat;
+  msm           =   sim.msm;
+  const ni, nj  =   size(msm.rho);
 
   for j=1:nj, i=1:ni
-    #@assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
-    #        "should be in the 'INTERFACE' state");
-    if t.state[i, j] != GAS && inbounds(i, j, sbounds)
-      for k=1:lat.n
+    if t.state[i, j] != GAS && active_cells[i, j]
+      for k=1:lat.n-1
         const i_nbr = i + lat.c[1, k];
         const j_nbr = j + lat.c[2, k];
-        if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr, j_nbr] == GAS
+        if (!inbounds(i_nbr, j_nbr, [1; ni; 1; nj]) ||
+            !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS)
           continue;
         elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
 
           const opk   = opp_lat_vec(lat, k);
-          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
+          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
 
         elseif  (t.state[i, j] == INTERFACE &&
                  t.state[i_nbr, j_nbr] == INTERFACE)
@@ -61,68 +100,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
       end
     end
   end
-end
 
-#! Simulate mass transfer across interface cells
-#!
-#! \param   sim           FreeSurfSim object
-#! \param   active_cells  Flags of active cells in the domain
-function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
-  t             =   sim.tracker;
-  lat           =   sim.lat;
-  msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
-
-  ΔM  = zeros(lat.n, size(msm.rho, 1), size(msm.rho, 2));
-
-  for j=1:nj, i=1:ni
-    #@assert(t.state[i, j] == INTERFACE, "All cells in the interface list " *
-    #        "should be in the 'INTERFACE' state");
-    if t.state[i, j] != GAS && active_cells[i, j]
-      for k=1:lat.n
-        const i_nbr = i + lat.c[1, k];
-        const j_nbr = j + lat.c[2, k];
-        if (!inbounds(i_nbr, j_nbr, [1, ni, 1, nj]) ||
-            !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS)
-          continue;
-        elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
-
-          const opk   = opp_lat_vec(lat, k);
-          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
-          ΔM[k, i, j] = lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
-
-        elseif  (t.state[i_nbr, j_nbr] == INTERFACE &&
-                 t.state[i_nbr, j_nbr] == INTERFACE)
-
-          const opk   = opp_lat_vec(lat, k);
-          t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
-                         (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
-          ΔM[k, i, j] = ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
-                         (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
-
-        else
-          error("state not understood or invalid");
-        end
-      end
-    end
-  end
-
-  for j=1:(size(msm.rho, 2)), i=1:(size(msm.rho, 1)), k=1:lat.n
-    const opk   =   opp_lat_vec(lat, k);
-    const i_new =   i + lat.c[1, k];
-    const j_new =   j + lat.c[2, k];
-    if (i_new > size(msm.rho, 1) || i_new < 1 || j_new > size(msm.rho, 2)
-        || j_new < 1)
-        @checkdebug(ΔM[k, i, j] == 0.0, "ΔM[$k, $i, $j] should be zero as we "*
-                    "are at a boundary.");
-    else
-        @checkdebug(abs(ΔM[k, i, j] + ΔM[opk, i_new, j_new]) < 1e-12,
-                    "ΔM[$k, $i, $j] != -ΔM[$opk, $i_new, $j_new] => "*
-                    "$(ΔM[k, i, j]) != $(-ΔM[opk, i_new, j_new]). ($i, $j) is "*
-                    "a $(t.state[i, j]) cell, and ($i_new, $j_new) is a "      *
-                    "$(t.state[i_new, j_new]) cell.");
-    end
-  end
 end
 
 # Update fluid fraction of each interface cell
@@ -148,7 +126,6 @@ end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Fluid)
-  info("($i, $j) changing from Interface to Fluid");
   t.state[i, j]   =   state;
   @assert(delete!(t.interfacels, (i, j)) != nothing,
           "Cell ($i, $j) not found in interface list. Unable to remove.");
@@ -156,7 +133,6 @@ end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Gas)
-  info("($i, $j) changing from Interface to Fluid");
   t.state[i, j]   =   state;
   @assert(delete!(t.interfacels, (i, j)) != nothing,
           "Cell ($i, $j) not found in interface list. Unable to remove.");
@@ -164,11 +140,11 @@ end
 
 #! Kernal function for changing the state of a cell
 function _change_state!(t::Tracker, i::Int, j::Int, state::Interface)
-  info("($i, $j) changing from $(t.state[i, j]) to Interface");
   t.state[i, j]   =   state;
   push!(t.interfacels, (i, j));
 end
 
+# TODO break this down into more kernal functions...
 # Update cell states and redistribute mass to neighborhoods
 function _update_cell_states!(sim::FreeSurfSim,
                               feq_f::LBXFunction,
@@ -266,6 +242,7 @@ function _update_cell_states!(sim::FreeSurfSim,
         end
       end
     end # find inteface loop
+    #=
     @assert(length(cells_to_redist_to) != 0 || length(all_int_nbrs) != 0,
             "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
             "is empty. Unit normal to interface is $(unit_norm). What the "  *
@@ -275,25 +252,35 @@ function _update_cell_states!(sim::FreeSurfSim,
             "No cells to redist. to at ($i, $j). Sum of weights "            *
             "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
             "shit happened?");
+    =#
 
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j] - msm.rho[i, j];
     if length(cells_to_redist_to) != 0
+
       for (ii, jj, v_i) in cells_to_redist_to
         t.M[ii, jj]      +=   v_i / v_sum * mex;
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
+
+      t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
+      t.eps[i, j] = 1.0;
+
     elseif length(all_int_nbrs) != 0
+
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
+
+      t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
+      t.eps[i, j] = 1.0;
+
     else
-      error("This shouldn't have happened.");
+      warn("Redistribution did not occur at ($i, $j). No cells to "          *
+           "redistribute to.");
     end
 
-    t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
-    t.eps[i, j] = 1.0;
   end, 1e-9);
 
   # TODO consider putting mass distribution in a kernal function
@@ -321,6 +308,7 @@ function _update_cell_states!(sim::FreeSurfSim,
         end
       end
     end # find inteface loop
+    #=
     @assert(length(cells_to_redist_to) != 0 || length(all_int_nbrs) != 0,
             "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
             "is empty. Unit normal to interface is $(unit_norm). What the "  *
@@ -330,25 +318,35 @@ function _update_cell_states!(sim::FreeSurfSim,
             "No cells to redist. to at ($i, $j). Sum of weights "            *
             "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
             "shit happened?");
+    =#
 
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j];
     if length(cells_to_redist_to) != 0
+
       for (ii, jj, v_i) in cells_to_redist_to
         t.M[ii, jj]      +=   v_i / v_sum * mex;
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
+
+      t.M[i, j]   = 0.0;
+      t.eps[i, j] = 0.0;
+
     elseif length(all_int_nbrs) != 0
+
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
+      
+      t.M[i, j]   = 0.0;
+      t.eps[i, j] = 0.0;
+
     else
-      error("This shouldn't have happened.");
+      warn("Redistribution did not occur at ($i, $j). No cells to "          *
+           "redistribute to.");
     end
 
-    t.M[i, j]   = 0.0;
-    t.eps[i, j] = 0.0;
   end, 1e-9);
 end
 
