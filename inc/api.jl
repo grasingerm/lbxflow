@@ -211,7 +211,14 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["test_for_term"] = (msm, prev_msm) -> true;
   end
 
-  try
+  mass_matrix = (if (haskey(defs, "simtype") 
+                     && defs["simtype"] == "free_surface")
+                    sim.tracker.M
+                  else 
+                    zeros(1);
+                  end);
+
+  @_checkdebug_mass_cons("simulation", mass_matrix, try
     tic();
 
     if !haskey(defs, "obstacles")
@@ -316,6 +323,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
       println("Press enter to continue...");
       readline(STDIN);
     end
-  end
+  end, 1e-12);
 
 end

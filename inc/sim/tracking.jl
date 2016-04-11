@@ -173,7 +173,8 @@ end
 function _update_cell_states!(sim::FreeSurfSim,
                               feq_f::LBXFunction,
                               new_empty_cells::Set{Tuple{Int, Int}},
-                              new_fluid_cells::Set{Tuple{Int, Int}})
+                              new_fluid_cells::Set{Tuple{Int, Int}},
+                              unorms::Dict{Tuple{Int, Int}, Vector{Float64}})
 
   lat           = sim.lat;
   msm           = sim.msm;
@@ -246,7 +247,8 @@ function _update_cell_states!(sim::FreeSurfSim,
   for (i, j) in new_fluid_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
-    const unit_norm     =     _unit_normal(t, (i, j));
+    #const unit_norm     =     _unit_normal(t, (i, j));
+    const unit_norm     =     unorms[(i, j)];
     v_sum               =     0.0;
 
     # Construct interface cells from neighborhood average at equilibrium
@@ -268,9 +270,7 @@ function _update_cell_states!(sim::FreeSurfSim,
             "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
             "is empty. Unit normal to interface is $(unit_norm). What the "  *
             "shit happened? Neighborhood: "                                  *
-            "$([t.state[i-1,j+1] t.state[i,j+1] t.state[i+1,j+1];
-                t.state[i-1,j] t.state[i,j] t.state[i+1,j];
-                t.state[i-1,j-1] t.state[i,j-1] t.state[i+1,j-1];])");
+            "$(_get_nbrhd(t.state, i, j))");
     @assert(v_sum != 0.0 || length(all_int_nbrs) != 0,
             "No cells to redist. to at ($i, $j). Sum of weights "            *
             "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
@@ -302,7 +302,8 @@ function _update_cell_states!(sim::FreeSurfSim,
   for (i, j) in new_empty_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
-    const unit_norm     =     _unit_normal(t, (i, j));
+    #const unit_norm     =     _unit_normal(t, (i, j));
+    const unit_norm     =     unorms[(i, j)];
     v_sum               =     0.0;
 
     # Construct interface cells from neighborhood average at equilibrium
@@ -324,9 +325,7 @@ function _update_cell_states!(sim::FreeSurfSim,
             "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
             "is empty. Unit normal to interface is $(unit_norm). What the "  *
             "shit happened? Neighborhood: "                                  *
-            " $([t.state[i-1,j+1] t.state[i,j+1] t.state[i+1,j+1];
-                 t.state[i-1,j] t.state[i,j] t.state[i+1,j];
-                 t.state[i-1,j-1] t.state[i,j-1] t.state[i+1,j-1];])");
+            " $(_get_nbrhd(t.state, i, j))");
     @assert(v_sum != 0.0 || length(all_int_nbrs) != 0,
             "No cells to redist. to at ($i, $j). Sum of weights "            *
             "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
@@ -358,9 +357,10 @@ end
 #! \param   sim   FreeSurfSim object
 #! \param   feq_f Equilibrium distribution function
 #! \param   kappa Constant for determining threshold of state change
-function update!(sim::FreeSurfSim, feq_f::LBXFunction, kappa=1.0e-3)
+function update!(sim::FreeSurfSim, feq_f::LBXFunction, 
+                 unorms::Dict{Tuple{Int, Int}, Vector{Float64}}, kappa=1.0e-3)
   new_empty_cells, new_fluid_cells  =   _update_fluid_fraction!(sim, kappa);
-  _update_cell_states!(sim, feq_f, new_empty_cells, new_fluid_cells);
+  _update_cell_states!(sim, feq_f, new_empty_cells, new_fluid_cells, unorms);
 end
 
 #! Kernal function for interface f reconstruction
@@ -414,6 +414,8 @@ function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
       _f_reconst_ij!(lat, msm, feq_f, rho_g, k, i, j);
     end
   end
+
+  return n;
 end
 
 #! Determine unit normal to interface using finite difference
@@ -445,14 +447,14 @@ function _unit_normal_ms(t::Tracker, ij::Tuple{Int64, Int64})
                   ((1,0),(1,1),(0,1)      ),  ((0,1),(-1,1),(-1,0))   );
   const BITS    = (1, 2, 4, 8);
   const NORMALS = (
-                    [0; 0],                   [-sqrt(2)/2; -sqrt(2)/2],
-                    [sqrt(2)/2; -sqrt(2)/2],  [0;-1],
-                    [sqrt(2)/2; sqrt(2)/2],   [0; 0],
-                    [1; 0],                   [-sqrt(2)/2; -sqrt(2)/2],
-                    [-sqrt(2)/2; sqrt(2)/2],  [1; 0],
-                    [0; 0],                   [-sqrt(2)/2; -sqrt(2)/2],
-                    [0; 1],                   [-sqrt(2)/2; sqrt(2)/2],
-                    [sqrt(2)/2; sqrt(2)/2],   [0; 0]
+                    Float64[0; 0],                   Float64[-sqrt(2)/2; -sqrt(2)/2],
+                    Float64[sqrt(2)/2; -sqrt(2)/2],  Float64[0;-1],
+                    Float64[sqrt(2)/2; sqrt(2)/2],   Float64[0; 0],
+                    Float64[1; 0],                   Float64[-sqrt(2)/2; -sqrt(2)/2],
+                    Float64[-sqrt(2)/2; sqrt(2)/2],  Float64[1; 0],
+                    Float64[0; 0],                   Float64[-sqrt(2)/2; -sqrt(2)/2],
+                    Float64[0; 1],                   Float64[-sqrt(2)/2; sqrt(2)/2],
+                    Float64[sqrt(2)/2; sqrt(2)/2],   Float64[0; 0]
   );
 
   case = 0;
@@ -475,3 +477,18 @@ function _unit_normal_ms(t::Tracker, ij::Tuple{Int64, Int64})
 end
 
 _unit_normal = _unit_normal_fd;
+
+function _get_nbrhd(u, i::Int, j::Int)
+  const ni, nj = size(u);
+
+  return ([ (i-1 > 0 && j+1 <= nj) ? u[i-1,j+1] : "N/A"
+            (j+1 <= nj) ? u[i,j+1] : "N/A"
+            (i+1 <= ni && j+1 <= nj) ? u[i+1,j+1] : "N/A";
+            (i-1 > 0) ? u[i-1, j] : "N/A"
+            u[i, j]
+            (i+1 <= ni) ? u[i+1, j] : "N/A";
+            (i-1 > 0 && j-1 > 0) ? u[i-1, j-1] : "N/A"
+            (j-1 > 0) ? u[i, j-1] : "N/A"
+            (i+1 <= ni && j-1 > 0) ? u[i+1, j-1] : "N/A"
+          ]);
+end

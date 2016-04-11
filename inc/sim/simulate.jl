@@ -127,9 +127,10 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
                    sbounds::Matrix{Int64}, collision_f!::ColFunction, 
                    cbounds::Matrix{Int64}, 
                    bcs!::Vector{LBXFunction})
-  lat   = sim.lat;
-  msm   = sim.msm;
-  t     = sim.tracker;
+  lat               =   sim.lat;
+  msm               =   sim.msm;
+  t                 =   sim.tracker;
+  unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
 
   const _init_mass = sum(t.M);
   # Algorithm should be:
@@ -142,7 +143,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
   @_checkdebug_mass_cons("f_reconst!", t.M, for (i, j) in t.interfacels
-    f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
+    unorms[(i, j)] = f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
   end, 1e-9);
 
   # 5.  particle collisions
@@ -158,9 +159,11 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  @_checkdebug_mass_cons("update!", t.M, update!(sim, collision_f!.feq_f), 1e-9);
+  @_checkdebug_mass_cons("update!", t.M, 
+    update!(sim, collision_f!.feq_f, unorms), 1e-9);
 
-  @checkdebug(abs(_init_mass - sum(t.M)) < 1e-9, "whole step: ΔM = $(_init_mass - sum(t.M))");
+  @checkdebug(abs(_init_mass - sum(t.M)) < 1e-9, 
+    "whole step: ΔM = $(_init_mass - sum(t.M))");
 end
 
 #! Simulate a single step
@@ -184,11 +187,12 @@ end
 function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
                    collision_f!::ColFunction, active_cells::Matrix{Bool}, 
                    bcs!::Vector{LBXFunction})
-  lat   = sim.lat;
-  msm   = sim.msm;
-  t     = sim.tracker;
+  lat               =   sim.lat;
+  msm               =   sim.msm;
+  t                 =   sim.tracker;
+  unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
 
-  const _init_mass = sum(t.M);
+  const _init_mass  =   sum(t.M);
   # Algorithm should be:
   # 1.  mass transfer
   @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, active_cells), 1e-9);
@@ -200,7 +204,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   # 4.  reconstruct distribution functions along interface normal
   @_checkdebug_mass_cons("f_reconst!", t.M,
   for (i, j) in t.interfacels #TODO maybe abstract out interface list...
-    f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
+    unorms[(i, j)] = f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
   end, 1e-9);
 
   # 5.  particle collisions
@@ -216,7 +220,8 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  @_checkdebug_mass_cons("update!", t.M, update!(sim, collision_f!.feq_f), 1e-9);
+  @_checkdebug_mass_cons("update!", t.M, 
+    update!(sim, collision_f!.feq_f, unorms), 1e-9);
 
   @checkdebug(abs(_init_mass - sum(t.M)) < 1e-9, "whole step: ΔM = $(_init_mass - sum(t.M))");
 end
