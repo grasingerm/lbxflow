@@ -89,8 +89,8 @@ immutable FreeSurfSim <: AbstractSim
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, rho_0::Real, 
                        rho_g::Real, fill_x::Real, fill_y::Real)
     const ni, nj    =     size(msm.rho);
-    const fill_ni   =     convert(Int, fill_x * ni);
-    const fill_nj   =     convert(Int, fill_y * nj);
+    const fill_ni   =     convert(Int, round(fill_x * ni));
+    const fill_nj   =     convert(Int, round(fill_y * nj));
     const nk        =     length(lat.w);
 
     t               =     Tracker(ni, nj, GAS);
