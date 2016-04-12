@@ -42,6 +42,7 @@ cbounds:
 bcs:
   - south_bounce_back!
   - north_bounce_back!
+  - "@anon (sim) -> mass_inlet_west!(sim, 1.0)"
 
 # free surface conditions
 rho_g: 1.0

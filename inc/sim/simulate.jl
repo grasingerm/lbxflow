@@ -117,7 +117,7 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
   stream!(lat, temp_f, sbounds);
 
   for bc! in bcs!
-    bc!(lat);
+    bc!(sim);
   end
 
   map_to_macro!(lat, msm);
@@ -152,7 +152,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   
   # 6.  enforce boundary conditions
   @_checkdebug_mass_cons("bcs!", t.M, for bc! in bcs!
-    bc!(lat);
+    bc!(sim);
   end, 1e-9);
 
   # 7.  calculate macroscopic variables
@@ -178,7 +178,7 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
   stream!(lat, temp_f, active_cells);
 
   for bc! in bcs!
-    bc!(lat);
+    bc!(sim);
   end
 
   map_to_macro!(lat, msm);
@@ -213,7 +213,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   
   # 6.  enforce boundary conditions
   @_checkdebug_mass_cons("bcs!", t.M, for bc! in bcs!
-    bc!(lat);
+    bc!(sim);
   end, 1e-9);
 
   # 7.  calculate macroscopic variables

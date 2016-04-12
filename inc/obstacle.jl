@@ -15,10 +15,10 @@ function _add_obstacle_bounce_back!(active_cells::Matrix{Bool},
                                    i_min::Int, i_max::Int, j_min::Int, 
                                    j_max::Int)
   active_cells[i_min+1:i_max-1, j_min+1:j_max-1] = false;
-  push!(bcs!, @anon lat -> north_bounce_back!(lat, i_min, i_max, j_min));
-  push!(bcs!, @anon lat -> south_bounce_back!(lat, i_min, i_max, j_max));
-  push!(bcs!, @anon lat -> east_bounce_back!(lat, i_min, j_min, j_max));
-  push!(bcs!, @anon lat -> west_bounce_back!(lat, i_max, j_min, j_max));
+  push!(bcs!, @anon sim -> north_bounce_back!(sim.lat, i_min, i_max, j_min));
+  push!(bcs!, @anon sim -> south_bounce_back!(sim.lat, i_min, i_max, j_max));
+  push!(bcs!, @anon sim -> east_bounce_back!(sim.lat, i_min, j_min, j_max));
+  push!(bcs!, @anon sim -> west_bounce_back!(sim.lat, i_max, j_min, j_max));
 end
 
 #! Add a reflecting obstacle to the domain
@@ -34,10 +34,10 @@ function _add_obstacle_reflector!(active_cells::Matrix{Bool},
                                   i_min::Int, i_max::Int, j_min::Int, 
                                   j_max::Int)
   active_cells[i_min+1:i_max-1, j_min+1:j_max-1] = false;
-  push!(bcs!, @anon lat -> north_reflect!(lat, i_min, i_max, j_min));
-  push!(bcs!, @anon lat -> south_reflect!(lat, i_min, i_max, j_max));
-  push!(bcs!, @anon lat -> east_reflect!(lat, i_min, j_min, j_max));
-  push!(bcs!, @anon lat -> west_reflect!(lat, i_max, j_min, j_max));
+  push!(bcs!, @anon sim -> north_reflect!(sim.lat, i_min, i_max, j_min));
+  push!(bcs!, @anon sim -> south_reflect!(sim.lat, i_min, i_max, j_max));
+  push!(bcs!, @anon sim -> east_reflect!(sim.lat, i_min, j_min, j_max));
+  push!(bcs!, @anon sim -> west_reflect!(sim.lat, i_max, j_min, j_max));
 end
 
 const _obstacle_hash_table! = Dict([
