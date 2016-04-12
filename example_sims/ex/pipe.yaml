@@ -7,7 +7,7 @@ preamble: >
   const constit_rel_f =   init_constit_srt_const(nu);
   const ni            =   64;
   const nj            =   16;
-  const nsteps        =   150000;
+  const nsteps        =   15000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }

@@ -2,14 +2,14 @@ version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data", "dam");
+  const datadir       =   joinpath("data", "dam_bingham2");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-5, 1e6, 1e-9, 10, 1e-5);
   const F             =   [0.0; -5.0e-6];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   50;
   const nj            =   50;
-  const nsteps        =   75000;
+  const nsteps        =   100000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
