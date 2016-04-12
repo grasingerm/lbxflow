@@ -133,7 +133,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   t                 =   sim.tracker;
   unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
 
-  const _init_mass = sum(t.M);
+  @_checkdebug_mass_cons("whole step", t.M, begin
   # Algorithm should be:
   # 1.  mass transfer
   @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, sbounds), 1e-9);
@@ -162,9 +162,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   # 9.  update cell states
   @_checkdebug_mass_cons("update!", t.M, 
     update!(sim, collision_f!.feq_f, unorms), 1e-9);
-
-  @checkdebug(abs(_init_mass - sum(t.M)) < 1e-9, 
-    "whole step: ΔM = $(_init_mass - sum(t.M))");
+  end, 1e-9);
 end
 
 #! Simulate a single step
@@ -193,7 +191,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   t                 =   sim.tracker;
   unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
 
-  const _init_mass  =   sum(t.M);
+  @_checkdebug_mass_cons("whole step", t.M, begin
   # Algorithm should be:
   # 1.  mass transfer
   @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, active_cells), 1e-9);
@@ -223,8 +221,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   # 9.  update cell states
   @_checkdebug_mass_cons("update!", t.M, 
     update!(sim, collision_f!.feq_f, unorms), 1e-9);
-
-  @checkdebug(abs(_init_mass - sum(t.M)) < 1e-9, "whole step: ΔM = $(_init_mass - sum(t.M))");
+  end, 1e-9);
 end
 
 #TODO clean up simulate! code with some kernal functions...

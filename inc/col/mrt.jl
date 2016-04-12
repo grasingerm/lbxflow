@@ -60,7 +60,8 @@ function call(col_f::MRT, sim::AbstractSim, bounds::Matrix{Int64})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
+      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                   col_f.iM, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
@@ -87,7 +88,7 @@ function call(col_f::MRT_F, sim::AbstractSim, bounds::Matrix{Int64})
     for j = j_min:j_max, i = i_min:i_max
 
       @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   msm.u[:,i,j];
+      @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
@@ -96,7 +97,8 @@ function call(col_f::MRT_F, sim::AbstractSim, bounds::Matrix{Int64})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   col_f.constit_relation_f(sim, fneq, i, j);
+      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                               col_f.iM, i, j);
       const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
       const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
@@ -136,7 +138,8 @@ function call(col_f::MRT, sim::FreeSurfSim, bounds::Matrix{Int64})
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
-        const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
+        const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                 col_f.iM, i, j);
         const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
         @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
@@ -167,7 +170,7 @@ function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64})
       @inbounds if sim.tracker.state[i, j] != GAS
 
         @inbounds rhoij =   msm.rho[i,j];
-        @inbounds uij   =   msm.u[:,i,j];
+        @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
         feq             =   Vector{Float64}(lat.n);
         fneq            =   Vector{Float64}(lat.n);
 
@@ -176,7 +179,8 @@ function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64})
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
-        const mu    =   col_f.constit_relation_f(sim, fneq, i, j);
+        const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                 col_f.iM, i, j);
         const omega =   @omega(mu, lat.cssq, lat.dt);
         const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
         const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
@@ -215,7 +219,8 @@ function call(col_f::MRT, sim::AbstractSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
+      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                   col_f.iM, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
@@ -241,7 +246,7 @@ function call(col_f::MRT_F, sim::AbstractSim, active_cells::Matrix{Bool})
     @inbounds if active_cells[i, j]
 
       @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   msm.u[:,i,j];
+      @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
@@ -250,7 +255,8 @@ function call(col_f::MRT_F, sim::AbstractSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   col_f.constit_relation_f(sim, fneq, i, j);
+      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                               col_f.iM, i, j);
       const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
       const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
@@ -287,7 +293,8 @@ function call(col_f::MRT, sim::FreeSurfSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
+      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                   col_f.iM, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
@@ -314,7 +321,7 @@ function call(col_f::MRT_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
 
       @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   msm.u[:,i,j];
+      @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
@@ -323,7 +330,8 @@ function call(col_f::MRT_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   col_f.constit_relation_f(sim, fneq, i, j);
+      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                               col_f.iM, i, j);
       const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
       const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);

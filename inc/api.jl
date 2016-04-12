@@ -157,16 +157,9 @@ function parse_and_run(infile::AbstractString, args::Dict)
   # recursively remove data from previous runs
   if args["clean"]
     for f in readdir(defs["datadir"]); rrm(joinpath(defs["datadir"], f)); end
-    if args["noexe"]; rm(defs["datadir"]); end
   end
 
-  # check for `noexe` switch
-  if args["noexe"]
-    info("`noexe` switch was passed. $infile will not be simulated.");
-    return nothing;
-  end
-
-  is_init = false;
+    is_init = false;
   if args["resume"]
     k, sim = load_latest_backup(defs["datadir"]);
     if k == 0 || sim == nothing

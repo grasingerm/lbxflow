@@ -431,6 +431,20 @@ function north_velocity!(lat::Lattice, u::Real)
   north_velocity!(lat, u, 1, ni, nj);
 end
 
+#! North velocity boundary condition
+function north_velocity!(lat::Lattice, us::Vector{Float64}, i_begin::Int, 
+                         j::Int)
+  for (c, u) in enumerate(us)
+    const i = i_begin + c - 1;
+    north_velocity!(lat, u, i, i, j);
+  end
+end
+
+#! North velocity boundary condition
+north_velocity!(lat::Lattice, us::Vector{Float64}, i_range::UnitRange{Int}, 
+                j::Int) = north_velocity!(lat, us, start(i_range), 
+                                          last(i_range), j);
+
 #! South velocity boundary condition
 function south_velocity!(lat::LatticeD2Q9, u::Real, i_begin::Int,
                          i_end::Int, j::Int)
@@ -452,6 +466,20 @@ function south_velocity!(lat::Lattice, u::Real)
   south_velocity!(lat, u, 1, ni, 1);
 end
 
+#! South velocity boundary condition
+function south_velocity!(lat::Lattice, us::Vector{Float64}, i_begin::Int, 
+                         j::Int)
+  for (c, u) in enumerate(us)
+    const i = i_begin + c - 1;
+    south_velocity!(lat, u, i, i, j);
+  end
+end
+
+#! South velocity boundary condition
+south_velocity!(lat::Lattice, us::Vector{Float64}, i_range::UnitRange{Int}, 
+                j::Int) = south_velocity!(lat, us, start(i_range), 
+                                          last(i_range), j);
+
 #! East velocity boundary condition
 function east_velocity!(lat::LatticeD2Q9, u::Real, i::Int, j_begin::Int,
                         j_end::Int)
@@ -471,6 +499,21 @@ end
 function east_velocity!(lat::Lattice, u::Real)
   east_velocity!(lat, u, size(lat.f, 2), 1, size(lat.f, 3));
 end
+
+#! East velocity boundary condition
+function east_velocity!(lat::Lattice, us::Vector{Float64}, i::Int, 
+                         j_begin::Int)
+  for (c, u) in enumerate(us)
+    const j = j_begin + c - 1;
+    east_velocity!(lat, u, i, j, j);
+  end
+end
+
+#! East velocity boundary condition
+east_velocity!(lat::Lattice, us::Vector{Float64}, i::Int, 
+                j_range::UnitRange{Int}) = east_velocity!(lat, us, i, 
+                                                          start(j_range), 
+                                                          last(j_range));
 
 #! West velocity boundary condition
 function west_velocity!(lat::LatticeD2Q9, u::Real, i::Int, j_begin::Int,
@@ -492,6 +535,21 @@ end
 function west_velocity!(lat::Lattice, u::Real)
   west_velocity!(lat, u, 1, 1, size(lat.f, 3));
 end
+
+#! West velocity boundary condition
+function west_velocity!(lat::Lattice, us::Vector{Float64}, i::Int, 
+                         j_begin::Int)
+  for (c, u) in enumerate(us)
+    const j = j_begin + c - 1;
+    west_velocity!(lat, u, i, j, j);
+  end
+end
+
+#! East velocity boundary condition
+west_velocity!(lat::Lattice, us::Vector{Float64}, i::Int, 
+                j_range::UnitRange{Int}) = west_velocity!(lat, us, i, 
+                                                          start(j_range), 
+                                                          last(j_range));
 
 #! Lid driven flow
 function lid_driven!(lat::LatticeD2Q9, u::Real)
@@ -681,9 +739,9 @@ end
 #! East open boundary
 function east_open!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
   for j=j_begin:j_end
-    lat.f[1, i, j] = 2.0 * lat.f[1, i+1, j] - lat.f[1, i+2, j];
-    lat.f[5, i, j] = 2.0 * lat.f[5, i+1, j] - lat.f[5, i+2, j];
-    lat.f[8, i, j] = 2.0 * lat.f[8, i+1, j] - lat.f[8, i+2, j];
+    lat.f[6, i, j] = 2.0 * lat.f[6, i-1, j] - lat.f[6, i-2, j];
+    lat.f[3, i, j] = 2.0 * lat.f[3, i-1, j] - lat.f[3, i-2, j];
+    lat.f[7, i, j] = 2.0 * lat.f[7, i-1, j] - lat.f[7, i-2, j];
   end
 end
 
@@ -696,9 +754,9 @@ end
 #! West open boundary
 function west_open!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
   for j=j_begin:j_end
-    lat.f[6, i, j] = 2.0 * lat.f[6, i-1, j] - lat.f[6, i-2, j];
-    lat.f[3, i, j] = 2.0 * lat.f[3, i-1, j] - lat.f[3, i-2, j];
-    lat.f[7, i, j] = 2.0 * lat.f[7, i-1, j] - lat.f[7, i-2, j];
+    lat.f[1, i, j] = 2.0 * lat.f[1, i+1, j] - lat.f[1, i+2, j];
+    lat.f[5, i, j] = 2.0 * lat.f[5, i+1, j] - lat.f[5, i+2, j];
+    lat.f[8, i, j] = 2.0 * lat.f[8, i+1, j] - lat.f[8, i+2, j];
   end
 end
 
@@ -708,4 +766,6 @@ function west_open!(lat::Lattice)
   west_open!(lat, 1, 1, nj);
 end
 
+# include all other boundary condition source files
 include(joinpath("bcs", "mass.jl"));
+include(joinpath("bcs", "vprofs.jl"));

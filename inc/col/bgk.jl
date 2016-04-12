@@ -119,7 +119,7 @@ function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64})
       @inbounds if sim.tracker.state[i, j] != GAS
 
         @inbounds rhoij =   msm.rho[i,j];
-        @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
+        @inbounds uij   =   msm.u[:, i, j];
         feq             =   Vector{Float64}(lat.n);
         fneq            =   Vector{Float64}(lat.n);
 
@@ -202,7 +202,7 @@ function call(col_f::BGK, sim::AbstractSim, active_cells::Matrix{Bool})
     @inbounds if active_cells[i, j]
 
       @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
+      @inbounds uij   =   msm.u[:, i, j];
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
@@ -277,7 +277,7 @@ function call(col_f::BGK, sim::FreeSurfSim, active_cells::Matrix{Bool})
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
 
       @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
+      @inbounds uij   =   msm.u[:, i, j];
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 

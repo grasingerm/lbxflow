@@ -6,6 +6,10 @@ macro NDEBUG()
   return false;
 end
 
+macro NDEBUG_MASS()
+  return false;
+end
+
 macro mdebug(message)
   if @NDEBUG()
     return;
@@ -28,7 +32,7 @@ end
 
 # Debugging macros
 macro _mdebug_mass_cons(opname, M, block)
-  if @NDEBUG()
+  if @NDEBUG_MASS()
     return block;
   else
     return quote
@@ -41,7 +45,7 @@ end
 
 # Debugging macros
 macro _checkdebug_mass_cons(opname, M, block, eps)
-  if @NDEBUG()
+  if @NDEBUG_MASS()
     return block;
   else
     return quote
