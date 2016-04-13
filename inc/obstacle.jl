@@ -11,9 +11,9 @@
 #! \param   j_min           jth index of beginning of obstacle
 #! \param   j_max           jth index of end of obstacle
 function _add_obstacle_bounce_back!(active_cells::Matrix{Bool}, 
-                                   bcs!::Vector{LBXFunction},
-                                   i_min::Int, i_max::Int, j_min::Int, 
-                                   j_max::Int)
+                                    bcs!::Vector{LBXFunction},
+                                    i_min::Int, i_max::Int, j_min::Int, 
+                                    j_max::Int)
   active_cells[i_min+1:i_max-1, j_min+1:j_max-1] = false;
   push!(bcs!, @anon sim -> north_bounce_back!(sim.lat, i_min, i_max, j_min));
   push!(bcs!, @anon sim -> south_bounce_back!(sim.lat, i_min, i_max, j_max));

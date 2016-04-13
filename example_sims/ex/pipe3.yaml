@@ -29,8 +29,7 @@ nsteps:     {   value: nsteps,        expr: true   }
 
 obstacles:
   - type:   bounce_back
-    coords: "[24; 28; 2; 6]" 
-    coords: "[24; 28; 10; 14]" 
+    coords: "[24 28 2 6; 24 28 10 14]'" 
 
 # boundary conditions
 bcs:
