@@ -41,7 +41,7 @@ bcs:
   - south_bounce_back!
   - north_bounce_back!
   - FastAnonymous.@anon (sim) -> west_mass_inlet!(sim, 1.0)
-  - FastAnonymous.@anon (sim) -> west_velocity!(sim.lat, 0.01)
+  - FastAnonymous.@anon (sim) -> west_velocity!(sim.lat, 0.005)
   - east_mass_outlet!
 
 # free surface conditions

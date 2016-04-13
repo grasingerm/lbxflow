@@ -2,12 +2,14 @@ version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data", "pipe3");
+  const datadir       =   joinpath("data", "dam_bingham4");
   const nu            =   0.2;
-  const constit_rel_f =   init_constit_srt_const(nu);
-  const ni            =   64;
-  const nj            =   16;
-  const nsteps        =   15000;
+  const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 2.5e-5, 1e6, 1e-9, 10, 1e-5);
+  const F             =   [0.0; -5.0e-6];
+  const forcing_kf    =   init_sukop_gravity_Fk(F);
+  const ni            =   50;
+  const nj            =   50;
+  const nsteps        =   100000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
@@ -24,31 +26,35 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      BGK(constit_rel_f);
+col_f:      BGK_F(constit_rel_f, forcing_kf);
 nsteps:     {   value: nsteps,        expr: true   }
 
-obstacles:
-  - type:   bounce_back
-    coords: "[24 28 2 6; 24 28 10 14]'" 
+# boundaries
+sbounds:
+  value:  "[1 ni 1 nj;]'"
+  expr:   true
+
+cbounds:
+  value:  "[1 ni 1 nj;]'"
+  expr:   true
 
 # boundary conditions
 bcs:
+  - west_bounce_back!
+  - east_bounce_back!
   - south_bounce_back!
   - north_bounce_back!
-  - FastAnonymous.@anon (sim) -> west_mass_inlet!(sim, 1.0)
-  - FastAnonymous.@anon (sim) -> west_velocity!(sim.lat, 0.005)
-  - east_mass_outlet!
 
 # free surface conditions
 rho_g: 1.0
 
-fill_x: { value: 0.1, expr: false }
+fill_x: { value: 0.5, expr: false }
 fill_y: { value: 1.0, expr: false }
 
 # callback functions
 callbacks:
   - print_step_callback(50, "free-surf")
-  - plot_mass_contours_callback(250, joinpath(datadir, "mass"), [(2, 6, 24/ni, 28/ni), (10, 14, 24/ni, 28/ni)]; levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5])
+  - plot_mass_contours_callback(250, joinpath(datadir, "mass"))
   - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out
