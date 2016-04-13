@@ -7,7 +7,7 @@ preamble: >
   const constit_rel_f =   init_constit_srt_const(nu);
   const ni            =   64;
   const nj            =   16;
-  const nsteps        =   15000;
+  const nsteps        =   20000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
@@ -53,7 +53,7 @@ fill_y: { value: 1.0, expr: false }
 # callback functions
 callbacks:
   - print_step_callback(50, "free-surf")
-  - plot_mass_contours_callback(250, joinpath(datadir, "mass"))
+  - plot_mass_contours_callback(100, joinpath(datadir, "mass"); levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5])
   - write_jld_file_callback(datadir, 500)
 
 # clean-up, backup, write out

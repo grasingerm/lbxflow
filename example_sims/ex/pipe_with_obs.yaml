@@ -9,7 +9,7 @@ preamble: >
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   16;
   const nj            =   64;
-  const nsteps        =   150000;
+  const nsteps        =   200000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
