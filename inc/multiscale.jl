@@ -113,9 +113,9 @@ function u_mag(msm::MultiscaleMap)
   u_mag_res = Array(Float64, (ni, nj));
 
   for j = 1:nj, i = 1:ni
-    u = msm.u[1,i,j];
-    v = msm.u[2,i,j];
-    u_mag_res[i,j] = sqrt(u*u + v*v);
+    u = msm.u[1, i, j];
+    v = msm.u[2, i, j];
+    u_mag_res[i, j] = sqrt(u*u + v*v);
   end
 
   return u_mag_res;
@@ -189,4 +189,93 @@ function div_strain_rate(D::Matrix{Float64}, c::Matrix{Float64})
   end
 
   return divD / 6.0;
+end
+
+#! Calculate the flow potential
+function flow_ϕ(u::Matrix{Float64}, v::Matrix{Float64})
+  const ni, nj  =   size(u, 2), size(u, 3);
+
+  cx  =   _cumsimp(sub(u, :, 1));
+  cy  =   _cumsimp(sub(v, 1, :));
+  ϕ   =   _cumsimp(v')';
+  for j=1:nj
+    ϕ[j, :] += cx';
+  end 
+  ϕ   =   (ϕ + _cumsimp(u)) / 2;
+  for i=1:ni
+    ϕ[:, i] += cy' / 2;
+  end
+
+  return ϕ
+end
+
+flow_potential = flow_ϕ;
+
+#! Calculate the stream function
+function flow_ψ(u::Matrix{Float64}, v::Matrix{Float64})
+  const ni, nj  =   size(u, 2), size(u, 3);
+
+  cx  =   _cumsimp(sub(v, :, 1));
+  cy  =   _cumsimp(sub(u, 1, :));
+  ψ   =   -_cumsimp(u')';
+  for j=1:nj
+    ψ[j, :] += cx';
+  end
+  ψ   =   (ψ + _cumsimp(v)) / 2;
+  for i=1:ni
+    ψ[:, i] -= cy' / 2;
+  end
+
+  return ψ
+end
+
+stream_function = flow_ψ;
+
+function _cumsimp(y)
+  #  Adapted from Matlab code written by Kirill K. Pankratov, March 7, 1994.
+
+  # 3-points interpolation coefficients to midpoints.
+  # Second-order polynomial (parabolic) interpolation coefficients
+  # from  Xbasis = [0 1 2]  to  Xint = [.5 1.5]
+  const c1 = 3/8;
+  const c2 = 6/8;
+  const c3 = -1/8;
+
+  # Determine the size of the input and make column if vector
+  is_transpose  =   false;
+  lv            =   size(y, 1);
+
+  if lv == 1
+    is_transpose   =   true;
+    y              =   y[:]; 
+    lv             =   length(y);
+  end
+
+  f   =   zeros(size(y));
+
+  # If only 2 elements in columns - simple sum divided by 2
+  if lv == 2
+    f[2, :] = (y[1, :] + y[2, :])/2;
+    if is_transpose; f = f'; end
+    return f;
+  end
+
+  # If more than two elements in columns - Simpson summation
+  num = 1:lv-2;
+
+  # Interpolate values of Y to all midpoints
+  f[num+1, :] = c1*y[num, :] + c2*y[num+1, :] + c3*y[num+2, :];
+  f[num+2, :] = f[num+2, :] + c3*y[num, :] + c2*y[num+1, :] + c1*y[num+2, :];
+  f[2, :]     = f[2, :]*2; 
+  f[lv, :]    = f[lv, :]*2;
+
+  # Now Simpson (1,4,1) rule
+  f[2:lv, :]  = 2*f[2:lv, :] + y[1:lv-1, :] + y[2:lv, :];
+  f           = cumsum(f) / 6;
+
+  if is_transpose
+    f = f'; 
+  end
+
+  return f;
 end

@@ -42,11 +42,7 @@ cbounds:
 
 # boundary conditions
 bcs:
-  - >
-    begin;
-      curry_lid_driven!(lat) = lid_driven!(lat, U);
-      return curry_lid_driven!;
-    end
+  - lat -> lid_driven!(lat, U);
   - south_bounce_back!
   - east_bounce_back!
   - west_bounce_back!
@@ -72,4 +68,8 @@ finally:
       writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
       writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+      PyPlot.clf();
+      cs = PyPlot.contour(transpose(flow_ψ(reshape(sim.msm.u[1,:,:], (ni, nj)), reshape(sim.msm.u[2,:,:], (ni, nj)))));
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(joinpath(datadir, "stream_function.png"));
     end
