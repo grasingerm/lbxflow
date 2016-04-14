@@ -197,8 +197,14 @@ function flow_ϕ(u::Matrix{Float64}, v::Matrix{Float64})
 
   cx  =   _cumsimp(sub(u, :, 1));
   cy  =   _cumsimp(sub(v, 1, :));
-  ϕ   =   _cumsimp(v')' + cx[ones(nj, 1), :];
-  ϕ  +=   (ϕ + _cumsimp(u) + cy[:, ones(1, ni)]) / 2;
+  ϕ   =   _cumsimp(v')';
+  for j=1:nj
+    ϕ[j, :] += cx';
+  end 
+  ϕ   =   (ϕ + _cumsimp(u)) / 2;
+  for i=1:ni
+    ϕ[:, i] += cy' / 2;
+  end
 
   return ϕ
 end
@@ -211,10 +217,16 @@ function flow_ψ(u::Matrix{Float64}, v::Matrix{Float64})
 
   cx  =   _cumsimp(sub(v, :, 1));
   cy  =   _cumsimp(sub(u, 1, :));
-  ψ   =   -_cumsimp(u')' + cx[ones(nj, 1), :];
-  ψ  +=   (ψ + _cumsimp(v) + cy[:, ones(1, ni)]) / 2;
+  ψ   =   -_cumsimp(u')';
+  for j=1:nj
+    ψ[j, :] += cx';
+  end
+  ψ   =   (ψ + _cumsimp(v)) / 2;
+  for i=1:ni
+    ψ[:, i] -= cy' / 2;
+  end
 
-  return ψ
+  return ψ'
 end
 
 stream_function = flow_ψ;

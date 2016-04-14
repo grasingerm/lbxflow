@@ -1,4 +1,4 @@
-function  [phi,psi] = flowfun(u,v,flag)
+function  [cx_phi,cy_phi,phi,cx_psi,cy_psi,psi] = flowfun(u,v,flag)
 
 % FLOWFUN  Computes the potential PHI and the streamfunction PSI
 %     of a 2-dimensional flow defined by the matrices of velocity
@@ -74,18 +74,18 @@ ly = size(u,1);
 
  % Compute potential PHI (potential, non-rotating part)
 if isphi
-  cx = cumsimp(u(1,:));  % Compute x-integration constant
-  cy = cumsimp(v(:,1));  % Compute y-integration constant
-  phi = cumsimp(v)+cx(ones(ly,1),:);
-  phi = (phi+cumsimp(u')'+cy(:,ones(1,lx)))/2;
+  cx_phi = cumsimp(u(1,:));  % Compute x-integration constant
+  cy_phi = cumsimp(v(:,1));  % Compute y-integration constant
+  phi = cumsimp(v)+cx_phi(ones(ly,1),:);
+  phi = (phi+cumsimp(u')'+cy_phi(:,ones(1,lx)))/2;
 end
 
  % Compute streamfunction PSI (solenoidal part)
 if ispsi
-  cx = cumsimp(v(1,:));  % Compute x-integration constant
-  cy = cumsimp(u(:,1));  % Compute y-integration constant
-  psi = -cumsimp(u)+cx(ones(ly,1),:);
-  psi = (psi+cumsimp(v')'-cy(:,ones(1,lx)))/2;
+  cx_psi = cumsimp(v(1,:))  % Compute x-integration constant
+  cy_psi = cumsimp(u(:,1))  % Compute y-integration constant
+  psi = -cumsimp(u)+cx_psi(ones(ly,1),:)
+  psi = (psi+cumsimp(v')'-cy_psi(:,ones(1,lx)))/2
 end
 
  % Rename output if need only PSI
