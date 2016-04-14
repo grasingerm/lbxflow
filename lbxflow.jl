@@ -85,12 +85,12 @@ end
 
 if pa["profile-view"]; using ProfileView; end
 
-if pa["ndebug"]; macro NDEBUG(); return true; end; end
-if pa["ndebug-mass-cons"]; macro NDEBUG_MASS(); return true; end; end
-
 # Load lattice Boltzmann method simulation module
 push!(LOAD_PATH, "inc");
 import LBXFlow;
+
+if pa["ndebug"];            LBXFlow.turn_off_debugging();           end;
+if pa["ndebug-mass-cons"];  LBXFlow.turn_off_mass_cons_debugging(); end;
 
 # run input file
 if pa["file"] != nothing

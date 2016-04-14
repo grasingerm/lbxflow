@@ -68,4 +68,7 @@ finally:
       writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
       writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
       writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+      PyPlot.clf();
+      PyPlot.contour(flow_ψ(reshape(sim.msm.u[1,:,:], ni, nj), reshape(sim.msm.u[2,:,:], ni, nj)));
+      PyPlot.savefig("stream_function.png");
     end

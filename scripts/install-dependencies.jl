@@ -32,9 +32,9 @@ if confirm("Would you like to update Julia packages (Y/N)?: ")
   end
 
   try
-    Pkg.clone("https://github.com/grasingerm/List.jl.git");
+    Pkg.clone("https://github.com/grasingerm/Discrete.jl.git");
   catch e
-    warn("unable to clone List.jl");
+    warn("unable to clone Discrete.jl");
   end
 end
 

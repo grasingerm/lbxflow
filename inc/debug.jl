@@ -2,16 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-macro NDEBUG()
-  return false;
-end
+_NDEBUG       =   false;
+_NDEBUG_MASS  =   true;
 
-macro NDEBUG_MASS()
-  return false;
-end
+function turn_off_debugging();            LBXFlow._NDEBUG = true;       end
+function turn_off_mass_cons_debugging();  LBXFlow._NDEBUG_MASS = true;  end
 
 macro mdebug(message)
-  if @NDEBUG()
+  if _NDEBUG
     return;
   else
     return :(warn($message));
@@ -19,7 +17,7 @@ macro mdebug(message)
 end
 
 macro checkdebug(condition, message)
-  if @NDEBUG()
+  if _NDEBUG
     return;
   else
     return quote
@@ -32,7 +30,7 @@ end
 
 # Debugging macros
 macro _mdebug_mass_cons(opname, M, block)
-  if @NDEBUG_MASS()
+  if _NDEBUG_MASS
     return block;
   else
     return quote
@@ -45,7 +43,7 @@ end
 
 # Debugging macros
 macro _checkdebug_mass_cons(opname, M, block, eps)
-  if @NDEBUG_MASS()
+  if _NDEBUG_MASS
     return block;
   else
     return quote

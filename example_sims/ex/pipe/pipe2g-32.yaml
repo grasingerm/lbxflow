@@ -2,14 +2,14 @@ version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data");
+  const datadir       =   joinpath("data", "pipe2g-32");
   const nu            =   0.2;
-  const constit_rel_f =   init_constit_mrt_const(nu);
-  const F             =   [0.0; -1.0e-6];
+  const constit_rel_f =   init_constit_srt_const(nu);
+  const F             =   [0.0; -5.0e-6];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
-  const ni            =   50;
-  const nj            =   50;
-  const nsteps        =   40000;
+  const ni            =   128;
+  const nj            =   32;
+  const nsteps        =   50000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
@@ -26,36 +26,32 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      MRT_F(constit_rel_f, forcing_kf; S=S_luo);
+col_f:      BGK_F(constit_rel_f, forcing_kf);
 nsteps:     {   value: nsteps,        expr: true   }
 
-# boundaries
-sbounds:
-  value:  "[1 ni 1 nj;]'"
-  expr:   true
-
-cbounds:
-  value:  "[1 ni 1 nj;]'"
-  expr:   true
+obstacles:
+  - type:   bounce_back
+    coords: "[36 44 8 16]'" 
 
 # boundary conditions
 bcs:
-  - west_bounce_back!
-  - east_bounce_back!
   - south_bounce_back!
   - north_bounce_back!
+  - FastAnonymous.@anon (sim) -> west_mass_inlet!(sim, 1.0)
+  - FastAnonymous.@anon (sim) -> west_velocity!(sim.lat, 0.0025)
+  - east_mass_outlet!
 
 # free surface conditions
 rho_g: 1.0
 
-fill_x: { value: 0.5, expr: false }
+fill_x: { value: 0.1, expr: false }
 fill_y: { value: 1.0, expr: false }
 
 # callback functions
 callbacks:
   - print_step_callback(50, "free-surf")
-  - plot_mass_contours_callback(100)
-  - write_jld_file_callback(datadir, 500);
+  - plot_mass_contours_callback(100, joinpath(datadir, "mass"), [(8, 16, 36/ni, 44/ni)]; levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0])
+  - write_jld_file_callback(datadir, 5000)
 
 # clean-up, backup, write out
 finally:
@@ -79,3 +75,5 @@ finally:
       end
       print_with_color(:green, "TEST PASSED\n");
     end
+  - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir)

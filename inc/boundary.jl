@@ -517,7 +517,7 @@ east_velocity!(lat::Lattice, us::Vector{Float64}, i::Int,
 
 #! West velocity boundary condition
 function west_velocity!(lat::LatticeD2Q9, u::Real, i::Int, j_begin::Int,
-  j_end::Int)
+                        j_end::Int)
 
   for j=j_begin:j_end
     rhow = ((lat.f[9, i, j] + lat.f[2, i, j] + lat.f[4, i, j] +
