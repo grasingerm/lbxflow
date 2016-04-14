@@ -405,7 +405,6 @@ function plot_mass_contours_callback(iters_per_frame::Int,
       PyPlot.colorbar(cs);
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
-      PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.pause(0.001);
       sleep(pause);
     end
