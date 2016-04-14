@@ -226,7 +226,7 @@ function flow_ψ(u::Matrix{Float64}, v::Matrix{Float64})
     ψ[:, i] -= cy' / 2;
   end
 
-  return ψ'
+  return ψ
 end
 
 stream_function = flow_ψ;
