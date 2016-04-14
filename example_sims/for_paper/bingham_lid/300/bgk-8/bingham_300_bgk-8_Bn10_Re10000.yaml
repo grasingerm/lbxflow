@@ -2,26 +2,30 @@ version: 0.2.5
 
 # code to execute before parsing
 
-# Power-law lid-driven flow
-# Power-law index is 1.0
-# Reynolds number is 100
-# No filtering, MRT operator
+# Bingham plastic lid-driven flow
+# Bingham number is 10
+# Reynolds number is 10000
+# Stress growth exponent is 10^8
+# No filtering, BGK operator
 preamble: >
-  const id      =   "power_mrt_100_n1.0_Re100";
+  const id      =   "bingham_300_bgk-8_Bn10_Re10000";
   const datadir =   joinpath("data","paper-tests", id);
   const nsteps  =   50000;
-  const ni      =   100;
-  const nj      =   100;
-  const U       =   1.0;
-  const m       =   1.0; 
-  const n       =   1.0;
-  const rho_0   =   1.0; 
-  const Re      =   U ^ (2 - n) * (ni ^ n) / (m);
+  const ni      =   300;
+  const nj      =   300;
+  const U       =   0.1;
+  const mu_p    =   0.003;
+  const tau_y   =   0.00001;
+  const m       =   1.0e8; 
+  const rho_0   =   1.0;
+  const Re      =   U * ni / (mu_p / rho_0);
+  const Bn      =   tau_y * ni / (mu_p * U);
   const feq_f   =   feq_incomp_max_entropy; 
-  info("n = $n");
+  info("Bn = $Bn");
   info("Re = $Re");
   info("Grid size = $ni");
-  const constit_rel_f = init_constit_mrt_power_law_implicit(m, n, 1.0e-9, 100, 1.0e-9, 1.0);
+  info("Stress growth exponent = $m");
+  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -29,7 +33,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: rho_0,       expr: true  }
-nu:       { value: m,           expr: true  }
+nu:       { value: mu_p,        expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }
@@ -40,7 +44,7 @@ nj:       { value: nj,      expr: true  }
 # simulation parameters
 simtype:    default
 nsteps:     { value: nsteps,   expr: true }
-col_f:      init_col_mrt(constit_rel_f, S_luo, feq_f=feq_f)
+col_f:      init_col_srt(constit_rel_f, feq_f=feq_f)
 
 # boundaries
 sbounds:
@@ -66,6 +70,10 @@ bcs:
 callbacks:
   - print_step_callback(100, id)
   - write_jld_file_callback(datadir, convert(Int, nsteps/100))
+
+# test for steady state
+test_for_term:          init_is_steadystate(1e-7)
+test_for_term_steps:    100
 
 # clean-up, backup, write out
 finally:

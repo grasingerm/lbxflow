@@ -2,30 +2,26 @@ version: 0.2.5
 
 # code to execute before parsing
 
-# Bingham plastic lid-driven flow
-# Bingham number is 100
-# Reynolds number is 10000
-# Stress growth exponent is 10^8
-# Filtering, MRT operator
+# Power-law lid-driven flow
+# Power-law index is 0.5
+# Reynolds number is 100
+# No filtering, BGK operator
 preamble: >
-  const id      =   "bingham_100_mrt-filter_Bn100_Re10000";
+  const id      =   "power_bgk_100_n0.5_Re100";
   const datadir =   joinpath("data","paper-tests", id);
   const nsteps  =   50000;
   const ni      =   100;
   const nj      =   100;
   const U       =   0.1;
-  const mu_p    =   0.001;
-  const tau_y   =   0.0001;
-  const m       =   1.0e8; 
-  const rho_0   =   1.0;
-  const Re      =   U * ni / (mu_p / rho_0);
-  const Bn      =   tau_y * ni / (mu_p * U);
+  const m       =   0.00316227766; 
+  const n       =   0.5;
+  const rho_0   =   1.0; 
+  const Re      =   U ^ (2 - n) * (ni ^ n) / (m);
   const feq_f   =   feq_incomp_max_entropy; 
-  info("Bn = $Bn");
+  info("n = $n");
   info("Re = $Re");
   info("Grid size = $ni");
-  info("Stress growth exponent = $m");
-  const constit_rel_f = init_constit_mrt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-5, 1.0);
+  const constit_rel_f = init_constit_srt_power_law_implicit(m, n, 1.0e-9, 100, 1.0e-9, 1.0);
 
 # data
 datadir:  { value: datadir, expr: true  }
@@ -33,7 +29,7 @@ datadir:  { value: datadir, expr: true  }
 # material properties
 # TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
 rho_0:    { value: rho_0,       expr: true  }
-nu:       { value: mu_p,        expr: true  }
+nu:       { value: m,           expr: true  }
 
 # lattice parameters
 dx:       { value: 1.0,     expr: false }
@@ -44,7 +40,7 @@ nj:       { value: nj,      expr: true  }
 # simulation parameters
 simtype:    default
 nsteps:     { value: nsteps,   expr: true }
-col_f:      init_col_filter_std(init_col_mrt(constit_rel_f, S_luo, feq_f=feq_f));
+col_f:      init_col_srt(constit_rel_f, feq_f=feq_f)
 
 # boundaries
 sbounds:
