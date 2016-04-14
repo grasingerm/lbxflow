@@ -63,3 +63,13 @@ test_for_term_steps:  100
 finally:
   - write_jld_file_callback(datadir)
   - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
+  - >
+    (sim::Sim, k::Int) -> begin
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      const xs = linspace(0, 1.0, ni);
+      const ys = linspace(0, 1.0, nj);
+      writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+    end
