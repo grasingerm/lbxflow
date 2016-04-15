@@ -178,8 +178,8 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
                                                     max_iters, tol, relax);
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    const mu_min = sim.lat.cssq*sim.lat.dt * (rt_min - 0.5);
-    const mu_max = sim.lat.cssq*sim.lat.dt * (rt_max - 0.5);
+    const mu_max = @nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
+    const mu_max = @nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
     mu = inner_f(sim, fneq, i, j);
     if mu < mu_min
       return mu_min;
@@ -317,7 +317,7 @@ function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
   end
 end
 
-#! Initialize an explicit power law constitutive relationship
+#! Initialize an implicit power law constitutive relationship
 #!
 #! \param k Flow consistency index
 #! \param n Power law index
@@ -373,6 +373,43 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
       mu_prev = muij;
     end
     return muij;
+  end
+end
+
+#! Initialize an implicit power law constitutive relationship
+#!
+#! \param k Flow consistency index
+#! \param n Power law index
+#! \param rt_min Minimum relaxation time
+#! \param rt_max Maximum relaxation time
+#! \param gamma_min Minimum allowable strain rate
+#! \param max_iters Maximum iterations
+#! \param tol Convergence tolerance
+#! \param relax Relaxation coefficient
+#! \return Constitutive relation function
+function init_constit_srt_power_law_implicit(k::AbstractFloat,
+                                             n::AbstractFloat,
+                                             rt_min::AbstractFloat,
+                                             rt_max::AbstractFloat,
+                                             gamma_min::AbstractFloat,
+                                             max_iters::Int,
+                                             tol::AbstractFloat,
+                                             relax::Number = 1.0)
+
+  const inner_f = init_constit_srt_power_law_implicit(k, n, gamma_min, 
+                                                      max_iters, tol, relax);
+
+  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
+    const mu_min = @nu(1/rt_min, sim.lat.cssq, sim.lat.dt);
+    const mu_max = @nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
+    mu = inner_f(sim, fneq, i, j);
+    if mu < mu_min
+      return mu_min;
+    elseif mu > mu_max
+      return mu_max;
+    else 
+      return mu;
+    end
   end
 end
 
