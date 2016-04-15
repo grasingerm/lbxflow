@@ -209,6 +209,8 @@ function flow_ϕ(u::Matrix{Float64}, v::Matrix{Float64})
   return ϕ
 end
 
+flow_ϕ(msm::MultiscaleMap) = flow_ϕ(reshape(msm.u[1, :, :], size(msm.rho)),
+                                    reshape(msm.u[2, :, :], size(msm.rho)));
 flow_potential = flow_ϕ;
 
 #! Calculate the stream function
@@ -229,7 +231,9 @@ function flow_ψ(u::Matrix{Float64}, v::Matrix{Float64})
   return ψ
 end
 
-stream_function = flow_ψ;
+flow_ψ(msm::MultiscaleMap) = flow_ψ(reshape(msm.u[1, :, :], size(msm.rho)),
+                                    reshape(msm.u[2, :, :], size(msm.rho)));
+stream_function = flow_ψ; # alias for input files that do not support unicode
 
 function _cumsimp(y)
   #  Adapted from Matlab code written by Kirill K. Pankratov, March 7, 1994.
