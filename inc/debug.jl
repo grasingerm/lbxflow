@@ -3,10 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 _NDEBUG       =   false;
-_NDEBUG_MASS  =   true;
+_NDEBUG_MASS  =   false;
 
-function turn_off_debugging();            LBXFlow._NDEBUG = true;       end
-function turn_off_mass_cons_debugging();  LBXFlow._NDEBUG_MASS = true;  end
+function turn_off_debugging(); global _NDEBUG; _NDEBUG = true; end
+function turn_off_mass_cons_debugging()
+  global _NDEBUG_MASS;
+  _NDEBUG_MASS = true;
+end
 
 macro mdebug(message)
   if _NDEBUG

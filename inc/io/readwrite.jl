@@ -236,13 +236,33 @@ end
 #! \param stepout Number of steps in between writing
 #! \param A Function for extracting a 2D array from the sim
 #! \param delim Delimiter to separate values with
-function write_datafile_callback(pre::AbstractString, stepout::Int, A::Function,
-  dir=".", delim=',')
+function write_datafile_callback(pre::AbstractString, stepout::Int, 
+                                 A::LBXFunction; dir=".", delim=',')
 
-  return (sim::Sim, k::Int) -> begin
+  return (sim::AbstractSim, k::Int) -> begin
     if k % stepout == 0
       writedlm(joinpath(dir, pre*"_step-$k.dsv"), A(sim), delim);
     end
   end;
 
 end
+
+#! Record a snapshot in a text file
+#!
+#! \param   fname     File name
+#! \param   stepout   Number of steps in between writing
+#! \param   A         Function for extracting data points
+#! \param   delim     Delimiter for file
+#! \return            Callback function
+function take_snapshot_callback(fname::AbstractString, stepout::Int, 
+                                A::LBXFunction; delim::Char=',')
+  fhandle = open(fname, "a");
+  f = (sim::AbstractSim, k::Int) -> (if k % stepout == 0; 
+                                      write(fhandle, join(A(sim), delim));
+                                      write(fhandle, '\n');
+                                     end);
+  finalizer(f, () -> close(fhandle));
+  return f;
+end
+
+include("sample.jl");

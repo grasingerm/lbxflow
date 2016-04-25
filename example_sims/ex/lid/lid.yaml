@@ -28,7 +28,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 simtype:    default
-nsteps:     { value: 60000,   expr: false }
+nsteps:     { value: 50000,   expr: false }
 col_f:      BGK(constit_rel_f)
 
 # boundaries
@@ -49,11 +49,13 @@ bcs:
 
 # callback functions
 callbacks:
-  - print_step_callback(50, id)
-  - write_jld_file_callback(datadir, 500)
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, 2000)
+  - take_snapshot_callback(joinpath(datadir, "u_snaps.dsv"), 100, sample_u_uniform_sqr(5, 5, 40, 5))
+  - take_snapshot_callback(joinpath(datadir, "v_snaps.dsv"), 100, sample_v_uniform_sqr(5, 5, 40, 5))
 
 test_for_term:        is_steadystate
-test_for_term_steps:  100
+test_for_term_steps:  25
 
 # clean-up, backup, write out
 finally:
