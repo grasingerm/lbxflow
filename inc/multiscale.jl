@@ -38,8 +38,10 @@ macro rho(p, cssq)
   return :($p / $cssq);
 end
 
+abstract AbstractMultiscaleMap;
+
 #! Multiscale map for resolving macroscopic parameters
-immutable MultiscaleMap
+immutable MultiscaleMap <: AbstractMultiscaleMap
   rho_0::AbstractFloat;
   omega::Matrix{Float64};
   u::Array{Float64,3};
