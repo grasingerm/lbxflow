@@ -4,8 +4,8 @@ version: 1.0.0
 preamble: >
   @init_plot_env();
   using Base.Test;
-  const F = [0.0; -1.0e-6];
-  const nsteps  = 120000;
+  const F = [0.0; -75.0e-6];
+  const nsteps  = 10000;
   const datadir = joinpath("data","dam_with_obs");
   const ni = 64;
   const nj = 64;
@@ -52,9 +52,9 @@ fill_y: { value: 1.0, expr: false }
 
 # callback functions
 callbacks:
-  - print_step_callback(50, "free-surf")
-  - plot_mass_contours_callback(200, joinpath(datadir, "mass"), [(8, 16, 48/ni, 54/ni)])
-  - write_jld_file_callback(datadir, 500)
+  - print_step_callback(100, "free-surf")
+  - plot_mass_contours_callback(50, joinpath(datadir, "mass"), [(8, 16, 48/ni, 54/ni)]; levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0])
+  - write_jld_file_callback(datadir, 2500)
 
 # clean-up, backup, write out
 finally:
