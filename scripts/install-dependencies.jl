@@ -32,9 +32,9 @@ if confirm("Would you like to update Julia packages (Y/N)?: ")
   end
 
   try
-    Pkg.clone("https://github.com/grasingerm/MapView.jl.git");
+    Pkg.clone("https://github.com/grasingerm/LazyViews.jl.git");
   catch e
-    warn("unable to clone Discrete.jl");
+    warn("unable to clone LazyViews.jl");
   end
 end
 

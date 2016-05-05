@@ -261,7 +261,7 @@ function take_snapshot_callback(fname::AbstractString, stepout::Int,
                                       write(fhandle, join(A(sim), delim));
                                       write(fhandle, '\n');
                                      end);
-  finalizer(f, () -> close(fhandle));
+  # finalizer(f, () -> close(fhandle));
   return f;
 end
 

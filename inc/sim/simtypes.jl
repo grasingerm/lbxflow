@@ -142,6 +142,7 @@ immutable FreeSurfSim <: AbstractSim
 
 end
 
+#=
 include("lazy.jl");
 
 type AdaptiveTimestepSim <: AbstractSim
@@ -154,3 +155,4 @@ type AdaptiveTimestepSim <: AbstractSim
 
   AdaptiveTimestepSim(isim::AbstractSim, ξ::Real) = error("Not yet implemented");
 end
+=#

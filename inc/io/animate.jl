@@ -84,6 +84,11 @@ macro init_plot_env()
   end
 end
 
+#! Change default figure size
+macro change_default_figsize(w, h)
+  return :(PyPlot.rc("figure", figsize=($w, $h)));
+end
+
 #############################################################################
 ###################### Base plots ###########################################
 #############################################################################
@@ -915,13 +920,13 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int, 
                                      fname::AbstractString,
-                                     levs::Vector,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
+      cs = PyPlot.contourf(transpose(sim.tracker.M), levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();

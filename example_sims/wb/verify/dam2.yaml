@@ -2,10 +2,10 @@ version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data", "dam");
+  const datadir       =   joinpath("data", "dam2");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
-  const F             =   [0.0; -5.0e-6];
+  const F             =   [0.0; -5.0e-7];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   60;
   const nj            =   50;

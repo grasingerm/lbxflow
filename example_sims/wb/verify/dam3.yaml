@@ -2,10 +2,10 @@ version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data", "dam");
+  const datadir       =   joinpath("data", "dam3");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
-  const F             =   [0.0; -5.0e-6];
+  const F             =   [0.0; -5.0e-8];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   60;
   const nj            =   50;
@@ -55,9 +55,13 @@ fill_y: { value: 0.9, expr: false }
 callbacks:
   - print_step_callback(100, "dam-break")
   - plot_mass_contours_callback(200, joinpath(datadir, "mass"))
+  - write_datafile_callback("mass", 200, sim -> transpose(sim.tracker.M); dir=datadir)
+  - take_snapshot_callback(joinpath(datadir, "snaps"), 200, sim -> vec(transpose(sim.tracker.M)))
   - write_jld_file_callback(datadir, 5000)
 
 # clean-up, backup, write out
 finally:
   - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - write_datafile_callback("mass", 1, sim -> transpose(sim.tracker.M); dir=datadir)
+  - take_snapshot_callback(joinpath(datadir, "snaps"), 1, sim -> vec(transpose(sim.tracker.M)))
   - write_jld_file_callback(datadir)
