@@ -1,0 +1,60 @@
+version: 1.0.0
+
+preamble: >
+  @init_plot_env();
+  @change_default_figsize(5, 12);
+  const datadir       =   joinpath("data", "annulus_with_obs_100");
+  const nu            =   0.2;
+  const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-4, 1e6, 1e-9, 10, 1e-5);
+  const F             =   [0.0; -5.0e-6];
+  const forcing_kf    =   init_sukop_gravity_Fk(F);
+  const nj            =   128;
+  const ni            =   32;
+  const nsteps        =   50000;
+
+# data directory
+datadir:    {   value: datadir,       expr: true    }
+
+# material properties
+rho_0:      {   value: 1.0,           expr: false   }
+nu:         {   value: nu,            expr: true    }
+
+# lattice parameters
+dx:         {   value: 1.0,           expr: false   }
+dt:         {   value: 1.0,           expr: false   }
+ni:         {   value:  ni,           expr: true    }
+nj:         {   value:  nj,           expr: true    }
+
+# simulation parameters
+simtype:    free_surface
+col_f:      BGK_F(constit_rel_f, forcing_kf);
+nsteps:     {   value: nsteps,        expr: true   }
+
+obstacles:
+  - type:   bounce_back
+    coords: "[1 8 48 56;]'" 
+
+# boundary conditions
+bcs:
+  - west_bounce_back!
+  - east_bounce_back!
+  - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
+  - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, 0.0025)
+  - north_mass_outlet!
+
+# free surface conditions
+rho_g: 1.0
+
+fill_x: { value: 1.0, expr: false }
+fill_y: { value: 0.1, expr: false }
+
+# callback functions
+callbacks:
+  - print_step_callback(50, "free-surf")
+  - plot_mass_contours_callback(100, joinpath(datadir, "mass"), [(48, 56, 0/ni, 8/ni)]; levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0])
+  - write_jld_file_callback(datadir, 5000)
+
+# clean-up, backup, write out
+finally:
+  - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir)

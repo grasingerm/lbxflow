@@ -5,7 +5,7 @@ preamble: >
   const datadir       =   joinpath("data");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_mrt_const(nu);
-  const F             =   [0.0; -1.0e-6];
+  const F             =   [0.0; -1.0e-5];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   50;
   const nj            =   50;
@@ -48,14 +48,14 @@ bcs:
 # free surface conditions
 rho_g: 1.0
 
-fill_x: { value: 0.5, expr: false }
-fill_y: { value: 1.0, expr: false }
+fill_x: { value: 1/3, expr: true  }
+fill_y: { value: 0.9, expr: false }
 
 # callback functions
 callbacks:
   - print_step_callback(50, "free-surf")
   - plot_mass_contours_callback(100)
-  - write_jld_file_callback(datadir, 500);
+  - write_jld_file_callback(datadir, 5000);
 
 # clean-up, backup, write out
 finally:

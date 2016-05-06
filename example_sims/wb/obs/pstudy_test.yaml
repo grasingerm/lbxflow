@@ -1,0 +1,87 @@
+version: 1.0.0
+
+#!! figsize  =  5, 12
+#!! g        =  -5.0e-6
+#!! nj       =  128
+#!! ni       =  32
+#!! nsteps   =  50000
+
+comments:
+  - comment 1 about re-1
+  - comment 2 about re-2
+
+preambles: 
+  - "re-1": |
+            @init_plot_env();
+            @change_default_figsize(&figsize&);
+            const datadir       =   joinpath("data", "re-1");
+            const nu            =   0.2;
+            const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-4, 1e6, 1e-9, 10, 1e-5);
+            const F             =   [0.0; &g&];
+            const forcing_kf    =   init_sukop_gravity_Fk(F);
+            const nj            =   &nj&;
+            const ni            =   &ni&;
+            const nsteps        =   &nsteps&;
+  - "re-2": |
+            @init_plot_env();
+            @change_default_figsize(&figsize&);
+            const datadir       =   joinpath("data", "re-2");
+            const nu            =   0.1;
+            const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-4, 1e6, 1e-9, 10, 1e-5);
+            const F             =   [0.0; &g&];
+            const forcing_kf    =   init_sukop_gravity_Fk(F);
+            const nj            =   &nj&;
+            const ni            =   &ni&;
+            const nsteps        =   &nsteps&;
+
+# data directory
+datadirs: ["" : {   value: datadir,       expr: true    }]
+
+# material properties
+rho_0s:   ["" : {   value: 1.0,           expr: false   }]
+nus:      ["" : {   value: nu,            expr: true    }]
+
+# lattice parameters
+dxs:      ["" : {   value: 1.0,           expr: false   }]
+dts:      ["" : {   value: 1.0,           expr: false   }]
+nis:      ["" : {   value:  ni,           expr: true    }]
+njs:      ["" : {   value:  nj,           expr: true    }]
+
+# simulation parameters
+simtypes:    ["" : free_surface]
+col_fs:      
+  - "" : BGK_F(constit_rel_f, forcing_kf);
+nstepss:     ["" : {   value: nsteps,        expr: true   }]
+
+obstacless:
+  "":
+    - type:   bounce_back
+      coords: "[1 8 48 56;]'" 
+
+# boundary conditions
+bcss:
+  "":
+    - west_bounce_back!
+    - east_bounce_back!
+    - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
+    - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, 0.0025)
+    - north_mass_outlet!
+
+# free surface conditions
+rho_gs: ["" : 1.0]
+
+fill_xs: ["" : { value: 1.0, expr: false }]
+fill_ys: ["" : { value: 0.1, expr: false }]
+
+# callback functions
+callbackss:
+  "":
+    - print_step_callback(50, "free-surf")
+    - plot_mass_contours_callback(100, joinpath(datadir, "mass"), [(48, 56, 0/ni, 8/ni)]; levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0])
+    - write_jld_file_callback(datadir, 5000)
+
+# clean-up, backup, write out
+finallys:
+  "":
+    - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+    - write_jld_file_callback(datadir)
