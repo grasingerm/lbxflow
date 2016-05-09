@@ -48,7 +48,8 @@ def parse_raw_params(params, names):
 
 def compile_file(fname, strs, ext='.yaml'):
     with open(fname + ext, 'w') as w:
-        w.write('\n'.join(strs))
+        w.write(('\n'.join(strs)).replace('~DIR_LS~', 
+                        ', '.join(['"'+ s +'"' for s in fname.split('_')])))
 
 def compile_input_files(fname, *cats):
     if type(cats[-1]) != dict:
