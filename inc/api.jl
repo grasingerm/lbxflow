@@ -14,15 +14,15 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
-                                           :type => Function ),
+                                           :type => ColFunction ),
     "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "callbacks"     =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "finally"       =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "test_for_term" =>  Dict{Symbol, Any}( :store => true,  :array => false, 
-                                           :type => Function )
+                                           :type => LBXFunction )
   );
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
@@ -40,6 +40,10 @@ function parse_and_run(infile::AbstractString, args::Dict)
     if ins["version"] > args["LBX_VERSION"]
       warn("$infile recommends v$(ins["version"]), consider updating.");
     end
+
+  else
+
+    warn("$infile does not contain versioning information.");
 
   end
 
@@ -123,6 +127,25 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["finally"][end] = write_jld_file_callback(defs["datadir"], 1);
   end
 
+  # syntactic sugar for adding obstacles
+  if haskey(defs, "obstacles")
+    defs["active_cells"]  =   fill(true, defs["ni"], defs["nj"]);
+    for obstacle_array in defs["obstacles"]
+      obs_type      =   parse(obstacle_array["type"]);
+      obs_locs      =   eval(parse(obstacle_array["coords"]));
+
+      @assert(size(obs_locs, 1) == 4, "Obstacle coordinates should be "      *
+              "organized in columns, i.e. coords[:, ...] = i_min, i_max, "   *
+              "j_min, j_max. Obstacle coordinate matrix should have exactly "*
+              "4 rows. $(size(obs_locs, 1)) != 4");
+
+      for j = 1:size(obs_locs, 2)
+        add_obstacle!(defs["active_cells"], defs["bcs"], obs_locs[1, j], 
+                      obs_locs[2, j], obs_locs[3, j], obs_locs[4, j], obs_type); 
+      end
+    end
+  end
+
   if args["verbose"]; println("$infile definitions:"); println(defs); end
 
   # if datadir does not exist, create it
@@ -134,16 +157,9 @@ function parse_and_run(infile::AbstractString, args::Dict)
   # recursively remove data from previous runs
   if args["clean"]
     for f in readdir(defs["datadir"]); rrm(joinpath(defs["datadir"], f)); end
-    if args["noexe"]; rm(defs["datadir"]); end
   end
 
-  # check for `noexe` switch
-  if args["noexe"]
-    info("`noexe` switch was passed. $infile will not be simulated.");
-    return nothing;
-  end
-
-  is_init = false;
+    is_init = false;
   if args["resume"]
     k, sim = load_latest_backup(defs["datadir"]);
     if k == 0 || sim == nothing
@@ -188,41 +204,85 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["test_for_term"] = (msm, prev_msm) -> true;
   end
 
-  try
+  mass_matrix = (if (haskey(defs, "simtype") 
+                     && defs["simtype"] == "free_surface")
+                    sim.tracker.M
+                  else 
+                    zeros(1);
+                  end);
+
+  @_checkdebug_mass_cons("simulation", mass_matrix, try
     tic();
 
-    if !haskey(defs, "test_for_term")
-      # this simulate should be more memory and computationally efficient
-      @profif(args["profile"],
-        begin;
-          global nsim;
-          nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                           defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
-        end;
-      );
-    else
-      if haskey(defs, "test_for_term_steps")
-        @assert(defs["test_for_term_steps"] > 1, 
-                "'test_for_term_steps', i.e. the number of steps to average " *
-                "over when checking for steady-state conditions, should be "  *
-                "greater than 1 (or not specified).");
+    if !haskey(defs, "obstacles")
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin;
             global nsim;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                             defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                             defs["test_for_term_steps"], defs["callbacks"], k); 
+                             defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
           end;
         );
       else
+        if haskey(defs, "test_for_term_steps")
+          @assert(defs["test_for_term_steps"] > 1, 
+                  "'test_for_term_steps', i.e. the number of steps to average " *
+                  "over when checking for steady-state conditions, should be "  *
+                  "greater than 1 (or not specified).");
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["test_for_term_steps"], defs["callbacks"], k); 
+            end;
+          );
+        else
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["callbacks"], k); 
+            end;
+          );
+        end
+      end
+    else
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin;
             global nsim;
-            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                             defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                             defs["callbacks"], k); 
+            nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                             defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
           end;
         );
+      else
+        if haskey(defs, "test_for_term_steps")
+          @assert(defs["test_for_term_steps"] > 1, 
+                  "'test_for_term_steps', i.e. the number of steps to average " *
+                  "over when checking for steady-state conditions, should be "  *
+                  "greater than 1 (or not specified).");
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["test_for_term_steps"], defs["callbacks"], k); 
+            end;
+          );
+        else
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["callbacks"], k); 
+            end;
+          );
+        end
       end
     end
 
@@ -256,6 +316,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
       println("Press enter to continue...");
       readline(STDIN);
     end
-  end
+  end, 1e-12);
 
 end

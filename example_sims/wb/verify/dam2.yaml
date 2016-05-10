@@ -1,14 +1,15 @@
-version: 0.2.6
+version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data","dam");
+  const datadir       =   joinpath("data", "dam2");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
-  const F             =   [0.0; -1.0e-6];
-  const forcing_kf    =   init_guo_Fk(F);
-  const ni            =   50;
+  const F             =   [0.0; -5.0e-7];
+  const forcing_kf    =   init_sukop_gravity_Fk(F);
+  const ni            =   60;
   const nj            =   50;
+  const nsteps        =   500000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
@@ -25,8 +26,8 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      init_col_srt(constit_rel_f, forcing_kf);
-nsteps:     {   value: 250000,        expr: false   }
+col_f:      BGK_F(constit_rel_f, forcing_kf);
+nsteps:     {   value: nsteps,        expr: true   }
 
 # boundaries
 sbounds:
@@ -47,15 +48,16 @@ bcs:
 # free surface conditions
 rho_g: 1.0
 
-fill_x: { value: 0.5, expr: false }
-fill_y: { value: 1.0, expr: false }
+fill_x: { value: 1/3, expr: true  }
+fill_y: { value: 0.9, expr: false }
 
 # callback functions
 callbacks:
-  - plot_mass_contours_callback(100, joinpath(datadir, "mass"))
-  - print_step_callback(50, "free-surf")
-#  - write_jld_file_callback(datadir, 500)
+  - print_step_callback(100, "dam-break")
+  - plot_mass_contours_callback(200, joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir, 5000)
 
 # clean-up, backup, write out
-#finally:
-#  - write_jld_file_callback(datadir)
+finally:
+  - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir)

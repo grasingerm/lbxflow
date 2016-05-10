@@ -2,13 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-using List
+using FastAnonymous;
+abstract ColFunction;
+typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction};
 
-#using FastAnonymous;
-#typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure};
-typealias LBXFunction Function;
-
-abstract AbstractSim
+abstract AbstractSim;
 
 #! Simulation object
 #! lat Lattice
@@ -33,21 +31,21 @@ immutable Tracker
   state::Matrix{State};
   M::Matrix{Float64};
   eps::Matrix{Float64};
-  interfacels::DoublyLinkedList{Tuple{Int64, Int64}};
+  interfacels::Set{Tuple{Int64, Int64}};
 
   function Tracker(ni::Int, nj::Int,
                    state::State = GAS) 
     return new(convert(Matrix{Union{Gas, Interface, Fluid}}, 
                        fill(state, (ni, nj))),
                zeros(ni, nj), zeros(ni, nj),
-               DoublyLinkedList{Tuple{Int64, Int64}}());
+               Set{Tuple{Int64, Int64}}());
   end
 
   function Tracker(msm::MultiscaleMap,
                    state::Matrix{State})
 
     const ni, nj  = size(state);
-    lst           = DoublyLinkedList{Tuple{Int64, Int64}}();
+    lst           = Set{Tuple{Int64, Int64}}();
     M             = Array{Float64}(ni, nj);
     eps           = Array{Float64}(ni, nj);
 
@@ -91,8 +89,8 @@ immutable FreeSurfSim <: AbstractSim
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, rho_0::Real, 
                        rho_g::Real, fill_x::Real, fill_y::Real)
     const ni, nj    =     size(msm.rho);
-    const fill_ni   =     convert(Int, fill_x * ni);
-    const fill_nj   =     convert(Int, fill_y * nj);
+    const fill_ni   =     convert(Int, round(fill_x * ni));
+    const fill_nj   =     convert(Int, round(fill_y * nj));
     const nk        =     length(lat.w);
 
     t               =     Tracker(ni, nj, GAS);
@@ -143,3 +141,18 @@ immutable FreeSurfSim <: AbstractSim
   end
 
 end
+
+#=
+include("lazy.jl");
+
+type AdaptiveTimestepSim <: AbstractSim
+  isim::AbstractSim;
+  lat::LazyLattice;
+  msm::LazyMultiscaleMap;
+  tracker::Union{Tracker, Nothing}; # TODO how much will I regret this choice?
+  rho_g::Union{AbstractFloat, Nothing};
+  ξ::Real;
+
+  AdaptiveTimestepSim(isim::AbstractSim, ξ::Real) = error("Not yet implemented");
+end
+=#

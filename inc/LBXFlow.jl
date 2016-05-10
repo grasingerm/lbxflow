@@ -4,15 +4,18 @@
 
 module LBXFlow
 
-include("boundary.jl");
+include("debug.jl");
 include("lattice.jl");
 include("multiscale.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
+include(joinpath("sim","adapt.jl"));
 include(joinpath("sim","simulate.jl"));
-include(joinpath("col","collision.jl"));
-include("convergence.jl");
 include("entropy.jl");
+include(joinpath("col","collision.jl"));
+include("boundary.jl");
+include("obstacle.jl");
+include("convergence.jl");
 include("lbxio.jl");
 include("profile.jl");
 include("stability.jl");

@@ -26,7 +26,7 @@ function print_step_callback(step::Int, name::AbstractString)
   return (sim::AbstractSim, k::Int) -> begin
     if k % step == 0
       println(name * ":\tstep $k");
-   end
+    end
   end
 end
 
@@ -82,6 +82,11 @@ macro init_plot_env()
     import PyPlot;
     PyPlot.ion();
   end
+end
+
+#! Change default figure size
+macro change_default_figsize(w, h)
+  return :(PyPlot.rc("figure", figsize=($w, $h)));
 end
 
 #############################################################################
@@ -212,13 +217,14 @@ const _DEFAULT_MASS_LEVELS = [-0.25; 0.0; 0.25; 0.50; 0.75; 1.0; 1.25];
 
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.draw();
       PyPlot.pause(0.001);
@@ -393,17 +399,17 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int, 
                                      fname::AbstractString,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
-      PyPlot.savefig(fname*"_step-$k.png");
       PyPlot.pause(0.001);
       sleep(pause);
     end
@@ -612,13 +618,14 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
                                      xy::Tuple{Number, Number},
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.draw();
@@ -812,13 +819,14 @@ end
 function plot_mass_contours_callback(iters_per_frame::Int,
                                      xy::Tuple{Number, Number},
                                      fname::AbstractString,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sim.tracker.M), 
-                           levels=_DEFAULT_MASS_LEVELS);
+                           levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.text(xy[1], xy[2], "step: $k");
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
@@ -912,13 +920,13 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int, 
                                      fname::AbstractString,
-                                     levs::Vector,
-                                     pause::AbstractFloat = 0.025)
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
+      cs = PyPlot.contourf(transpose(sim.tracker.M), levels=levs);
       PyPlot.colorbar(cs);
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
       PyPlot.draw();
@@ -1014,13 +1022,14 @@ end
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int, 
                                      fname::AbstractString,
-                                     levs::Vector, rects::Vector,
-                                     pause::AbstractFloat = 0.025)
+                                     rects::Vector,
+                                     pause::AbstractFloat = 0.025;
+                                     levs=_DEFAULT_MASS_LEVELS)
 
   return (sim::FreeSurfSim, k::Int) -> begin
     if k % iters_per_frame == 0
       PyPlot.clf();
-      cs = PyPlot.contour(transpose(sim.tracker.M), levels=levs);
+      cs = PyPlot.contourf(transpose(sim.tracker.M), levels=levs);
       PyPlot.colorbar(cs);
       for rect in rects
         PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4],
@@ -1064,6 +1073,34 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                        facecolor="black");
       end
       PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, k));
+      PyPlot.draw();
+      PyPlot.pause(0.001);
+      sleep(pause);
+    end
+  end
+
+end
+
+#! Plot streamlines for the domain
+function plot_streamlines_callback(iters_per_frame::Int,
+                                   rects::Vector,
+                                   pause::AbstractFloat = 0.025)
+
+  return (sim::AbstractSim, k::Int) -> begin
+    if k % iters_per_frame == 0
+      const ni, nj = size(sim.msm.rho);
+      x = collect(1:ni);
+      y = collect(1:nj);
+
+      PyPlot.clf();
+      PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
+                        transpose(reshape(sim.msm.u[2,:,:], (ni, nj))));
+      for rect in rects
+        PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
+                       facecolor="black");
+      end
+      PyPlot.ylim(1, nj);
+      PyPlot.xlim(1, ni);
       PyPlot.draw();
       PyPlot.pause(0.001);
       sleep(pause);
