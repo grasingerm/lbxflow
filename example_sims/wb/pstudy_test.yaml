@@ -1,6 +1,6 @@
 - "": "version: 1.0.0"
 
-#!! figsize      =  3.5, 12
+#!! figsize      =  4, 12
 #!! g            =  -5.0e-6
 #!! nj           =  512
 #!! ni           =  128
@@ -16,7 +16,7 @@
 
 # Different preambles correspond to different materials
 - re-0010_bn-0000: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -28,7 +28,7 @@
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
   re-0010_bn-0001: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -40,7 +40,7 @@
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
   re-0010_bn-0010: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -52,7 +52,7 @@
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
   re-0010_bn-0100: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -63,7 +63,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
   re-0010_bn-1000: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -74,7 +74,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
   re-0005_bn-0010: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -86,7 +86,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
   re-0100_bn-0010: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
@@ -98,7 +98,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
   re-0250_bn-0010: |
-                   preamble: |
+                   preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
