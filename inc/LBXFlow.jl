@@ -6,6 +6,7 @@ module LBXFlow
 
 include("debug.jl");
 include("lattice.jl");
+include("numerics.jl");
 include("multiscale.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));

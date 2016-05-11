@@ -36,7 +36,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = sbounds[:,r];
     for j=j_min:j_max, i=i_min:i_max
       # TODO inbounds check is kind of redundant
-      if t.state[i, j] != GAS && inbounds(i, j, sbounds)
+      if t.state[i, j] == INTERFACE && inbounds(i, j, sbounds)
         for k=1:lat.n-1
           const i_nbr = i + lat.c[1, k];
           const j_nbr = j + lat.c[2, k];
@@ -75,7 +75,7 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
   const ni, nj  =   size(msm.rho);
 
   for j=1:nj, i=1:ni
-    if t.state[i, j] != GAS && active_cells[i, j]
+    if t.state[i, j] == INTERFACE && active_cells[i, j]
       for k=1:lat.n-1
         const i_nbr = i + lat.c[1, k];
         const j_nbr = j + lat.c[2, k];
@@ -110,13 +110,17 @@ function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   new_empty_cells   = Set{Tuple{Int, Int}}();
   new_fluid_cells   = Set{Tuple{Int, Int}}();
 
-  for (i, j) in t.interfacels
-    t.eps[i, j] =   t.M[i, j] / sim.msm.rho[i, j];
+  for j = 1:nj, i = 1:ni
+    if t.state[i, j] == INTERFACE
+      t.eps[i, j] =   t.M[i, j] / sim.msm.rho[i, j];
 
-    if      t.M[i, j] > (1 + kappa) * sim.msm.rho[i, j]
-      push!(new_fluid_cells, (i, j));
-    elseif  t.M[i, j] < -kappa * sim.msm.rho[i, j]
-      push!(new_empty_cells, (i, j));
+      if      t.M[i, j] > (1 + kappa) * sim.msm.rho[i, j]
+        push!(new_fluid_cells, (i, j));
+      elseif  t.M[i, j] < -kappa * sim.msm.rho[i, j]
+        push!(new_empty_cells, (i, j));
+      end
+    elseif t.state[i, j] == FLUID
+      t.M[i, j] = sim.msm.rho[i, j];
     end
 
   end
