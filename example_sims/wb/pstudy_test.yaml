@@ -2,12 +2,12 @@
 
 #!! figsize      =  4, 12
 #!! g            =  -5.0e-6
-#!! nj           =  512
-#!! ni           =  128
+#!! nj           =  600
+#!! ni           =  200
 #!! nsteps       =  50000
 #!! backup_steps =  5000
 #!! plot_steps   =  200
-#!! nu1          =  0.128
+#!! nu1          =  0.2
 #!! m            =  1e6
 #!! gamma_min    =  1e-9
 #!! max_iters    =  15
@@ -78,8 +78,8 @@
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
-                             const nu            =   0.256;
-                             const tau_y         =   2e-4;
+                             const nu            =   0.4;
+                             const tau_y         =   2e-5;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
@@ -90,8 +90,8 @@
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
-                             const nu            =   0.0128;
-                             const tau_y         =   1e-5;
+                             const nu            =   0.02;
+                             const tau_y         =   1e-6;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
@@ -102,8 +102,8 @@
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
-                             const nu            =   0.00512;
-                             const tau_y         =   4e-6;
+                             const nu            =   0.008;
+                             const tau_y         =   4e-7;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
@@ -130,7 +130,7 @@
          - west_bounce_back!
          - east_bounce_back!
          - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
-         - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, 0.0025)
+         - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, 0.01)
          - north_mass_outlet!
 
        rho_g:  1.0
