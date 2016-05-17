@@ -54,4 +54,34 @@ function init_sukop_gravity_Fk(g::Vector{Float64})
     );
 end
 
-#TODO implement Silva, Guo, Buick forcing functions...
+
+#TODO should this just be M? or will M not be the actual mass for fluid cells?
+#! Velocity coupled gravitational acceleration
+function _vel_coup_gravity(sim::AbstractSim, k::Int, i::Int, j::Int, 
+                        g::Vector{Float64})
+  const ck = sub(sim.lat.c ,:, k);
+  const u  = sub(sim.msm.u, :, i, j);
+  return (sim.lat.w[k] * sim.lat.dt / sim.lat.cssq * sim.msm.rho[i, j] * 
+          dot(g, (ck - u) + dot(ck, u)*ck/sim.lat.cssq));
+end
+
+#! Velocity coupled gravitational acceleration
+function _vel_coup_gravity(sim::FreeSurfSim, k::Int, i::Int, j::Int, 
+                           g::Vector{Float64})
+  const ck = sub(sim.lat.c ,:, k);
+  const u  = sub(sim.msm.u, :, i, j);
+  return (sim.tracker.eps[i, j] * sim.lat.w[k] * sim.lat.dt / sim.lat.cssq 
+          * sim.msm.rho[i, j] * 
+          dot(g, (ck - u) + dot(ck, u)*ck/sim.lat.cssq));
+end
+
+#! Initialize a velocity coupled body forcing function
+#!
+#! \param g Gravitation acceleration
+#! \return (momentum_function, forcing_function)
+function init_vel_coup_gravity_Fk(g::Vector{Float64})
+  return (
+    _sukop_f1,
+    @anon (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, g)
+    );
+end
