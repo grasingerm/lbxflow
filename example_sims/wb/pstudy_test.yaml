@@ -27,6 +27,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
   re-0010_bn-0001: |
                    preamble: >
                              @init_plot_env();
@@ -39,6 +40,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
   re-0010_bn-0010: |
                    preamble: >
                              @init_plot_env();
@@ -51,6 +53,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
   re-0010_bn-0100: |
                    preamble: >
                              @init_plot_env();
@@ -63,6 +66,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
   re-0010_bn-1000: |
                    preamble: >
                              @init_plot_env();
@@ -75,6 +79,7 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
   re-0010_bn-1000: |
                    preamble: >
                              @init_plot_env();
@@ -87,6 +92,21 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+  re-0001_bn-0010: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   2.0;
+                             const tau_y         =   1e-4;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+
   re-0005_bn-0010: |
                    preamble: >
                              @init_plot_env();
@@ -100,32 +120,35 @@
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
-  re-0100_bn-0010: |
+                             const u0            =   0.01;
+  re-0025_bn-0010: |
                    preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
-                             const nu            =   0.02;
-                             const tau_y         =   1e-6;
+                             const nu            =   0.2;
+                             const tau_y         =   25e-6;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
-  re-0250_bn-0010: |
+                             const u0            =   0.025;
+  re-0050_bn-0010: |
                    preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
-                             const nu            =   0.008;
-                             const tau_y         =   4e-7;
+                             const nu            =   0.2;
+                             const tau_y         =   50e-6;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
+                             const u0            =   0.05;
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
@@ -147,7 +170,7 @@
          - west_bounce_back!
          - east_bounce_back!
          - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
-         - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, 0.01)
+         - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
          - north_mass_outlet!
 
        rho_g:  1.0
