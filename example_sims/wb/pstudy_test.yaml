@@ -4,7 +4,7 @@
 #!! g            =  -5.0e-6
 #!! nj           =  600
 #!! ni           =  200
-#!! nsteps       =  50000
+#!! nsteps       =  75000
 #!! backup_steps =  5000
 #!! plot_steps   =  200
 #!! nu1          =  0.2
@@ -58,6 +58,18 @@
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-3, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+  re-0010_bn-1000: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-2, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
@@ -171,6 +183,15 @@
                callbacks:
                  - print_step_callback(250, "free-surf")
                  - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 32/ni)]; levs=&levs&)
+
+  "obs-64x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 64 80 96]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 64/ni)]; levs=&levs&)
 
   "obs-32x2" : |
                obstacles:

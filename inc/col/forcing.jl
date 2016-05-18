@@ -85,3 +85,18 @@ function init_vel_coup_gravity_Fk(g::Vector{Float64})
     @anon (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, g)
     );
 end
+
+_tp_vec(cssq) = [1/3; 1/3; 1/3; 1/3; 1/12; 1/12; 1/12; 1/12; 1 - 5/3 * cssq];
+
+
+#! Initialize a Ginzburg and Steiner body forcing function
+#!
+#! \param g Gravitation acceleration
+#! \return (momentum_function, forcing_function)
+function init_gs_Fk(g::Vector{Float64})
+  return (
+          (sim, i, j) -> sim.msm.u[:, i, j] + 0.5 * g / sim.msm.rho[i, j],
+          (sim, omega, k, i, j) -> (_tp_vec(sim.lat.cssq)[k] * 
+                                    dot(sub(sim.lat.c, :, k), g))
+    );
+end
