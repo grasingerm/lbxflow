@@ -256,6 +256,7 @@ end
 #! \return            Callback function
 function take_snapshot_callback(fname::AbstractString, stepout::Int, 
                                 A::LBXFunction; dir=".", delim::Char=',')
+  if !isdir(dir); mkdir(dir); end
   fhandle = open(joinpath(dir, fname), "a");
   f = (sim::AbstractSim, k::Int) -> (if k % stepout == 0; 
                                       write(fhandle, join(A(sim), delim));
