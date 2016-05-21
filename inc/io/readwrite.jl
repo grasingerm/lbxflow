@@ -28,7 +28,7 @@ end
 function dumpsim(datadir::AbstractString, sim::Sim, step::Int)
   const dumpdir = joinpath(datadir, "bak_$step");
   if !isdir(dumpdir)
-    mkdir(dumpdir);
+    mkpath(dumpdir);
   end
  
   # backup particle distributions and lattice config
@@ -256,7 +256,7 @@ end
 #! \return            Callback function
 function take_snapshot_callback(fname::AbstractString, stepout::Int, 
                                 A::LBXFunction; dir=".", delim::Char=',')
-  if !isdir(dir); mkdir(dir); end
+  if !isdir(dir); mkpath(dir); end
   fhandle = open(joinpath(dir, fname), "a");
   f = (sim::AbstractSim, k::Int) -> (if k % stepout == 0; 
                                       write(fhandle, join(A(sim), delim));
