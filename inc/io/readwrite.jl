@@ -255,8 +255,8 @@ end
 #! \param   delim     Delimiter for file
 #! \return            Callback function
 function take_snapshot_callback(fname::AbstractString, stepout::Int, 
-                                A::LBXFunction; delim::Char=',')
-  fhandle = open(fname, "a");
+                                A::LBXFunction; dir=".", delim::Char=',')
+  fhandle = open(joinpath(dir, fname), "a");
   f = (sim::AbstractSim, k::Int) -> (if k % stepout == 0; 
                                       write(fhandle, join(A(sim), delim));
                                       write(fhandle, '\n');
