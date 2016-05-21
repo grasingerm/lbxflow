@@ -213,7 +213,7 @@
                  - print_step_callback(250, "free-surf")
                  - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(15, 30, 0/ni, 15/ni), (45, 148, 0/ni, 15/ni)]; levs=&levs&)
                  - write_jld_file_callback(datadir, &backup_steps&)
-                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
   "cav-30x1" : |
                obstacles:
                  - type:   bounce_back
