@@ -136,7 +136,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   @_checkdebug_mass_cons("whole step", t.M, begin
   # Algorithm should be:
   # 1.  mass transfer
-  @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, sbounds), 1e-9);
+  @_checkdebug_mass_cons("masstransfer!", t.M, sim.masstransfer!(sim, sbounds), 1e-9);
 
   # 2.  stream
   @_checkdebug_mass_cons("stream!", t.M, stream!(lat, temp_f, sbounds, t), 1e-9);
@@ -194,7 +194,7 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   @_checkdebug_mass_cons("whole step", t.M, begin
   # Algorithm should be:
   # 1.  mass transfer
-  @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, active_cells), 1e-9);
+  @_checkdebug_mass_cons("masstransfer!", t.M, sim.masstransfer!(sim, active_cells), 1e-9);
 
   # 2.  stream
   @_checkdebug_mass_cons("stream!", t.M, stream!(lat, temp_f, active_cells, t), 1e-9);

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-using ArrayViews
-
 #! Check to see if a pair of indices fall inside a bounds
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   const nbounds = size(sbounds, 2);
@@ -20,6 +18,26 @@ function inbounds(i::Int, j::Int, sbound::Vector{Int64})
   if j < sbound[3]; return false; end
   if j > sbound[4]; return false; end
   return true;
+end
+
+function _check_nbrhood_type(sim::FreeSurfSim, i::Int, j::Int)
+  const ni, nj = size(sim.msm.rho);
+  fflag::UInt8 = 0;
+  gflag::UInt8 = 0;
+
+  for k = 1:(sim.lat.n-1)
+    const i_nbr = i + sim.lat.c[1, k];
+    const j_nbr = i + sim.lat.c[2, k];
+    if inbounds(i_nbr, j_nbr, [1, ni, 1, nj])
+      if sim.tracker.state[i_nbr, j_nbr] == GAS
+        gflag = 1;
+      elseif sim.tracker.state[i_nbr, j_nbr] == FLUID
+        fflag = 2;
+      end
+    end
+  end
+
+  return gflag + fflag;
 end
 
 #! Simulate mass transfer across interface cells
@@ -93,6 +111,157 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
           const opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
                          (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+
+        else
+          error("state not understood or invalid");
+        end
+      end
+    end
+  end
+
+end
+
+#! Simulate mass transfer across interface cells and remove artifacts
+#!
+#! \param sim FreeSurfSim object
+#! \param sbounds Bounds where fluid can be streaming
+function masstransfer_rmart!(sim::FreeSurfSim, sbounds::Matrix{Int64})
+  t   = sim.tracker;
+  lat = sim.lat;
+  msm = sim.msm;
+  const nbounds = size(sbounds, 2);
+
+  for r = 1:nbounds
+    i_min, i_max, j_min, j_max = sbounds[:,r];
+    for j=j_min:j_max, i=i_min:i_max
+      # TODO inbounds check is kind of redundant
+      if t.state[i, j] != GAS && inbounds(i, j, sbounds)
+        for k=1:lat.n-1
+          const i_nbr = i + lat.c[1, k];
+          const j_nbr = j + lat.c[2, k];
+          if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr, j_nbr] == GAS
+            continue;
+          elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
+
+            const opk   = opp_lat_vec(lat, k);
+            t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
+
+          elseif  (t.state[i, j] == INTERFACE &&
+                   t.state[i_nbr, j_nbr] == INTERFACE)
+
+            nbr_type_k      = _check_nbrhood_type(sim, i, j);
+            nbr_type_opk    = _check_nbrhood_type(sim, i_nbr, j_nbr);
+
+            const opk   = opp_lat_vec(lat, k);
+            if nbr_type_k == 0 || nbr_type_k == 3
+              if nbr_type_opk == 0 || nbr_type_opk == 3
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+              elseif nbr_type_opk == 1
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (lat.f[opk, i_nbr, j_nbr]));
+              elseif nbr_type_opk == 2
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (-lat.f[k, i, j]));
+              else
+                error("neighborhood type not understood or invalid");
+              end
+            elseif nbr_type_k == 1
+              if nbr_type_opk == 0 || nbr_type_opk == 2 || nbr_type_opk == 3
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (-lat.f[k, i, j]));
+              elseif nbr_type_opk == 1
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+              else
+                error("neighborhood type not understood or invalid");
+              end
+            elseif nbr_type_k == 2
+              if nbr_type_opk == 0 || nbr_type_opk == 1 || nbr_type_opk == 3
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (lat.f[opk, i_nbr, j_nbr]));
+              elseif nbr_type_opk == 2
+                t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                               (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+              else
+                error("neighborhood type not understood or invalid");
+              end
+            end
+
+          else
+            error("state not understood or invalid");
+          end
+        end
+      end
+    end
+  end
+
+end
+
+#! Simulate mass transfer across interface cells
+#!
+#! \param   sim           FreeSurfSim object
+#! \param   active_cells  Flags of active cells in the domain
+function masstransfer_rmart!(sim::FreeSurfSim, active_cells::Matrix{Bool})
+  t             =   sim.tracker;
+  lat           =   sim.lat;
+  msm           =   sim.msm;
+  const ni, nj  =   size(msm.rho);
+
+  for j=1:nj, i=1:ni
+    if t.state[i, j] != GAS && active_cells[i, j]
+      for k=1:lat.n-1
+        const i_nbr = i + lat.c[1, k];
+        const j_nbr = j + lat.c[2, k];
+        if (!inbounds(i_nbr, j_nbr, [1; ni; 1; nj]) ||
+            !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS)
+          continue;
+        elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
+
+          const opk   = opp_lat_vec(lat, k);
+          t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
+
+        elseif  (t.state[i, j] == INTERFACE &&
+                 t.state[i_nbr, j_nbr] == INTERFACE)
+
+          nbr_type_k      = _check_nbrhood_type(sim, i, j);
+          nbr_type_opk    = _check_nbrhood_type(sim, i_nbr, j_nbr);
+
+          const opk   = opp_lat_vec(lat, k);
+          if nbr_type_k == 0 || nbr_type_k == 3
+            if nbr_type_opk == 0 || nbr_type_opk == 3
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+            elseif nbr_type_opk == 1
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (lat.f[opk, i_nbr, j_nbr]));
+            elseif nbr_type_opk == 2
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (-lat.f[k, i, j]));
+            else
+              error("neighborhood type not understood or invalid");
+            end
+          elseif nbr_type_k == 1
+            if nbr_type_opk == 0 || nbr_type_opk == 2 || nbr_type_opk == 3
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (-lat.f[k, i, j]));
+            elseif nbr_type_opk == 1
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+            else
+              error("neighborhood type not understood or invalid");
+            end
+          elseif nbr_type_k == 2
+            if nbr_type_opk == 0 || nbr_type_opk == 1 || nbr_type_opk == 3
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (lat.f[opk, i_nbr, j_nbr]));
+            elseif nbr_type_opk == 2
+              t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
+                             (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
+            else
+              error("neighborhood type not understood or invalid");
+            end
+          end
 
         else
           error("state not understood or invalid");
@@ -490,3 +659,5 @@ function _get_nbrhd(u, i::Int, j::Int)
             (i+1 <= ni && j-1 > 0) ? u[i+1, j-1] : "N/A"
           ]);
 end
+
+const __MTF! = masstransfer!;

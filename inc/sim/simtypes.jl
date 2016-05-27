@@ -78,16 +78,19 @@ immutable FreeSurfSim <: AbstractSim
   msm::MultiscaleMap
   tracker::Tracker
   rho_g::AbstractFloat
+  masstransfer!::LBXFunction
 
-  function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker)
-    return new(lat, msm, tracker, 1.0);
+  function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker,
+                       masstransfer_f!::LBXFunction)
+    return new(lat, msm, tracker, 1.0, masstransfer_f!);
   end
 
   FreeSurfSim(lat::Lattice, msm::MultiscaleMap, t::Tracker,
-              rho_g::Real) = new(lat, msm, t, rho_g);
+              rho_g::Real, masstransfer_f!::LBXFunction) = new(lat, msm, t, rho_g, masstransfer_f!);
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, rho_0::Real, 
-                       rho_g::Real, fill_x::Real, fill_y::Real)
+                       rho_g::Real, fill_x::Real, fill_y::Real, 
+                       masstransfer_f!::LBXFunction)
     const ni, nj    =     size(msm.rho);
     const fill_ni   =     convert(Int, round(fill_x * ni));
     const fill_nj   =     convert(Int, round(fill_y * nj));
@@ -137,7 +140,7 @@ immutable FreeSurfSim <: AbstractSim
       push!(t.interfacels, (i, j));
     end
 
-    return new(lat, msm, t, rho_g);
+    return new(lat, msm, t, rho_g, masstransfer_f!);
   end
 
 end

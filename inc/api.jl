@@ -177,15 +177,16 @@ function parse_and_run(infile::AbstractString, args::Dict)
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     if defs["simtype"] == "default"; sim = Sim(lat, msm)
     elseif defs["simtype"] == "free_surface"
+      const mtf =  haskey(defs, "masstransfer_f") ? eval(parse(defs["masstransfer_f"])) : __MTF!;
       if haskey(defs, "states")
         if haskey(defs, "fill_x") || haskey(defs, "fill_y")
           warn("'States' matrix was already provided. 'fill_\$D' variables " *
                "will be ignored");
         end
-        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
+        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"], mtf);
       elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
         sim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
-                          defs["fill_x"], defs["fill_y"]);
+                          defs["fill_x"], defs["fill_y"], mtf);
       else
         error("No `states` matrix provided. Cannot initialize free surface flow");
       end
