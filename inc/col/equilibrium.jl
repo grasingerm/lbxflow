@@ -9,8 +9,8 @@
 #! \param u Macroscopic flow at lattice site
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp(lat::LatticeD2Q9, rho::AbstractFloat, u::Vector{Float64},
-                    k::Int)
+function feq_incomp(lat::LatticeD2Q9, rho::AbstractFloat, 
+                    u::AbstractArray{Float64, 1}, k::Int)
   const cssq = 1/3;
   const ckdotu = dot(lat.c[:,k], u);
 
@@ -27,7 +27,8 @@ end
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
 function feq_incomp_HL(lat::LatticeD2Q9, rho::AbstractFloat,
-                       rho_0::AbstractFloat, u::Vector{Float64}, k::Int)
+                       rho_0::AbstractFloat, u::AbstractArray{Float64, 1}, 
+                       k::Int)
   const cssq = 1/3;
   const ckdotu = dot(lat.c[:,k], u);
 
@@ -47,8 +48,8 @@ end
 #! \param rho Macroscopic density at lattice site
 #! \param u Macroscopic flow at lattice site
 #! \return Equilibrium frequency
-function feq_incomp(lat::LatticeD2Q4, rho::AbstractFloat, u::Vector{Float64},
-                    k::Int)
+function feq_incomp(lat::LatticeD2Q4, rho::AbstractFloat, 
+                    u::AbstractArray{Float64, 1}, k::Int)
   const cssq = 1/2;
   const ckdotu = dot(lat.c[:,k], u);
 
@@ -64,7 +65,8 @@ end
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
 function feq_incomp_HL(lat::LatticeD2Q4, rho::AbstractFloat,
-                       rho_0::AbstractFloat, u::Vector{Float64}, k::Int)
+                       rho_0::AbstractFloat, u::AbstractArray{Float64, 1}, 
+                       k::Int)
   const cssq = 1/2;
   const ckdotu = dot(lat.c[:,k], u);
 
@@ -80,7 +82,7 @@ end
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency distribution that maximizes entropy
 function feq_incomp_max_entropy(lat::LatticeD2Q9, rho::AbstractFloat, 
-                                u::Vector{Float64}, k::Int)
+                                u::AbstractArray{Float64, 1}, k::Int)
   const nj  =   length(u);
   prod      =   1.0;
 

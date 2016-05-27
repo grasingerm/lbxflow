@@ -1,4 +1,4 @@
-version: 0.2.5
+version: 1.0.0
 
 # code to execute before parsing
 preamble: >
@@ -9,8 +9,9 @@ preamble: >
   const ni = 40;
   const nj = 25;
   const mu = 1/3;
-  const constit_rel_f = init_constit_srt_const(mu);
-  const forcing_kf = init_korner_Fk(F);
+  const constit_rel_f =   init_constit_srt_const(mu);
+  const forcing_kf    =   init_korner_Fk(F);
+  const col_f!        =   BGK_F(constit_rel_f, forcing_kf);
   const h = (nj - 1)/2.0;
   analytic_soln(xs) = begin;
     result = zeros(length(xs));
@@ -36,7 +37,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_filter_std(init_col_srt(constit_rel_f, forcing_kf));
+col_f:    init_col_filter_std(col_f!);
 
 # boundaries
 sbounds:

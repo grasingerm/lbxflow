@@ -14,7 +14,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
-                                           :type => ColFunction ),
+                                           :type => LBXFunction ),
     "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
                                            :type => LBXFunction ),
     "callbacks"     =>  Dict{Symbol, Any}( :store => true,  :array => true,  
