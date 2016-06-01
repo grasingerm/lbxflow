@@ -1,4 +1,4 @@
-version: 0.2.4
+version: 1.0.0
 
 # code to execute before parsing
 preamble: >
@@ -6,7 +6,7 @@ preamble: >
   const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
   const constit_rel_f = init_constit_srt_const(1/6);
-  const forcing_kf = init_guo_Fk(F);
+  const forcing_kf = init_sukop_Fk(F);
   const datadir = "data/sukop";
   const ni = 20;
   const nj = 12;
@@ -27,7 +27,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    init_col_srt(constit_rel_f, forcing_kf);
+col_f:    BGK_F(constit_rel_f, forcing_kf);
 
 # boundaries
 sbounds:
@@ -46,7 +46,7 @@ bcs:
 
 # callback functions
 callbacks:
-  - plot_ux_profile_callback(convert(Int64, round(ni/2)), 10, 0.0)
+  - pycontour_callback(25, pressure_ascr; showfig=true, filled=true)
   - print_step_callback(25, "ex1")
   - write_jld_file_callback(datadir, 500)
 

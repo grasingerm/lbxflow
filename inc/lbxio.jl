@@ -4,7 +4,6 @@
 
 @everywhere import HDF5, JLD
 
-include("multiscale.jl");
-include(joinpath("sim", "simulate.jl"));
 include(joinpath("io", "readwrite.jl"));
+include(joinpath("io", "animate0.jl"));
 include(joinpath("io", "animate.jl"));

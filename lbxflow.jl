@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
-const LBX_VERSION = v"1.0.0";
+const LBX_VERSION = v"1.0.1";
 
 # load dependencies
 using ArgParse;

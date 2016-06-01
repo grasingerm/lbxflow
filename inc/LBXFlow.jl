@@ -12,6 +12,7 @@ include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
 include(joinpath("sim","adapt.jl"));
 include(joinpath("sim","simulate.jl"));
+include("accessors.jl");
 include("entropy.jl");
 include(joinpath("col","collision.jl"));
 include("boundary.jl");
