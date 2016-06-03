@@ -85,14 +85,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
 function vel_mag_ascr(sim::AbstractSim)
-  const ni, nj = size(sim.msm.rho);
-  u_mag = Matrix{Float64}(ni, nj);
-  for j=1:nj, i=1:ni
-    const u = sim.msm.u[1, i, j];
-    const v = sim.msm.u[2, i, j];
-    u_mag[i, j] = sqrt(u*u + v*v);
-  end
-  return transpose(u_mag);
+  return transpose(u_mag(sim.msm));
 end
 
 #! Velocity field accessor

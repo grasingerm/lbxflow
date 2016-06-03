@@ -180,8 +180,10 @@ function __uij_rhoij_f_feq_fneq_kernal(lat::Lattice, msm::MultiscaleMap,
 
 end
 
+abstract FltrColFunction <: ColFunction;
+
 #! Filtered collision function with fixed DS threshold
-type FltrFixedDSCol <: ColFunction
+type FltrFixedDSCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
   scale::LBXFunction;
@@ -441,7 +443,7 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
 end
 
 #! Filtered collision function by standard deviation of noneq entropy
-type FltrStdCol <: ColFunction
+type FltrStdCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
   scale::LBXFunction;

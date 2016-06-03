@@ -2,7 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-typealias Force Tuple{LBXFunction, LBXFunction};
+abstract Force;
+
+type ConstForce <: Force
+  fs::Tuple{LBXFunction, LBXFunction};
+
+  ConstForce(f1::LBXFunction, f2::LBXFunction) = new((f1, f2));
+end
+
+Base.getindex(f::ConstForce, idx) = f.fs[idx];
 
 # Kernal functions for Sukop forcing
 function _sukop_f1(sim::AbstractSim, i::Int, j::Int)
@@ -17,11 +25,11 @@ end
 #!
 #! \param F Body force vector
 #! \return (momentum_function, forcing_function)
-function init_sukop_Fk(F::Vector{Float64})
-  return (
+function init_sukop_Fk(F::Vector{Float64}, ftype::Symbol=:ConstForce)
+  return eval(:($ftype(
     _sukop_f1,
-    @anon (sim, omega, k, i, j) -> _sukop_f2(sim, omega, k, i, j, F)
-    );
+    @anon (sim, omega, k, i, j) -> _sukop_f2(sim, omega, k, i, j, $F)
+    )));
 end
 
 # Function aliases
@@ -47,18 +55,18 @@ end
 #!
 #! \param g Gravitation acceleration
 #! \return (momentum_function, forcing_function)
-function init_sukop_gravity_Fk(g::Vector{Float64})
-  return (
+function init_sukop_gravity_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
+  return eval(:($ftype(
     _sukop_f1, 
-    @anon (sim, omega, k, i, j) -> _sukop_gravity(sim, k, i, j, g)
-    );
+    @anon (sim, omega, k, i, j) -> _sukop_gravity(sim, k, i, j, $g)
+    )));
 end
 
 
 #TODO should this just be M? or will M not be the actual mass for fluid cells?
 #! Velocity coupled gravitational acceleration
 function _vel_coup_gravity(sim::AbstractSim, k::Int, i::Int, j::Int, 
-                        g::Vector{Float64})
+                           g::Vector{Float64})
   const ck = sub(sim.lat.c ,:, k);
   const u  = sub(sim.msm.u, :, i, j);
   return (sim.lat.w[k] * sim.lat.dt / sim.lat.cssq * sim.msm.rho[i, j] * 
@@ -79,11 +87,11 @@ end
 #!
 #! \param g Gravitation acceleration
 #! \return (momentum_function, forcing_function)
-function init_vel_coup_gravity_Fk(g::Vector{Float64})
-  return (
+function init_vel_coup_gravity_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
+  return eval(:($ftype(
     _sukop_f1,
-    @anon (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, g)
-    );
+    @anon (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, $g)
+    )));
 end
 
 _tp_vec(cssq) = [1/3; 1/3; 1/3; 1/3; 1/12; 1/12; 1/12; 1/12; 1 - 5/3 * cssq];
@@ -93,10 +101,20 @@ _tp_vec(cssq) = [1/3; 1/3; 1/3; 1/3; 1/12; 1/12; 1/12; 1/12; 1 - 5/3 * cssq];
 #!
 #! \param g Gravitation acceleration
 #! \return (momentum_function, forcing_function)
-function init_gs_Fk(g::Vector{Float64})
-  return (
-          (sim, i, j) -> sim.msm.u[:, i, j] + 0.5 * g / sim.msm.rho[i, j],
+function init_gs_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
+  return eval(:($ftype(
+          (sim, i, j) -> sim.msm.u[:, i, j] + 0.5 * $g / sim.msm.rho[i, j],
           (sim, omega, k, i, j) -> (_tp_vec(sim.lat.cssq)[k] * 
-                                    dot(sub(sim.lat.c, :, k), g))
-    );
+                                    dot(sub(sim.lat.c, :, k), $g))
+    )));
 end
+
+type ScalableForce <: Force
+  fs::Tuple{LBXFunction, LBXFunction};
+  c::Real;
+
+  ScalableForce(f1::LBXFunction, f2::LBXFunction) = new((f1, f2), 1.0);
+  ScalableForce(f1::LBXFunction, f2::LBXFunction, c::Real) = new((f1, f2), c);
+end
+
+Base.getindex(f::ScalableForce, idx) = (args...) -> f.c * f.fs[idx](args...);

@@ -142,17 +142,11 @@ immutable FreeSurfSim <: AbstractSim
 
 end
 
-#=
-include("lazy.jl");
-
-type AdaptiveTimestepSim <: AbstractSim
+type AdaptiveTimeStepSim <: AbstractSim
   isim::AbstractSim;
-  lat::LazyLattice;
-  msm::LazyMultiscaleMap;
-  tracker::Union{Tracker, Nothing}; # TODO how much will I regret this choice?
-  rho_g::Union{AbstractFloat, Nothing};
   ξ::Real;
+  Δt::Real;
 
-  AdaptiveTimestepSim(isim::AbstractSim, ξ::Real) = error("Not yet implemented");
+  AdaptiveTimeStepSim(isim::AbstractSim, ξ::Real=4/5) = 
+                                                      new(isim, ξ, isim.lat.dt);
 end
-=#
