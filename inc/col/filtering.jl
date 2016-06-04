@@ -201,14 +201,16 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrFixedDSCol, sim::AbstractSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::FltrFixedDSCol, sim::AbstractSim, bounds::Matrix{Int64},
+              st::Real=1.0)
   const nbounds   =   size(bounds, 2);
   const feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   for r = 1:nbounds
     @inbounds i_min, i_max, j_min, j_max = bounds[:, r];
@@ -262,14 +264,16 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrFixedDSCol, sim::FreeSurfSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::FltrFixedDSCol, sim::FreeSurfSim, bounds::Matrix{Int64},
+              st::Real=1.0)
   const nbounds   =   size(bounds, 2);
   const feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   for r = 1:nbounds
     @inbounds i_min, i_max, j_min, j_max = bounds[:, r];
@@ -324,15 +328,16 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
+#! \param   st            Timestep ratio
 function call(col_f::FltrFixedDSCol, sim::AbstractSim, 
-              active_cells::Matrix{Bool})
+              active_cells::Matrix{Bool}, st::Real=1.0)
   const ni, nj    =   size(sim.msm.rho);
   const feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   for j = 1:nj, i = 1:ni
 
@@ -384,17 +389,18 @@ end
 
 #! Calling filtered collision function
 #!
-#! \param   sim     Simulation
+#! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
+#! \param   st            Timestep ratio
 function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
-              active_cells::Matrix{Bool})
+              active_cells::Matrix{Bool}, st::Real=1.0)
   const ni, nj    =   size(sim.msm.rho);
   const feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   for j = 1:nj, i = 1:ni
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
@@ -460,14 +466,16 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64},
+              st::Real=1.0)
   const ni, nj    = size(sim.msm.rho);
   const nbounds   = size(bounds, 2);
   const feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   # Calculate nonequilibrium entropy densities
   for r = 1:nbounds
@@ -522,14 +530,16 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64},
+              st::Real=1.0)
   const ni, nj    = size(sim.msm.rho);
   const nbounds   = size(bounds, 2);
   const feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   # Calculate nonequilibrium entropy densities
   for r = 1:nbounds
@@ -583,15 +593,17 @@ end
 
 #! Calling filtered collision function
 #!
-#! \param   sim     Simulation
+#! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
+#! \param   st            Timestep ratio
+function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool},
+              st::Real=1.0)
   const ni, nj    = size(sim.msm.rho);
   const feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   # Calculate nonequilibrium entropy densities
   for j=1:nj, i=1:ni
@@ -639,15 +651,17 @@ end
 
 #! Calling filtered collision function
 #!
-#! \param   sim     Simulation
+#! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
+#! \param   st            Timestep ratio
+function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool},
+              st::Real=1.0)
   const ni, nj    = size(sim.msm.rho);
   const feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, bounds, st);
 
   # Calculate nonequilibrium entropy densities
   for j=1:nj, i=1:ni

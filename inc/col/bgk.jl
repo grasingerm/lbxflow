@@ -32,7 +32,8 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK, sim::AbstractSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::BGK, sim::AbstractSim, bounds::Matrix{Int64}, st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -47,15 +48,15 @@ function call(col_f::BGK, sim::AbstractSim, bounds::Matrix{Int64})
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
-      @simd for k = 1:lat.n 
+      for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-      const omega     =   @omega(mu, lat.cssq, lat.dt);
+      const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-      @simd for k = 1:lat.n
+      for k = 1:lat.n
         @inbounds lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * 
                                   lat.f[k,i,j]);
       end
@@ -70,7 +71,9 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK_F, sim::AbstractSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::BGK_F, sim::AbstractSim, bounds::Matrix{Int64}, 
+              st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -85,18 +88,19 @@ function call(col_f::BGK_F, sim::AbstractSim, bounds::Matrix{Int64})
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
-      @simd for k = 1:lat.n 
+      for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-      const omega     =   @omega(mu, lat.cssq, lat.dt);
+      const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-      @simd for k = 1:lat.n
+      for k = 1:lat.n
         @inbounds lat.f[k,i,j]    =   ((omega * feq[k] + (1.0 - omega) * 
                                         lat.f[k,i,j]) +
-                                       col_f.forcing_f[2](sim, omega, k, i, j));
+                                       @_scale_f(col_f.forcing_f[2](sim, omega, 
+                                                                 k, i, j), st));
       end
 
       @inbounds msm.omega[i,j]  =   omega;
@@ -109,7 +113,8 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64}, st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -126,15 +131,15 @@ function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64})
         feq             =   Vector{Float64}(lat.n);
         fneq            =   Vector{Float64}(lat.n);
 
-        @simd for k = 1:lat.n 
+        for k = 1:lat.n 
           @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
         const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-        const omega     =   @omega(mu, lat.cssq, lat.dt);
+        const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-        @simd for k = 1:lat.n
+        for k = 1:lat.n
           @inbounds lat.f[k,i,j]    =   (omega * feq[k] + (1.0 - omega) * 
                                          lat.f[k,i,j]);
         end
@@ -151,7 +156,9 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64})
+#! \param   st      Timestep ratio
+function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64}, 
+              st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -168,19 +175,19 @@ function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64})
         feq             =   Vector{Float64}(lat.n);
         fneq            =   Vector{Float64}(lat.n);
 
-        @simd for k = 1:lat.n 
+        for k = 1:lat.n 
           @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
         const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-        const omega     =   @omega(mu, lat.cssq, lat.dt);
+        const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-        @simd for k = 1:lat.n
+        for k = 1:lat.n
           @inbounds lat.f[k,i,j]    =   ((omega * feq[k] + (1.0 - omega) * 
                                          lat.f[k,i,j]) +
-                                         col_f.forcing_f[2](sim, omega, k, i, 
-                                                            j));
+                                         @_scale_f(col_f.forcing_f[2](sim, omega, 
+                                                                 k, i, j), st));
         end
 
         @inbounds msm.omega[i,j]  =   omega;
@@ -195,7 +202,9 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK, sim::AbstractSim, active_cells::Matrix{Bool})
+#! \param   st            Timestep ratio
+function call(col_f::BGK, sim::AbstractSim, active_cells::Matrix{Bool}, 
+              st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -209,15 +218,15 @@ function call(col_f::BGK, sim::AbstractSim, active_cells::Matrix{Bool})
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
-      @simd for k = 1:lat.n 
+      for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-      const omega     =   @omega(mu, lat.cssq, lat.dt);
+      const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-      @simd for k = 1:lat.n
+      for k = 1:lat.n
         @inbounds lat.f[k,i,j]    =   (omega * feq[k] + (1.0 - omega) * 
                                        lat.f[k,i,j]);
       end
@@ -232,7 +241,9 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK_F, sim::AbstractSim, active_cells::Matrix{Bool})
+#! \param   st            Timestep ratio
+function call(col_f::BGK_F, sim::AbstractSim, active_cells::Matrix{Bool},
+              st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -246,18 +257,19 @@ function call(col_f::BGK_F, sim::AbstractSim, active_cells::Matrix{Bool})
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
-      @simd for k = 1:lat.n 
+      for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-      const omega     =   @omega(mu, lat.cssq, lat.dt);
+      const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-      @simd for k = 1:lat.n
+      for k = 1:lat.n
         @inbounds lat.f[k,i,j]    =   ((omega * feq[k] + (1.0 - omega) * 
                                        lat.f[k,i,j]) +
-                                       col_f.forcing_f[2](sim, omega, k, i, j));
+                                       @_scale_f(col_f.forcing_f[2](sim, omega, 
+                                                                 k, i, j), st));
       end
 
       @inbounds msm.omega[i,j]  =   omega;
@@ -270,7 +282,9 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK, sim::FreeSurfSim, active_cells::Matrix{Bool})
+#! \param   st            Timestep ratio
+function call(col_f::BGK, sim::FreeSurfSim, active_cells::Matrix{Bool}, 
+              st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -284,15 +298,15 @@ function call(col_f::BGK, sim::FreeSurfSim, active_cells::Matrix{Bool})
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
-      @simd for k = 1:lat.n 
+      for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-      const omega     =   @omega(mu, lat.cssq, lat.dt);
+      const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-      @simd for k = 1:lat.n
+      for k = 1:lat.n
         @inbounds lat.f[k,i,j]    =   (omega * feq[k] + (1.0 - omega) * 
                                        lat.f[k,i,j]);
       end
@@ -308,7 +322,9 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
+#! \param   st            Timestep ratio
+function call(col_f::BGK_F, sim::FreeSurfSim, active_cells::Matrix{Bool}, 
+              st::Real=1.0)
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -322,18 +338,19 @@ function call(col_f::BGK_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
-      @simd for k = 1:lat.n 
+      for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
       const mu        =   col_f.constit_relation_f(sim, fneq, i, j);
-      const omega     =   @omega(mu, lat.cssq, lat.dt);
+      const omega     =   @_scale_omega(@omega(mu, lat.cssq, lat.dt), st);
 
-      @simd for k = 1:lat.n
+      for k = 1:lat.n
         @inbounds lat.f[k,i,j]    =   ((omega * feq[k] + (1.0 - omega) * 
                                        lat.f[k,i,j]) +
-                                       col_f.forcing_f[2](sim, omega, k, i, j));
+                                       @_scale_f(col_f.forcing_f[2](sim, omega, 
+                                                                 k, i, j), st));
       end
 
       @inbounds msm.omega[i,j]  =   omega;

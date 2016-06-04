@@ -2,6 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+macro _scale_omega(omega, st)
+  return :(1.0 / ($st * (1/$omega - 0.5) + 0.5));
+end
+
+macro _scale_f(f, st)
+  return :($st*$st * $f);
+end
+
 include("forcing.jl");
 include("equilibrium.jl");
 include("constitutive.jl");

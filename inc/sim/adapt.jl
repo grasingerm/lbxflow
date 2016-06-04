@@ -15,7 +15,12 @@ function adapt_time_step!(sim::AdaptiveTimeStepSim, col_f!::ColFunction)
     const Δt_o  =   sim.Δt;
     Δt_n        =   Δt_o * sim.ξ;
     const st    =   Δt_n / Δt_o;
-    rescale(col_f!, st); 
+    const ρ_med =   sum(sim.isim.tracker.eps) / sum(sim.isim.tracker.M);
+    ρ_n         =   map(@anon ρ -> st * (ρ - ρ_med) + ρ_med, msm.rho);
+    for j=1:nj, i=1:ni
+      sim.isim.tracker.M[i, j] *= msm.rho[i, j] / ρ_n[i, j];
+    end
+    copy!(msm.rho, ρ_n);
 
   # Decrease time step
   elseif  u_mag_max < (sim.ξ / 6)
