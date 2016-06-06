@@ -18,7 +18,8 @@ function adapt_time_step!(sim::AdaptiveTimeStepSim, col_f!::ColFunction)
     const ρ_med =   sum(sim.isim.tracker.eps) / sum(sim.isim.tracker.M);
     ρ_n         =   map(@anon ρ -> st * (ρ - ρ_med) + ρ_med, msm.rho);
     for j=1:nj, i=1:ni
-      sim.isim.tracker.M[i, j] *= msm.rho[i, j] / ρ_n[i, j];
+      @inbounds sim.isim.tracker.M[i, j] *= msm.rho[i, j] / ρ_n[i, j];
+      @inbounds sim.isim.tracker.eps[i, j] = sim.isim.tracker.M[i, j] / ρ_n[i, j];
     end
     copy!(msm.rho, ρ_n);
 
