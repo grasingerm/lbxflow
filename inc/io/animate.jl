@@ -174,39 +174,31 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
       mat = accessor(sim);
 
       PyPlot.clf();
-      eval(if filled
-             if colorbar
-               if levels != false
-                 quote
-                   cs = PyPlot.contourf($mat, levels=$levels);
-                   PyPlot.colorbar(cs);
-                 end
-               else
-                 quote
-                   cs = PyPlot.contourf($mat);
-                   PyPlot.colorbar(cs);
-                 end
-               end
-             else
-               :(PyPlot.contourf($mat));
-             end
-           else
-             if colorbar
-               if levels != false
-                 quote
-                   cs = PyPlot.contour($mat, levels=$levels);
-                   PyPlot.colorbar(cs);
-                 end
-               else
-                 quote
-                   cs = PyPlot.contour($mat);
-                   PyPlot.colorbar(cs);
-                 end
-               end
-             else
-               :(PyPlot.contour($mat));
-             end
-           end);
+      if filled
+       if colorbar
+         if levels != false
+           cs = PyPlot.contourf(mat, levels=levels);
+           PyPlot.colorbar(cs);
+         else
+           cs = PyPlot.contourf(mat);
+           PyPlot.colorbar(cs);
+         end
+       else
+         PyPlot.contourf(mat);
+       end
+     else
+       if colorbar
+         if levels != false
+           cs = PyPlot.contour(mat, levels=levels);
+           PyPlot.colorbar(cs);
+         else
+           cs = PyPlot.contour(mat);
+           PyPlot.colorbar(cs);
+         end
+       else
+         PyPlot.contour(mat);
+       end
+     end
       
       eval(if title != ""
              :(PyPlot.title($title));

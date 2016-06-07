@@ -24,7 +24,7 @@ function vel_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
     const n = length(j_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon j -> _vel_ascr_kernal(sim, c, i, j);
+    f = @anon j -> _vel_acsr_kernal(sim, c, i, j);
     const y = pmap(f, j_range);
 
     return x, y;
@@ -43,7 +43,7 @@ function vel_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
     const n = length(i_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon i -> _vel_ascr_kernal(sim, c, i, j);
+    f = @anon i -> _vel_acsr_kernal(sim, c, i, j);
     const y = pmap(f, i_range);
 
     return x, y;
@@ -62,7 +62,7 @@ function vbar_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
     const n = length(j_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon j -> _vel_ascr_kernal(sim, c, i, j);
+    f = @anon j -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
     y /= maximum(y);
 
@@ -82,7 +82,7 @@ function vbar_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
     const n = length(i_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon i -> _vel_ascr_kernal(sim, c, i, j);
+    f = @anon i -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, i_range);
     y /= maximum(y);
 
@@ -94,7 +94,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
-function vel_mag_ascr(sim::AbstractSim)
+function vel_mag_acsr(sim::AbstractSim)
   return transpose(u_mag(sim.msm));
 end
 
@@ -102,7 +102,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
-function vel_mag_ascr(sim::AdaptiveTimeStepSim)
+function vel_mag_acsr(sim::AdaptiveTimeStepSim)
   const ni, nj = size(sim.isim.msm);
   u_mag = Array{Float64}(ni, nj);
   for j=1:nj, i=1:ni
@@ -117,7 +117,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
-function vel_field_ascr(sim::AbstractSim)
+function vel_field_acsr(sim::AbstractSim)
   const ni, nj = size(sim.msm.rho);
   return (transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
           transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
@@ -127,7 +127,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
-function vel_field_ascr(sim::AdaptiveTimeStepSim)
+function vel_field_acsr(sim::AdaptiveTimeStepSim)
   const ni, nj = size(sim.isim.msm.rho);
   return (transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 1, :, :)), 
                     (ni, nj))), 
@@ -139,7 +139,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid density over domain
-function density_ascr(sim::AbstractSim)
+function density_acsr(sim::AbstractSim)
   return transpose(sim.msm.rho);
 end
 
@@ -147,7 +147,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid density over domain
-function density_ascr(sim::AdaptiveTimeStepSim)
+function density_acsr(sim::AdaptiveTimeStepSim)
   return transpose(map(ρ -> ρ / sim.Δt, sim.isim.msm.rho));
 end
 
@@ -155,7 +155,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid pressure over domain
-function pressure_ascr(sim::AbstractSim)
+function pressure_acsr(sim::AbstractSim)
   f = @anon rho -> sim.lat.cssq * rho;
   return transpose(map(f, sim.msm.rho));
 end
@@ -164,7 +164,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid mass over domain
-function mass_ascr(sim::FreeSurfSim)
+function mass_acsr(sim::FreeSurfSim)
   return transpose(sim.tracker.M);
 end
 
@@ -172,7 +172,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid mass over domain
-function mass_ascr(sim::AdaptiveTimeStepSim)
+function mass_acsr(sim::AdaptiveTimeStepSim)
   return transpose(map(m -> m / sim.Δt, sim.tracker.M));
 end
 
@@ -180,7 +180,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        x, y, u, v for streamlines
-function streamlines_ascr(sim::AbstractSim)
+function streamlines_acsr(sim::AbstractSim)
   const ni, nj = size(sim.msm.rho);
   return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
           transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
@@ -191,7 +191,7 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        x, y, u, v for streamlines
-function streamlines_ascr(sim::AdaptiveTimeStepSim)
+function streamlines_acsr(sim::AdaptiveTimeStepSim)
   const ni, nj = size(sim.isim.msm);
   u = Array{Float64}(ni, nj);
   v = Array{Float64}(ni, nj);

@@ -473,7 +473,7 @@ type FltrStdCol <: FltrColFunction
   fltr_thrsh_warn::Real;
 
   function FltrStdCol(inner_col_f!::ColFunction; scale::LBXFunction=__SCALE,
-                      stds::Real=__DS, fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+                      stds::Real=__STDS, fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
     new(inner_col_f!.feq_f, inner_col_f!, scale, stds, fltr_thrsh_warn);
   end
 end

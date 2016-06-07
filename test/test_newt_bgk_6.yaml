@@ -3,15 +3,21 @@ version: 1.0.0
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -5e-4;
+  @init_plot_env();
+  const pgrad = -1e-2;
   const F = [-pgrad; 0.0];
   const datadir = "data";
   const ni = rand(40:50);
-  const nj = rand(20:25);
+  const nj = rand(20:35);
   const mu = rand(0.333:0.01:2.0);
   const constit_rel_f =   init_constit_srt_const(mu);
-  const forcing_kf    =   init_korner_Fk(F);
-  
+  const forcing_kf    =   init_korner_Fk(F, :ScalableForce);
+
+simtype: default, adaptive
+decr: true
+incr: false
+relax: 0.8
+
 # data
 datadir:  { value: datadir, expr: true  }
 
@@ -28,7 +34,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: 10000,   expr: false }
-col_f:    FltrStdCol(BGK_F(constit_rel_f, forcing_kf));
+col_f:    BGK_F(constit_rel_f, forcing_kf);
 
 # boundaries
 sbounds:
@@ -46,17 +52,18 @@ bcs:
   - periodic_east_to_west!
 
 callbacks:
-  - print_step_callback(25) 
+  - print_step_callback(25)
+  - pyplot_callback(50, vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj); xlabel="x", ylabel="u (lat/sec)", title="Velocity Profile at Mid Channel")
 
 # clean-up, backup, write out
 finally:
   - >
-    (sim::Sim, k::Real) -> begin
+    (sim::AbstractSim, k::Real) -> begin
       us = analytical_poise_newton(mu, pgrad, nj);
       i = convert(Int, round(ni/2));
       for j = 1:nj
-        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
-        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 5e-3
+        println("analyt == lbm ? $(us[j]) == $(_vel_acsr_kernal(sim, 1, i, j))"); 
+        @test_approx_eq_eps us[j] _vel_acsr_kernal(sim, 1, i, j) 1e-2
       end
       println("TEST PASSED");
       info("Reynolds  = $(reynolds(maximum(us), nj, mu))");

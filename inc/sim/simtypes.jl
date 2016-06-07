@@ -151,10 +151,17 @@ immutable FreeSurfSim <: AbstractSim
 end
 
 type AdaptiveTimeStepSim <: AbstractSim
+  lat::Lattice
+  msm::MultiscaleMap
   isim::AbstractSim;
   ξ::Real;
   Δt::Real;
+  incr::Bool;
+  decr::Bool;
+  relax::Real;
 
-  AdaptiveTimeStepSim(isim::AbstractSim, ξ::Real=4/5) = 
-                                                      new(isim, ξ, isim.lat.dt);
+  function AdaptiveTimeStepSim(isim::AbstractSim, ξ::Real=4/5; incr::Bool=true, 
+                               decr::Bool=true, relax=1.0)
+    return new(isim.lat, isim.msm, isim, ξ, isim.lat.dt, incr, decr, relax);
+  end
 end

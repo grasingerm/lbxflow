@@ -175,22 +175,37 @@ function parse_and_run(infile::AbstractString, args::Dict)
     k = 0.0; # this is so every simulation can start from "k+1"
     lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
-    if defs["simtype"] == "default"; sim = Sim(lat, msm)
-    elseif defs["simtype"] == "free_surface"
+    const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
+    if "default" in simtypes
+      @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
+      isim = Sim(lat, msm);
+    elseif "free_surface" in simtypes
       if haskey(defs, "states")
         if haskey(defs, "fill_x") || haskey(defs, "fill_y")
           warn("'States' matrix was already provided. 'fill_\$D' variables " *
                "will be ignored");
         end
-        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
+        isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
       elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
-        sim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
+        isim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
                           defs["fill_x"], defs["fill_y"]);
       else
         error("No `states` matrix provided. Cannot initialize free surface flow");
       end
     else
       error("`simtype` $(defs["simtype"]) is not understood");
+    end
+    if "adaptive" in simtypes # adaptive time stepping?
+      const incr = (!haskey(defs, "incr") || defs["incr"]) ? true : false;
+      const decr = (!haskey(defs, "decr") || defs["decr"]) ? true : false;
+      const relax = (haskey(defs, "relax")) ? defs["relax"] : 1.0;
+      if haskey(defs, "xi")
+        sim = AdaptiveTimeStepSim(isim, defs["xi"]; incr=incr, decr=decr, relax=relax);
+      else
+        sim = AdaptiveTimeStepSim(isim; incr=incr, decr=decr, relax=relax);
+      end
+    else
+      sim = isim;
     end
   end
  
