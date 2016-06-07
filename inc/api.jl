@@ -196,6 +196,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
       error("`simtype` $(defs["simtype"]) is not understood");
     end
     if "adaptive" in simtypes # adaptive time stepping?
+      warn("Adaptive time stepping is highly experimental. It has not yet been validated");
       const incr = (!haskey(defs, "incr") || defs["incr"]) ? true : false;
       const decr = (!haskey(defs, "decr") || defs["decr"]) ? true : false;
       const relax = (haskey(defs, "relax")) ? defs["relax"] : 1.0;
