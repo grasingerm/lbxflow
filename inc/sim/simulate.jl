@@ -165,6 +165,13 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   end, 1e-9);
 end
 
+# Adaptive time step simulation step
+function sim_step!(sim::AdaptiveTimeStepSim, temp_f::Array{Float64,3},
+                   sbounds::Matrix{Int64}, collision_f!::ColFunction, args...)
+  sim_step!(sim.isim, temp_f, sbounds, collision_f!, args...); # forward sim_step!
+  adapt_time_step!(sim, collision_f!);
+end
+
 #! Simulate a single step
 function sim_step!(sim::Sim, temp_f::Array{Float64,3}, 
                    collision_f!::LBXFunction, active_cells::Matrix{Bool}, 
@@ -224,49 +231,42 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
   end, 1e-9);
 end
 
-#TODO clean up simulate! code with some kernal functions...
-macro _report_and_exit(e, i)
-  return quote
-    const bt = catch_backtrace(); 
-    showerror(STDERR, $e, bt);
-    println();
-    println("Showing backtrace:");
-    Base.show_backtrace(STDERR, backtrace()); # display callstack
-    println();
-    warn("Simulation interrupted at step ", $i, "!");
-    return $i;
-  end
+# Adaptive time step simulation step
+function sim_step!(sim::AdaptiveTimeStepSim, temp_f::Array{Float64,3},
+                   collision_f!::ColFunction, args...)
+  sim_step!(sim.isim, temp_f, collision_f!, args...); # forward sim_step!
+  adapt_time_step!(sim, collision_f!);
 end
 
 #! Run simulation
 function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    collision_f!::LBXFunction, cbounds::Matrix{Int64},
-                   bcs!::Vector{LBXFunction}, n_steps::Int, 
+                   bcs!::Vector{LBXFunction}, n_steps::Real, 
                    test_for_term::LBXFunction,
-                   callbacks!::Vector{LBXFunction}, k::Int = 0)
+                   callbacks!::Vector{LBXFunction}, k::Real = 0)
 
   temp_f = copy(sim.lat.f);
 
   sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
 
   for c! in callbacks!
-    c!(sim, k+1);
+    c!(sim, (k+=sim.Δt));
   end
 
   prev_msm = MultiscaleMap(sim.msm);
 
-  for i = k+2:n_steps
+  while (k+=sim.Δt) <= n_steps
     try
 
       sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
 
       for c! in callbacks!
-        c!(sim, i);
+        c!(sim, k);
       end
 
       # if returns true, terminate simulation
       if test_for_term(sim.msm, prev_msm)
-        return i;
+        return k;
       end
 
       copy!(prev_msm.omega, sim.msm.omega);
@@ -275,7 +275,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
     
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
   end
@@ -287,37 +287,38 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    collision_f!::LBXFunction, cbounds::Matrix{Int64},
-                   bcs!::Vector{LBXFunction}, n_steps::Int, 
+                   bcs!::Vector{LBXFunction}, n_steps::Real, 
                    test_for_term::LBXFunction,
                    steps_for_term::Int, callbacks!::Vector{LBXFunction}, 
-                   k::Int = 0)
+                   k::Real = 0)
 
   temp_f = copy(sim.lat.f);
 
   sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
 
   for c! in callbacks!
-    c!(sim, k+1);
+    c!(sim, (k+=sim.Δt));
   end
 
   prev_msms = Vector{MultiscaleMap}(steps_for_term);
   for i=1:steps_for_term; prev_msms[i] = MultiscaleMap(sim.msm); end;
 
-  for i = k+2:n_steps
+  idx = 0;
+  while (k+=sim.Δt) <= n_steps
     try
 
       sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
 
       for c! in callbacks!
-        c!(sim, i);
+        c!(sim, k);
       end
 
       # if returns true, terminate simulation
       if test_for_term(sim.msm, prev_msms)
-        return i;
+        return k;
       end
   
-      const idx = i % steps_for_term + 1;
+      if (idx += 1) > steps_for_term; idx = 1; end
       copy!(prev_msms[idx].omega, sim.msm.omega);
       copy!(prev_msms[idx].rho,   sim.msm.rho);
       copy!(prev_msms[idx].u,     sim.msm.u);
@@ -325,7 +326,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
     
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
 
@@ -338,17 +339,17 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    collision_f!::LBXFunction, cbounds::Matrix{Int64},
-                   bcs!::Vector{LBXFunction}, n_steps::Int,
-                   callbacks!::Vector{LBXFunction}, k::Int = 0)
+                   bcs!::Vector{LBXFunction}, n_steps::Real,
+                   callbacks!::Vector{LBXFunction}, k::Real = 0)
 
   temp_f = copy(sim.lat.f);
-  for i = k+1:n_steps
+  while (k+=sim.Δt) <= n_steps
     try
 
       sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
 
       for c! in callbacks!
-        c!(sim, i);
+        c!(sim, k);
       end
 
     
@@ -367,14 +368,14 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    collision_f!::LBXFunction, cbounds::Matrix{Int64},
-                   bcs!::Vector{LBXFunction}, n_steps::Int, k::Int = 0)
+                   bcs!::Vector{LBXFunction}, n_steps::Real, k::Real = 0)
 
   temp_f = copy(sim.lat.f);
-  for i = k+1:n_step
+  while (k+=sim.Δt) <= n_steps
     try; sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
   end
@@ -386,32 +387,32 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim, collision_f!::LBXFunction,
                    active_cells::Matrix{Bool},
-                   bcs!::Vector{LBXFunction}, n_steps::Int, 
+                   bcs!::Vector{LBXFunction}, n_steps::Real, 
                    test_for_term::LBXFunction,
-                   callbacks!::Vector{LBXFunction}, k::Int = 0)
+                   callbacks!::Vector{LBXFunction}, k::Real = 0)
 
   temp_f = copy(sim.lat.f);
 
   sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
 
   for c! in callbacks!
-    c!(sim, k+1);
+    c!(sim, (k+=sim.Δt));
   end
 
   prev_msm = MultiscaleMap(sim.msm);
 
-  for i = k+2:n_steps
+  while (k+=sim.Δt) <= n_steps
     try
 
       sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
 
       for c! in callbacks!
-        c!(sim, i);
+        c!(sim, k);
       end
 
       # if returns true, terminate simulation
       if test_for_term(sim.msm, prev_msm)
-        return i;
+        return k;
       end
 
       copy!(prev_msm.omega, sim.msm.omega);
@@ -420,7 +421,7 @@ function simulate!(sim::AbstractSim, collision_f!::LBXFunction,
     
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
   end
@@ -432,44 +433,45 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim,
                    collision_f!::LBXFunction, active_cells::Matrix{Bool},
-                   bcs!::Vector{LBXFunction}, n_steps::Int, 
+                   bcs!::Vector{LBXFunction}, n_steps::Real, 
                    test_for_term::LBXFunction,
                    steps_for_term::Int, callbacks!::Vector{LBXFunction}, 
-                   k::Int = 0)
+                   k::Real = 0)
 
   temp_f = copy(sim.lat.f);
 
   sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
 
   for c! in callbacks!
-    c!(sim, k+1);
+    c!(sim, (k+=sim.Δt));
   end
 
   prev_msms = Vector{MultiscaleMap}(steps_for_term);
   for i=1:steps_for_term; prev_msms[i] = MultiscaleMap(sim.msm); end;
 
-  for i = k+2:n_steps
+  idx = 0;
+  while (k+=sim.Δt) <= n_steps
     try
 
       sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
 
       for c! in callbacks!
-        c!(sim, i);
+        c!(sim, k);
       end
 
       # if returns true, terminate simulation
       if test_for_term(sim.msm, prev_msms)
-        return i;
+        return k;
       end
   
-      const idx = i % steps_for_term + 1;
+      if (idx += 1) > steps_for_term; idx = 1; end
       copy!(prev_msms[idx].omega, sim.msm.omega);
       copy!(prev_msms[idx].rho,   sim.msm.rho);
       copy!(prev_msms[idx].u,     sim.msm.u);
     
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
   end
@@ -481,22 +483,22 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim,
                    collision_f!::LBXFunction, active_cells::Matrix{Bool},
-                   bcs!::Vector{LBXFunction}, n_steps::Int,
-                   callbacks!::Vector{LBXFunction}, k::Int = 0)
+                   bcs!::Vector{LBXFunction}, n_steps::Real,
+                   callbacks!::Vector{LBXFunction}, k::Real = 0)
 
   temp_f = copy(sim.lat.f);
-  for i = k+1:n_steps
+  while (k+=sim.Δt) <= n_steps
     try
 
       sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
 
       for c! in callbacks!
-        c!(sim, i);
+        c!(sim, k);
       end
 
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
   end
@@ -508,14 +510,14 @@ end
 #! Run simulation
 function simulate!(sim::AbstractSim,
                    collision_f!::LBXFunction, active_cells::Matrix{Bool},
-                   bcs!::Vector{LBXFunction}, n_steps::Int, k::Int = 0)
+                   bcs!::Vector{LBXFunction}, n_steps::Real, k::Real = 0)
 
   temp_f = copy(sim.lat.f);
-  for i = k+1:n_step
+  while (k+=sim.Δt) <= n_steps
     try; sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
   end

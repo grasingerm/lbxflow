@@ -2,9 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Setting up types that will be used throughout module
 using FastAnonymous;
 abstract ColFunction;
-typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction};
+abstract FltrColFunction <: ColFunction;
+type _ConstConstit
+  μ::Real
+  _ConstConstit(μ::Real) = new(μ);
+end
+typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction, _ConstConstit};
 
 abstract AbstractSim;
 
@@ -14,8 +20,9 @@ abstract AbstractSim;
 immutable Sim <: AbstractSim
   lat::Lattice;
   msm::MultiscaleMap;
+  Δt::Real;
 
-  Sim(lat::Lattice, msm::MultiscaleMap) = new(lat, msm);
+  Sim(lat::Lattice, msm::MultiscaleMap) = new(lat, msm, lat.dt);
 end
 
 #! Type system for cell states
@@ -78,13 +85,14 @@ immutable FreeSurfSim <: AbstractSim
   msm::MultiscaleMap
   tracker::Tracker
   rho_g::AbstractFloat
+  Δt::Real;
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, tracker::Tracker)
-    return new(lat, msm, tracker, 1.0);
+    return new(lat, msm, tracker, 1.0, lat.dt);
   end
 
   FreeSurfSim(lat::Lattice, msm::MultiscaleMap, t::Tracker,
-              rho_g::Real) = new(lat, msm, t, rho_g);
+              rho_g::Real) = new(lat, msm, t, rho_g, lat.dt);
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, rho_0::Real, 
                        rho_g::Real, fill_x::Real, fill_y::Real)
@@ -137,7 +145,7 @@ immutable FreeSurfSim <: AbstractSim
       push!(t.interfacels, (i, j));
     end
 
-    return new(lat, msm, t, rho_g);
+    return new(lat, msm, t, rho_g, lat.dt);
   end
 
 end

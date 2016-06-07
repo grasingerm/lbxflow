@@ -40,8 +40,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-#! \param   st      Timestep ratio
-function call(col_f::MRT, sim::AbstractSim, bounds::Matrix{Int64}, st::Real=1.0)
+function call(col_f::MRT, sim::AbstractSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -61,8 +60,8 @@ function call(col_f::MRT, sim::AbstractSim, bounds::Matrix{Int64}, st::Real=1.0)
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                        col_f.M, col_f.iM, i, j);
+      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                   col_f.iM, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
@@ -78,9 +77,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-#! \param   st      Timestep ratio
-function call(col_f::MRT_F, sim::AbstractSim, bounds::Matrix{Int64}, 
-              st::Real=1.0)
+function call(col_f::MRT_F, sim::AbstractSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -100,13 +97,13 @@ function call(col_f::MRT_F, sim::AbstractSim, bounds::Matrix{Int64},
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                    col_f.M, col_f.iM, i, j);
+      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                               col_f.iM, i, j);
       const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
       const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-      @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - @_scale_f(F, st);
+      @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
       # update collision frequency matrix
       @inbounds msm.omega[i,j] = omega;
@@ -119,8 +116,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-#! \param   st      Timestep ratio
-function call(col_f::MRT, sim::FreeSurfSim, bounds::Matrix{Int64}, st::Real=1.0)
+function call(col_f::MRT, sim::FreeSurfSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -142,8 +138,8 @@ function call(col_f::MRT, sim::FreeSurfSim, bounds::Matrix{Int64}, st::Real=1.0)
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
-        const mu        =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                          col_f.M, col_f.iM, i, j);
+        const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                 col_f.iM, i, j);
         const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
         @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
@@ -161,9 +157,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-#! \param   st      Timestep ratio
-function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64}, 
-              st::Real=1.0)
+function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -185,13 +179,13 @@ function call(col_f::MRT_F, sim::FreeSurfSim, bounds::Matrix{Int64},
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
-        const mu    =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                      col_f.M, col_f.iM, i, j);
+        const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                 col_f.iM, i, j);
         const omega =   @omega(mu, lat.cssq, lat.dt);
         const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
         const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-        @inbounds lat.f[:, i, j]  -= col_f.iM * Sij * col_f.M * fneq - @_scale_f(F, st);
+        @inbounds lat.f[:, i, j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
         # update collision frequency matrix
         @inbounds msm.omega[i,j] = omega;
@@ -206,9 +200,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-#! \param   st            Timestep ratio
-function call(col_f::MRT, sim::AbstractSim, active_cells::Matrix{Bool}, 
-              st::Real=1.0)
+function call(col_f::MRT, sim::AbstractSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -227,8 +219,8 @@ function call(col_f::MRT, sim::AbstractSim, active_cells::Matrix{Bool},
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                        col_f.M, col_f.iM, i, j);
+      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                   col_f.iM, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
@@ -244,9 +236,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-#! \param   st            Timestep ratio
-function call(col_f::MRT_F, sim::AbstractSim, active_cells::Matrix{Bool}, 
-              st::Real=1.0)
+function call(col_f::MRT_F, sim::AbstractSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -265,13 +255,13 @@ function call(col_f::MRT_F, sim::AbstractSim, active_cells::Matrix{Bool},
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                    col_f.M, col_f.iM, i, j);
+      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                               col_f.iM, i, j);
       const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
       const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-      @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - @_scale_f(F, st);
+      @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
       # update collision frequency matrix
       @inbounds msm.omega[i,j] = omega;
@@ -284,9 +274,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-#! \param   st            Timestep ratio
-function call(col_f::MRT, sim::FreeSurfSim, active_cells::Matrix{Bool}, 
-              st::Real=1.0)
+function call(col_f::MRT, sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -305,8 +293,8 @@ function call(col_f::MRT, sim::FreeSurfSim, active_cells::Matrix{Bool},
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                        col_f.M, col_f.iM, i, j);
+      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                                   col_f.iM, i, j);
       const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
@@ -323,9 +311,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-#! \param   st            Timestep ratio
-function call(col_f::MRT_F, sim::FreeSurfSim, active_cells::Matrix{Bool}, 
-              st::Real=1.0)
+function call(col_f::MRT_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -344,13 +330,13 @@ function call(col_f::MRT_F, sim::FreeSurfSim, active_cells::Matrix{Bool},
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   st * col_f.constit_relation_f(sim, fneq, col_f.S, 
-                                                    col_f.M, col_f.iM, i, j);
+      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+                                               col_f.iM, i, j);
       const omega =   @omega(mu, lat.cssq, lat.dt);
       const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
       const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
-      @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - @_scale_f(F, st);
+      @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
       # update collision frequency matrix
       @inbounds msm.omega[i,j] = omega;

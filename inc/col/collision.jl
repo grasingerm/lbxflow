@@ -10,6 +10,10 @@ macro _scale_f(f, st)
   return :($st*$st * $f);
 end
 
+macro _scale_mu(mu, st)
+  return :($st * $mu);
+end
+
 include("forcing.jl");
 include("equilibrium.jl");
 include("constitutive.jl");

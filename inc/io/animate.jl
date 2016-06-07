@@ -3,9 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #! Create callback for pausing the simulation
-function pause_sim_callback(step::Int)
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % step == 0
+function pause_sim_callback(step::Real)
+  _c = __create_anon_counter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = _c(k);
+    if val >= step
+      _c(-val); # reset counter
       println("Press ENTER to continue...");
       readline(STDIN);
     end
@@ -13,18 +16,24 @@ function pause_sim_callback(step::Int)
 end
 
 #! Create callback for reporting step
-function print_step_callback(step::Int)
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % step == 0
-      println("step $k");
+function print_step_callback(step::Real)
+  _c = _StepCounter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = add(_c, k);
+    if val >= step
+      reset(_c); # reset counter
+      println("step $k: $(_c.k)");
     end
   end
 end
 
 #! Create callback for reporting step
-function print_step_callback(step::Int, name::AbstractString)
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % step == 0
+function print_step_callback(step::Real, name::AbstractString)
+  _c = __create_anon_counter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = _c(k);
+    if val >= step
+      _c(-val); # reset counter
       println(name * ":\tstep $k");
     end
   end
@@ -61,7 +70,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pyplot_callback(iters_per_frame::Int, accessor::LBXFunction; 
+function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction; 
                          showfig::Bool=true, fname::AbstractString="",
                          title::AbstractString="",
                          xlabel::AbstractString="", ylabel::AbstractString="", 
@@ -70,8 +79,11 @@ function pyplot_callback(iters_per_frame::Int, accessor::LBXFunction;
                          yticks=false, rects=false, 
                          rcolor::AbstractString="black")
 
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  _c = __create_anon_counter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = _c(k);
+    if val >= iters_per_frame
+      _c(-val); # reset counter
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -164,7 +176,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pycontour_callback(iters_per_frame::Int, accessor::LBXFunction; 
+function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction; 
                             showfig::Bool=true, filled=false, colorbar=false, 
                             levels=false, fname::AbstractString="",
                             title::AbstractString="", xlabel::AbstractString="", 
@@ -172,8 +184,11 @@ function pycontour_callback(iters_per_frame::Int, accessor::LBXFunction;
                             grid::Bool=false, xticks=false, yticks=false,
                             rects=false, rcolor::AbstractString="black")
 
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  _c = __create_anon_counter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = _c(k);
+    if val >= iters_per_frame
+      _c(-val); # reset counter
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -288,7 +303,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pyquiver_callback(iters_per_frame::Int, accessor::LBXFunction; 
+function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction; 
                            showfig::Bool=true, fname::AbstractString="",
                            title::AbstractString="",
                            xlabel::AbstractString="", ylabel::AbstractString="", 
@@ -296,9 +311,11 @@ function pyquiver_callback(iters_per_frame::Int, accessor::LBXFunction;
                            xticks=false, yticks=false, rects=false, 
                            rcolor::AbstractString="black")
 
-
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  _c = __create_anon_counter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = _c(k);
+    if val >= iters_per_frame
+      _c(-val); # reset counter
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -381,7 +398,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pystream_callback(iters_per_frame::Int, accessor::LBXFunction; 
+function pystream_callback(iters_per_frame::Real, accessor::LBXFunction; 
                            showfig::Bool=true, fname::AbstractString="",
                            title::AbstractString="",
                            xlabel::AbstractString="", ylabel::AbstractString="", 
@@ -389,8 +406,11 @@ function pystream_callback(iters_per_frame::Int, accessor::LBXFunction;
                            xticks=false, yticks=false, rects=false, 
                            rcolor::AbstractString="black")
 
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % iters_per_frame == 0
+  _c = __create_anon_counter();
+  return (sim::AbstractSim, k::Real) -> begin
+    val = _c(k);
+    if val >= iters_per_frame
+      _c(-val); # reset counter
       eval(if showfig == true
              :(PyPlot.ion(););
            else

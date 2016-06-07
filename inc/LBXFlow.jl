@@ -4,6 +4,20 @@
 
 module LBXFlow
 
+#TODO clean up simulate! code with some kernal functions...
+macro _report_and_exit(e, i)
+  return quote
+    const bt = catch_backtrace(); 
+    showerror(STDERR, $e, bt);
+    println();
+    println("Showing backtrace:");
+    Base.show_backtrace(STDERR, backtrace()); # display callstack
+    println();
+    warn("Simulation interrupted at step ", $i, "!");
+    return $i;
+  end
+end
+
 include("debug.jl");
 include("numerics.jl");
 include("lattice.jl");

@@ -172,7 +172,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   if !is_init
     # construct objects
-    k = 0; # this is so every simulation can start from "k+1"
+    k = 0.0; # this is so every simulation can start from "k+1"
     lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
     msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     if defs["simtype"] == "default"; sim = Sim(lat, msm)
@@ -287,10 +287,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
     end
 
   catch e
-    showerror(STDERR, e);
-    println();
-    Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
-    warn("$infile: not completed successfully.");
+    @_report_and_exit(e, 0.0);
 
   finally
     for fin in defs["finally"]

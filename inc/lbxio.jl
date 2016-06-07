@@ -4,6 +4,21 @@
 
 @everywhere import HDF5, JLD
 
+function __create_anon_counter()
+  name = parse("__" * join(rand('a':'z', 100)) * "__");
+  eval(quote
+        global $name = 0.0;
+        return (x::Real) -> begin; global $name += x; end;
+       end);
+end
+
+type _StepCounter
+  k::Real;
+  _StepCounter() = new(0.0);
+end
+
+add(sc::_StepCounter, x::Real) = (sc.k += x);
+reset(sc::_StepCounter)        = (sc.k = 0);
+
 include(joinpath("io", "readwrite.jl"));
-include(joinpath("io", "animate0.jl"));
 include(joinpath("io", "animate.jl"));

@@ -2,6 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#! Kernal function for accessing velocities
+function _vel_acsr_kernal(sim::AbstractSim, c::Int, i::Int, j::Int)
+  return sim.msm.u[c, i, j];
+end
+
+#! Kernal function for accessing velocities
+function _vel_acsr_kernal(sim::AdaptiveTimeStepSim, c::Int, i::Int, j::Int)
+  return sim.isim.msm.u[c, i, j] / sim.Δt;
+end
+
 #! Velocity profile accessor
 #!
 #! \param     c           Component index
@@ -14,7 +24,7 @@ function vel_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
     const n = length(j_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon j -> sim.msm.u[c, i, j];
+    f = @anon j -> _vel_ascr_kernal(sim, c, i, j);
     const y = pmap(f, j_range);
 
     return x, y;
@@ -33,8 +43,8 @@ function vel_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
     const n = length(i_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon i -> sim.msm.u[c, i, j];
-    const y = pmap(f, j_range);
+    f = @anon i -> _vel_ascr_kernal(sim, c, i, j);
+    const y = pmap(f, i_range);
 
     return x, y;
   end
@@ -52,7 +62,7 @@ function vbar_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
     const n = length(j_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon j -> sim.msm.u[c, i, j];
+    f = @anon j -> _vel_ascr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
     y /= maximum(y);
 
@@ -72,8 +82,8 @@ function vbar_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
     const n = length(i_range);
     const x = linspace(-0.5, 0.5, n);
 
-    f = @anon i -> sim.msm.u[c, i, j];
-    y = pmap(f, j_range);
+    f = @anon i -> _vel_ascr_kernal(sim, c, i, j);
+    y = pmap(f, i_range);
     y /= maximum(y);
 
     return x, y;
@@ -88,6 +98,21 @@ function vel_mag_ascr(sim::AbstractSim)
   return transpose(u_mag(sim.msm));
 end
 
+#! Velocity magnitude accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Velocity magnitude over domain
+function vel_mag_ascr(sim::AdaptiveTimeStepSim)
+  const ni, nj = size(sim.isim.msm);
+  u_mag = Array{Float64}(ni, nj);
+  for j=1:nj, i=1:ni
+    ux = sim.isim.msm[1, i, j] / sim.Δt;
+    uy = sim.isim.msm[2, i, j] / sim.Δt;
+    u_mag[j, i] = sqrt(ux*ux + uy*uy);
+  end
+  return u_mag;
+end
+
 #! Velocity field accessor
 #!
 #! \param   sim   Simulation object
@@ -98,12 +123,32 @@ function vel_field_ascr(sim::AbstractSim)
           transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
 end
 
+#! Velocity field accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Velocity magnitude over domain
+function vel_field_ascr(sim::AdaptiveTimeStepSim)
+  const ni, nj = size(sim.isim.msm.rho);
+  return (transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 1, :, :)), 
+                    (ni, nj))), 
+          transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 2, :, :)), 
+                    (ni, nj))));
+end
+
 #! Density field accessor
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid density over domain
 function density_ascr(sim::AbstractSim)
   return transpose(sim.msm.rho);
+end
+
+#! Density field accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Fluid density over domain
+function density_ascr(sim::AdaptiveTimeStepSim)
+  return transpose(map(ρ -> ρ / sim.Δt, sim.isim.msm.rho));
 end
 
 #! Pressure field accessor
@@ -123,6 +168,14 @@ function mass_ascr(sim::FreeSurfSim)
   return transpose(sim.tracker.M);
 end
 
+#! Mass field accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Fluid mass over domain
+function mass_ascr(sim::AdaptiveTimeStepSim)
+  return transpose(map(m -> m / sim.Δt, sim.tracker.M));
+end
+
 #! Streamline fields accessor
 #!
 #! \param   sim   Simulation object
@@ -132,4 +185,20 @@ function streamlines_ascr(sim::AbstractSim)
   return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
           transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
           transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
+end
+
+#! Streamline fields accessor
+#!
+#! \param   sim   Simulation object
+#! \return        x, y, u, v for streamlines
+function streamlines_ascr(sim::AdaptiveTimeStepSim)
+  const ni, nj = size(sim.isim.msm);
+  u = Array{Float64}(ni, nj);
+  v = Array{Float64}(ni, nj);
+  for j=1:nj, i=1:ni
+    u[j, i] = sim.isim.msm[1, i, j] / sim.Δt;
+    v[j, i] = sim.isim.msm[2, i, j] / sim.Δt;
+  end
+  return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
+          u, v);
 end
