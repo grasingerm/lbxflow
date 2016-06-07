@@ -206,14 +206,9 @@ end
 function write_jld_file_callback(datadir::AbstractString, stepout::Real,
                                  append_step_to_name::Bool = false)
 
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= stepout
-      _c(-val); # reset counter
+  return @create_callback(stepout,
       dumpsim_jld(datadir, sim, k, append_step_to_name);
-    end
-  end;
+  );
 end
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::AbstractString)
@@ -224,13 +219,9 @@ end
 
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::AbstractString, stepout::Real)
-  return (sim::Sim, k::Real) -> begin
-    val = _c(k);
-    if val >= stepout
-      _c(-val); # reset counter
+  return @create_callback(stepout,
       dumpsim(datadir, sim, k);
-    end
-  end;
+  );
 end
 
 #! Create a callback function for writing to a delimited file
@@ -242,14 +233,9 @@ end
 function write_datafile_callback(pre::AbstractString, stepout::Real, 
                                  A::LBXFunction; dir=".", delim=',')
 
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= stepout
-      _c(-val); # reset counter
+  return @create_callback(stepout,
       writedlm(joinpath(dir, pre*"_step-$k.dsv"), A(sim), delim);
-    end
-  end;
+  );
 
 end
 
@@ -264,15 +250,10 @@ function take_snapshot_callback(fname::AbstractString, stepout::Real,
                                 A::LBXFunction; dir=".", delim::Char=',')
   if !isdir(dir); mkpath(dir); end
   fhandle = open(joinpath(dir, fname), "a");
-  _c = __create_anon_counter();
-  f = (sim::AbstractSim, k::Real) -> begin; 
-                                      val = _c(k);
-                                      if val >= stepout
-                                        _c(-val); # reset counter
-                                        write(fhandle, join(A(sim), delim));
-                                        write(fhandle, '\n');
-                                      end
-                                     end;
+  f = @create_callback(stepout, begin
+                        write(fhandle, join(A(sim), delim));
+                        write(fhandle, '\n');
+                       end);
   # finalizer(f, () -> close(fhandle));
   return f;
 end

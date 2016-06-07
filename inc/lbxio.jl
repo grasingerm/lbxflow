@@ -12,13 +12,15 @@ function __create_anon_counter()
        end);
 end
 
-type _StepCounter
-  k::Real;
-  _StepCounter() = new(0.0);
+macro create_callback(step, code)
+  return quote
+    (sim::AbstractSim, k::Real) -> begin
+      if k % $step < sim.Δt
+        $code
+      end
+    end
+  end
 end
-
-add(sc::_StepCounter, x::Real) = (sc.k += x);
-reset(sc::_StepCounter)        = (sc.k = 0);
 
 include(joinpath("io", "readwrite.jl"));
 include(joinpath("io", "animate.jl"));

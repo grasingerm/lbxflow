@@ -53,7 +53,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, feq_f::LBXFunction,
     end
   end
 
-  if !haskey(entropy_cache, key)
+  if !haskey(entropy_cache, (i, j))
     feq                       = Array{Float64}(sim.lat.n);
 
     for p=1:sim.lat.n
@@ -119,7 +119,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, feq_f::LBXFunction,
     end
   end
 
-  if !haskey(entropy_cache, key)
+  if !haskey(entropy_cache, (i, j))
     feq                       = Array{Float64}(sim.lat.n);
 
     for p=1:sim.lat.n
@@ -276,7 +276,7 @@ function call(col_f::FltrFixedDSCol, sim::AbstractSim, bounds::Matrix{Int64})
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -338,7 +338,7 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim, bounds::Matrix{Int64})
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -400,7 +400,7 @@ function call(col_f::FltrFixedDSCol, sim::AbstractSim,
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -460,7 +460,7 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -534,7 +534,7 @@ function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end
@@ -598,7 +598,7 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end
@@ -654,7 +654,7 @@ function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end
@@ -710,7 +710,7 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
     warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $percent_filtered");
+    info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end

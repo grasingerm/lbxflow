@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-using ArrayViews
-
 #! Check to see if a pair of indices fall inside a bounds
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
   const nbounds = size(sbounds, 2);

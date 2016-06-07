@@ -4,39 +4,24 @@
 
 #! Create callback for pausing the simulation
 function pause_sim_callback(step::Real)
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= step
-      _c(-val); # reset counter
+  return @create_callback(step, begin
       println("Press ENTER to continue...");
       readline(STDIN);
-    end
-  end
+    end);
 end
 
 #! Create callback for reporting step
 function print_step_callback(step::Real)
-  _c = _StepCounter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = add(_c, k);
-    if val >= step
-      reset(_c); # reset counter
-      println("step $k: $(_c.k)");
-    end
-  end
+  return @create_callback(step, begin
+      println("step $k");
+    end);
 end
 
 #! Create callback for reporting step
 function print_step_callback(step::Real, name::AbstractString)
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= step
-      _c(-val); # reset counter
+  return @create_callback(step, begin
       println(name * ":\tstep $k");
-    end
-  end
+    end)
 end
 
 #! Initialize plotting environment
@@ -79,11 +64,7 @@ function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction;
                          yticks=false, rects=false, 
                          rcolor::AbstractString="black")
 
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= iters_per_frame
-      _c(-val); # reset counter
+  return @create_callback(iters_per_frame, begin
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -151,8 +132,7 @@ function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end
-  end
+    end);
 
 end
 
@@ -184,11 +164,7 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
                             grid::Bool=false, xticks=false, yticks=false,
                             rects=false, rcolor::AbstractString="black")
 
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= iters_per_frame
-      _c(-val); # reset counter
+  return @create_callback(iters_per_frame, begin
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -281,8 +257,7 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end
-  end
+    end);
 
 end
 
@@ -311,11 +286,7 @@ function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction;
                            xticks=false, yticks=false, rects=false, 
                            rcolor::AbstractString="black")
 
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= iters_per_frame
-      _c(-val); # reset counter
+  return @create_callback(iters_per_frame, begin
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -376,8 +347,7 @@ function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end
-  end
+    end);
 
 end
 
@@ -406,11 +376,7 @@ function pystream_callback(iters_per_frame::Real, accessor::LBXFunction;
                            xticks=false, yticks=false, rects=false, 
                            rcolor::AbstractString="black")
 
-  _c = __create_anon_counter();
-  return (sim::AbstractSim, k::Real) -> begin
-    val = _c(k);
-    if val >= iters_per_frame
-      _c(-val); # reset counter
+  return @create_callback(iters_per_frame, begin
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -471,7 +437,6 @@ function pystream_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end
-  end
+    end);
 
 end
