@@ -2,24 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#! Check to see if a pair of indices fall inside a bounds
-function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
-  const nbounds = size(sbounds, 2);
-  for n=1:nbounds
-    if !inbounds(i, j, sbounds[:, n]); return false; end
-  end
-  return true;
-end
-
-#! Check to see if a pair of indices fall inside a bounds
-function inbounds(i::Int, j::Int, sbound::Vector{Int64})
-  if i < sbound[1]; return false; end
-  if i > sbound[2]; return false; end
-  if j < sbound[3]; return false; end
-  if j > sbound[4]; return false; end
-  return true;
-end
-
 #! Simulate mass transfer across interface cells
 #!
 #! \param sim FreeSurfSim object

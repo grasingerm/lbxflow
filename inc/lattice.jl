@@ -120,3 +120,12 @@ end
 function opp_lat_vec(lat::LatticeD2Q4, k::Int)
   error("not yet implemented");
 end
+
+#! Helper function for initializing lattice
+function _fill_lat(lat::Lattice, i_range::UnitRange{Int}, j_range::UnitRange{Int}, 
+                   rho::Real)
+  for k=1:lat.n, j=j_range, i=i_range
+    lat.f[k, i_range, j_range] = fill(rho * lat.w[k], 
+                                      (length(i_range), length(j_range)));
+  end
+end

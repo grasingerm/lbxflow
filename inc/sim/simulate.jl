@@ -123,6 +123,31 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
   map_to_macro!(lat, msm);
 end
 
+#! Simulate a step for immiscible two-phase flow
+function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3},
+                   sbounds::Matrix{Int64}, col_fr!::LBXFunction, 
+                   col_fb!::LBXFunction, cbounds::Matrix{Int64}, 
+                   bcs!::Vector{LBXFunction})
+ 
+  # forward collision function calls
+  col_fr!(sim.simr, cbounds);
+  col_fb!(sim.simb, cbounds);
+  m2phase_col_f!(sim, cbounds);
+
+  recolor!(sim);
+
+  stream!(sim.simr, temp_f, sbounds);
+  stream!(sim.simb, temp_f, sbounds);
+
+  for bc! in bcs!
+    bc!(sim.simr);
+    bc!(sim.simb);
+  end
+
+  map_to_macro!(sim.simr.lat, sim.simr.msm);
+  map_to_macro!(sim.simb.lat, sim.simb.msm);
+end
+
 #! Simulate a single step free surface flow step
 function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
                    sbounds::Matrix{Int64}, collision_f!::ColFunction, 
@@ -187,6 +212,30 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
   end
 
   map_to_macro!(lat, msm);
+end
+
+#! Simulate a step for immiscible two-phase flow
+function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3}, 
+                   col_fr!::LBXFunction, col_fb!::LBXFunction, 
+                   active_cells::Matrix{Bool}, bcs!::Vector{LBXFunction})
+ 
+  # forward collision function calls
+  col_fr!(sim.simr, active_cells);
+  col_fb!(sim.simb, active_cells);
+  m2phase_col_f!(sim, active_cells);
+
+  recolor!(sim);
+
+  stream!(sim.simr, temp_f, active_cells);
+  stream!(sim.simb, temp_f, active_cells);
+
+  for bc! in bcs!
+    bc!(sim.simr);
+    bc!(sim.simb);
+  end
+
+  map_to_macro!(sim.simr.lat, sim.simr.msm);
+  map_to_macro!(sim.simb.lat, sim.simb.msm);
 end
 
 #! Simulate a single step free surface flow step

@@ -2,6 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#! Check to see if a pair of indices fall inside a bounds
+function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
+  const nbounds = size(sbounds, 2);
+  for n=1:nbounds
+    if !inbounds(i, j, sbounds[:, n]); return false; end
+  end
+  return true;
+end
+
+#! Check to see if a pair of indices fall inside a bounds
+function inbounds(i::Int, j::Int, sbound::Vector{Int64})
+  if i < sbound[1]; return false; end
+  if i > sbound[2]; return false; end
+  if j < sbound[3]; return false; end
+  if j > sbound[4]; return false; end
+  return true;
+end
+
 # Setting up types that will be used throughout module
 using FastAnonymous;
 abstract ColFunction;
@@ -150,6 +168,7 @@ immutable FreeSurfSim <: AbstractSim
 
 end
 
+#! Type for simulations with adaptive time stepping
 type AdaptiveTimeStepSim <: AbstractSim
   lat::Lattice
   msm::MultiscaleMap
@@ -163,5 +182,38 @@ type AdaptiveTimeStepSim <: AbstractSim
   function AdaptiveTimeStepSim(isim::AbstractSim, ξ::Real=4/5; incr::Bool=true, 
                                decr::Bool=true, relax=1.0)
     return new(isim.lat, isim.msm, isim, ξ, isim.lat.dt, incr, decr, relax);
+  end
+end
+
+type M2PhaseSim <: AbstractSim
+  simr::Sim;
+  simb::Sim;
+  Ar::Real;
+  Ab::Real;
+  αr::Real;
+  αb::Real;
+
+  function M2PhaseSim(nur::Real, nub::Real, rho_0r::Real, rho_0b::Real, 
+                      ni::Int, nj::Int, Ar::Real, Ab::Real, αr::Real, αb::Real;
+                      fill_r = (0.0, 1.0, 0.0, 1.0),
+                      fill_b = (0.0, 1.0, 0.0, 1.0))
+    latr = LatticeD2Q9(1.0, 1.0, ni, nj);
+    latb = LatticeD2Q9(1.0, 1.0, ni, nj);
+
+    i_range_r = convert(Int, round(fill_r[1])):convert(Int, round(fill_r[2]));
+    j_range_r = convert(Int, round(fill_r[3])):convert(Int, round(fill_r[4]));
+    i_range_b = convert(Int, round(fill_b[1])):convert(Int, round(fill_b[2]));
+    j_range_b = convert(Int, round(fill_b[3])):convert(Int, round(fill_b[4]));
+
+    _fill_lat(latr, i_range_r, j_range_r, rho_0r);
+    _fill_lat(latb, i_range_b, j_range_b, rho_0b);
+
+    msmr = MultiscaleMap(nur, latr, rho_0r); 
+    msmb = MultiscaleMap(nub, latb, rho_0b);
+
+    map_to_macro!(latr, msmr);
+    map_to_macro!(latb, msmb);
+
+    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb);
   end
 end
