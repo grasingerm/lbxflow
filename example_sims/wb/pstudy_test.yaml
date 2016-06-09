@@ -1,12 +1,12 @@
 - "": "version: 1.0.0"
 
-#!! figsize      =  4, 12
+#!! figsize      =  3, 15
 #!! g            =  -5.0e-6
-#!! nj           =  150
+#!! nj           =  2400
 #!! ni           =  50
-#!! nsteps       =  16000
+#!! nsteps       =  250000
 #!! backup_steps =  2000
-#!! plot_steps   =  100
+#!! plot_steps   =  250
 #!! nu1          =  0.2
 #!! m            =  1e6
 #!! gamma_min    =  1e-9

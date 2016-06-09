@@ -2,34 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#! Create callback for pausing the simulation
-function pause_sim_callback(step::Int)
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % step == 0
-      println("Press ENTER to continue...");
-      readline(STDIN);
-    end
-  end
-end
-
-#! Create callback for reporting step
-function print_step_callback(step::Int)
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % step == 0
-      println("step $k");
-    end
-  end
-end
-
-#! Create callback for reporting step
-function print_step_callback(step::Int, name::AbstractString)
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % step == 0
-      println(name * ":\tstep $k");
-    end
-  end
-end
-
 #! Extract velocity profile cut parallel to y-axis
 function extract_prof_callback(i::Int)
 
@@ -74,19 +46,6 @@ function extract_ubar_prof_callback(i::Int)
     return [x y];
   end;
 
-end
-
-#! Initialize plotting environment
-macro init_plot_env()
-  return quote
-    import PyPlot;
-    PyPlot.ion();
-  end
-end
-
-#! Change default figure size
-macro change_default_figsize(w, h)
-  return :(PyPlot.rc("figure", figsize=($w, $h)));
 end
 
 #############################################################################
