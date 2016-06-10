@@ -206,9 +206,11 @@ end
 function write_jld_file_callback(datadir::AbstractString, stepout::Real,
                                  append_step_to_name::Bool = false)
 
-  return @create_callback(stepout,
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       dumpsim_jld(datadir, sim, k, append_step_to_name);
-  );
+    end
+  end
 end
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::AbstractString)
@@ -219,9 +221,11 @@ end
 
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::AbstractString, stepout::Real)
-  return @create_callback(stepout,
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       dumpsim(datadir, sim, k);
-  );
+    end
+  end
 end
 
 #! Create a callback function for writing to a delimited file
@@ -233,9 +237,11 @@ end
 function write_datafile_callback(pre::AbstractString, stepout::Real, 
                                  A::LBXFunction; dir=".", delim=',')
 
-  return @create_callback(stepout,
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       writedlm(joinpath(dir, pre*"_step-$k.dsv"), A(sim), delim);
-  );
+    end
+  end
 
 end
 
@@ -250,10 +256,12 @@ function take_snapshot_callback(fname::AbstractString, stepout::Real,
                                 A::LBXFunction; dir=".", delim::Char=',')
   if !isdir(dir); mkpath(dir); end
   fhandle = open(joinpath(dir, fname), "a");
-  f = @create_callback(stepout, begin
+  f = (sim::AbstractSim, k::Real) -> begin
+                      if k % stepout < sim.Δt
                         write(fhandle, join(A(sim), delim));
                         write(fhandle, '\n');
-                       end);
+                      end
+                    end;
   # finalizer(f, () -> close(fhandle));
   return f;
 end

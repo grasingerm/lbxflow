@@ -3,25 +3,31 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #! Create callback for pausing the simulation
-function pause_sim_callback(step::Real)
-  return @create_callback(step, begin
+function pause_sim_callback(stepout::Real)
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       println("Press ENTER to continue...");
       readline(STDIN);
-    end);
+    end
+  end
 end
 
 #! Create callback for reporting step
-function print_step_callback(step::Real)
-  return @create_callback(step, begin
+function print_step_callback(stepout::Real)
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       println("step $k");
-    end);
+    end
+  end
 end
 
 #! Create callback for reporting step
-function print_step_callback(step::Real, name::AbstractString)
-  return @create_callback(step, begin
+function print_step_callback(stepout::Real, name::AbstractString)
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       println(name * ":\tstep $k");
-    end)
+    end
+  end
 end
 
 #! Initialize plotting environment
@@ -38,7 +44,7 @@ end
 
 #! Create a pyplot callback function for visualizing the simulation
 #!
-#! \param     iters_per_frame     Iterations per frame
+#! \param     stepout             Time per frame
 #! \param     accessor            Accessor function variable of interest
 #! \param     showfig             Show figure flag
 #! \param     fname               Filename, if empty do not save figure
@@ -55,7 +61,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction; 
+function pyplot_callback(stepout::Real, accessor::LBXFunction; 
                          showfig::Bool=true, fname::AbstractString="",
                          title::AbstractString="",
                          xlabel::AbstractString="", ylabel::AbstractString="", 
@@ -64,7 +70,8 @@ function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction;
                          yticks=false, rects=false, 
                          rcolor::AbstractString="black")
 
-  return @create_callback(iters_per_frame, begin
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -122,9 +129,9 @@ function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction;
 
       PyPlot.draw();
 
-      eval(if fname != ""
-             :(PyPlot.savefig(@sprintf("%s_step-%09d.png", $fname, k));)
-           end);
+      if fname != ""
+        PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
+      end
 
       eval(if showfig == true
              quote
@@ -132,13 +139,14 @@ function pyplot_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end);
+         end
+       end
 
 end
 
 #! Create a pycontour callback function for visualizing the simulation
 #!
-#! \param     iters_per_frame     Iterations per frame
+#! \param     stepout             Time per frame
 #! \param     accessor            Accessor function variable of interest
 #! \param     showfig             Show figure flag
 #! \param     filled              Flag to use filled contours
@@ -156,7 +164,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction; 
+function pycontour_callback(stepout::Real, accessor::LBXFunction; 
                             showfig::Bool=true, filled=false, colorbar=false, 
                             levels=false, fname::AbstractString="",
                             title::AbstractString="", xlabel::AbstractString="", 
@@ -164,7 +172,8 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
                             grid::Bool=false, xticks=false, yticks=false,
                             rects=false, rcolor::AbstractString="black")
 
-  return @create_callback(iters_per_frame, begin
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -177,26 +186,26 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
       if filled
        if colorbar
          if levels != false
-           cs = PyPlot.contourf(mat, levels=levels);
-           PyPlot.colorbar(cs);
+             cs = PyPlot.contourf(mat, levels=levels);
+             PyPlot.colorbar(cs);
          else
-           cs = PyPlot.contourf(mat);
-           PyPlot.colorbar(cs);
+             cs = PyPlot.contourf(mat);
+             PyPlot.colorbar(cs);
          end
        else
-         PyPlot.contourf(mat);
+         PyPlot.contourf(mat)
        end
      else
        if colorbar
          if levels != false
-           cs = PyPlot.contour(mat, levels=levels);
-           PyPlot.colorbar(cs);
+             cs = PyPlot.contour(mat, levels=levels);
+             PyPlot.colorbar(cs);
          else
-           cs = PyPlot.contour(mat);
-           PyPlot.colorbar(cs);
+             cs = PyPlot.contour(mat);
+             PyPlot.colorbar(cs);
          end
        else
-         PyPlot.contour(mat);
+         PyPlot.contour(mat)
        end
      end
       
@@ -239,9 +248,9 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
 
       PyPlot.draw();
 
-      eval(if fname != ""
-             :(PyPlot.savefig(@sprintf("%s_step-%09d.png", $fname, $k));)
-           end);
+      if fname != ""
+        PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
+      end
 
       eval(if showfig == true
              quote
@@ -249,13 +258,13 @@ function pycontour_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end);
-
+    end
+  end
 end
 
 #! Create a pyplot callback function for visualizing the simulation
 #!
-#! \param     iters_per_frame     Iterations per frame
+#! \param     stepout             Time per frame
 #! \param     accessor            Accessor function variable of interest
 #! \param     showfig             Show figure flag
 #! \param     fname               Filename, if empty do not save figure
@@ -270,7 +279,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction; 
+function pyquiver_callback(stepout::Real, accessor::LBXFunction; 
                            showfig::Bool=true, fname::AbstractString="",
                            title::AbstractString="",
                            xlabel::AbstractString="", ylabel::AbstractString="", 
@@ -278,7 +287,8 @@ function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction;
                            xticks=false, yticks=false, rects=false, 
                            rcolor::AbstractString="black")
 
-  return @create_callback(iters_per_frame, begin
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -329,9 +339,9 @@ function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction;
 
       PyPlot.draw();
 
-      eval(if fname != ""
-             :(PyPlot.savefig(@sprintf("%s_step-%09d.png", $fname, $k));)
-           end);
+      if fname != ""
+        PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
+      end
 
       eval(if showfig == true
              quote
@@ -339,13 +349,14 @@ function pyquiver_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end);
+         end
+       end
 
 end
 
 #! Create a pyplot callback function for visualizing the simulation
 #!
-#! \param     iters_per_frame     Iterations per frame
+#! \param     stepout             Time per frame
 #! \param     accessor            Accessor function variable of interest
 #! \param     showfig             Show figure flag
 #! \param     fname               Filename, if empty do not save figure
@@ -360,7 +371,7 @@ end
 #! \param     rects               List of rectangles
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
-function pystream_callback(iters_per_frame::Real, accessor::LBXFunction; 
+function pystream_callback(stepout::Real, accessor::LBXFunction; 
                            showfig::Bool=true, fname::AbstractString="",
                            title::AbstractString="",
                            xlabel::AbstractString="", ylabel::AbstractString="", 
@@ -368,7 +379,8 @@ function pystream_callback(iters_per_frame::Real, accessor::LBXFunction;
                            xticks=false, yticks=false, rects=false, 
                            rcolor::AbstractString="black")
 
-  return @create_callback(iters_per_frame, begin
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       eval(if showfig == true
              :(PyPlot.ion(););
            else
@@ -419,9 +431,9 @@ function pystream_callback(iters_per_frame::Real, accessor::LBXFunction;
 
       PyPlot.draw();
 
-      eval(if fname != ""
-             :(PyPlot.savefig(@sprintf("%s_step-%09d.png", $fname, $k));)
-           end);
+      if fname != ""
+        PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
+      end
 
       eval(if showfig == true
              quote
@@ -429,6 +441,7 @@ function pystream_callback(iters_per_frame::Real, accessor::LBXFunction;
                PyPlot.pause(0.00001);
              end
            end);
-    end);
+         end
+       end
 
 end

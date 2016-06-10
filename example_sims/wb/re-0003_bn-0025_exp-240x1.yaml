@@ -1,8 +1,8 @@
 version: 1.0.0
 preamble: >
-          @init_plot_env();
-          @change_default_figsize(3, 15);
-          const datadir       =   joinpath("data", "re-0003", "bn-0010", "obs-30xL");
+          import PyPlot;
+          PyPlot.rc("figure", figsize=(3, 15));
+          const datadir       =   joinpath("data", "re-0003", "bn-0010", "exp-240x1");
           const nu            =   0.2;
           const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-4, 1e6, 1e-9, 15, 1e-6);
           const F             =   [0.0; -5.0e-6];
@@ -45,7 +45,7 @@ obstacles:
 
 callbacks:
   - print_step_callback(250, "free-surf")
-  - pycontour_callback(250, mass_acsr; filled=true, colorbar=true, levels=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5], fname=joinpath(datadir, "mass"), rects=[(1, 240, 0/ni, 10/ni)])
+  - pycontour_callback(250, mass_acsr; showfig=false, filled=true, colorbar=true, levels=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5], fname=joinpath(datadir, "mass"), rects=[(1, 240, 0/ni, 10/ni)])
   - write_jld_file_callback(datadir, 2000)
   - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
