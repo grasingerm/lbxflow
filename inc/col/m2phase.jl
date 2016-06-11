@@ -39,7 +39,7 @@ const __B = Float64[2/27, 2/27, 2/27, 2/27, 5/108, 5/108, 5/108, 5/108, -4/27];
 #! Two-phase flow collision function
 function m2phase_col_f!(sim::M2PhaseSim, cbounds::Matrix{Int64})
   const nbounds = size(cbounds, 2);
-  for r = 1 = 1:nbounds
+  for r = 1:nbounds
     i_min, i_max, j_min, j_max = sub(cbounds, :, r);
     for j=j_min:j_max, i=i_min:i_max
       const F = _color_grad(sim, cbounds, i, j);

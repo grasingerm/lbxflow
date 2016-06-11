@@ -192,11 +192,15 @@ type M2PhaseSim <: AbstractSim
   Ab::Real;
   αr::Real;
   αb::Real;
+  β::Real;
 
   function M2PhaseSim(nur::Real, nub::Real, rho_0r::Real, rho_0b::Real, 
-                      ni::Int, nj::Int, Ar::Real, Ab::Real, αr::Real, αb::Real;
+                      ni::Int, nj::Int, Ar::Real, Ab::Real, αr::Real, αb::Real,
+                      β::Real;
                       fill_r = (0.0, 1.0, 0.0, 1.0),
                       fill_b = (0.0, 1.0, 0.0, 1.0))
+    @assert(β >= 0 && β <= 1, "β must be between 0 and 1. $(β) is invalid."); 
+
     latr = LatticeD2Q9(1.0, 1.0, ni, nj);
     latb = LatticeD2Q9(1.0, 1.0, ni, nj);
 
@@ -214,6 +218,6 @@ type M2PhaseSim <: AbstractSim
     map_to_macro!(latr, msmr);
     map_to_macro!(latb, msmb);
 
-    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb);
+    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb, β);
   end
 end

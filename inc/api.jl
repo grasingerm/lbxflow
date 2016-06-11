@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# TODO this entire mess needs rewritten... If you're reading this it's too late
+
 using PyCall;
 @pyimport yaml;
 
@@ -67,7 +69,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
       else
         if DEF_EXPR_ATTRS[k][:array]
           n = length(v);
-          # TODO: this syntax is soon deprecated; since when??
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
             if args["verbose"]; info("evalling... $(v[i])"); end
@@ -106,7 +107,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
     "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
     "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
     "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
-    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
     "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
@@ -178,8 +178,12 @@ function parse_and_run(infile::AbstractString, args::Dict)
     const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
     if "default" in simtypes
       @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
+      @assert(!("m2phase" in simtypes), "`simtype` cannot be both `default` and `m2phase`");
+      @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
       isim = Sim(lat, msm);
     elseif "free_surface" in simtypes
+      @assert(!("m2phase" in simtypes), "`simtype` cannot be both `free_surface` and `m2phase`");
+      @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
       if haskey(defs, "states")
         if haskey(defs, "fill_x") || haskey(defs, "fill_y")
           warn("'States' matrix was already provided. 'fill_\$D' variables " *
@@ -192,6 +196,11 @@ function parse_and_run(infile::AbstractString, args::Dict)
       else
         error("No `states` matrix provided. Cannot initialize free surface flow");
       end
+    elseif "m2phase" in simtypes
+      for key in ["col_fr", "col_fb", "Ar", "Ab", "αr", "αb", "β"]
+        @assert(haskey(defs, key), "`$key` is a required input");
+      end
+      error("Not yet implemented");
     else
       error("`simtype` $(defs["simtype"]) is not understood");
     end
