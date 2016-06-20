@@ -235,6 +235,19 @@ flow_ψ(msm::MultiscaleMap) = flow_ψ(reshape(msm.u[1, :, :], size(msm.rho)),
                                     reshape(msm.u[2, :, :], size(msm.rho)));
 stream_function = flow_ψ; # alias for input files that do not support unicode
 
+#! Find center of vortex
+function vortex_center(msm::MultiscaleMap)
+  const ψ = flow_ψ(msm);
+  const ni, nj = size(ψ);
+  max_i, max_j, max_ψ = 1, 1, ψ[1, 1];
+  for j=1:nj, i=1:ni
+    @inbounds if ψ[i, j] > max_ψ
+      @inbounds max_i, max_j, max_ψ = i, j, ψ[i, j];
+    end
+  end
+  return max_i, max_j, max_ψ;
+end
+
 function _cumsimp(y)
   #  Adapted from Matlab code written by Kirill K. Pankratov, March 7, 1994.
 
