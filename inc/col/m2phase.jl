@@ -2,6 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#! Collision function wrapper for two-phase flow
+type M2PhaseColFunction <: ColFunction
+  col_fr!::ColFunction;
+  col_fb!::ColFunction;
+  m2phase_col_f!::LBXFunction;
+
+  M2PhaseColFunction(col_fr!::ColFunction, col_fr!::ColFunction, 
+                     mcol_f!::LBXFunction=m2phase_col_f) = new(col_fr!, col_fb!, 
+                                                               mcol_f!);
+end
+
+#! Foward calls for collision functions
+function call(col_f::M2PhaseColFunction, sim::M2PhaseSim, args...)
+  col_f.col_fr!(sim.simr, args...);
+  col_f.col_fb!(sim.simb, args...);
+  col_f.m2phase_col_f!(sim, args...);
+end
+
 #! Calculate color gradient
 function _color_grad(sim::M2PhaseSim, cbounds::Matrix{Int64}, i::Int, j::Int)
   F = Array{Float64, 2}(2);
@@ -31,8 +49,6 @@ function _color_grad(sim::M2PhaseSim, active_cells::Matrix{Bool}, i::Int, j::Int
   end
   return F;
 end
-
-
 
 const __B = Float64[2/27, 2/27, 2/27, 2/27, 5/108, 5/108, 5/108, 5/108, -4/27];
 

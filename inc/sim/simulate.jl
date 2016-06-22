@@ -125,16 +125,13 @@ end
 
 #! Simulate a step for immiscible two-phase flow
 function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3},
-                   sbounds::Matrix{Int64}, col_fr!::ColFunction, 
-                   col_fb!::ColFunction, cbounds::Matrix{Int64}, 
-                   bcs!::Vector{LBXFunction})
+                   sbounds::Matrix{Int64}, col_f!::M2PhaseColFunction, 
+                   cbounds::Matrix{Int64}, bcs!::Vector{LBXFunction})
  
   # forward collision function calls
-  col_fr!(sim.simr, cbounds);
-  col_fb!(sim.simb, cbounds);
-  m2phase_col_f!(sim, cbounds);
+  col_f!(sim, cbounds);
 
-  recolor!(sim, sbounds, col_fr!.feq_f, col_fb!.feq_f);
+  recolor!(sim, sbounds, col_f!.col_fr!.feq_f, col_f!.col_fb!.feq_f);
 
   stream!(sim.simr, temp_f, sbounds);
   stream!(sim.simb, temp_f, sbounds);
@@ -216,13 +213,11 @@ end
 
 #! Simulate a step for immiscible two-phase flow
 function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3}, 
-                   col_fr!::LBXFunction, col_fb!::LBXFunction, 
+                   col_f!::M2PhaseColFunction, 
                    active_cells::Matrix{Bool}, bcs!::Vector{LBXFunction})
  
   # forward collision function calls
-  col_fr!(sim.simr, active_cells);
-  col_fb!(sim.simb, active_cells);
-  m2phase_col_f!(sim, active_cells);
+  col_f!(sim, active_cells);
 
   recolor!(sim, active_cells, col_fr!.feq_f, col_fb!.feq_f);
 
