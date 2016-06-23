@@ -173,36 +173,44 @@ function parse_and_run(infile::AbstractString, args::Dict)
   if !is_init
     # construct objects
     k = 0.0; # this is so every simulation can start from "k+1"
-    lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
-    msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
-    if "default" in simtypes
-      @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
-      @assert(!("m2phase" in simtypes), "`simtype` cannot be both `default` and `m2phase`");
-      @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
-      isim = Sim(lat, msm);
-    elseif "free_surface" in simtypes
-      @assert(!("m2phase" in simtypes), "`simtype` cannot be both `free_surface` and `m2phase`");
-      @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
-      if haskey(defs, "states")
-        if haskey(defs, "fill_x") || haskey(defs, "fill_y")
-          warn("'States' matrix was already provided. 'fill_\$D' variables " *
-               "will be ignored");
-        end
-        isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
-      elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
-        isim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
-                          defs["fill_x"], defs["fill_y"]);
-      else
-        error("No `states` matrix provided. Cannot initialize free surface flow");
-      end
-    elseif "m2phase" in simtypes
-      for key in ["col_fr", "col_fb", "Ar", "Ab", "αr", "αb", "β"]
+    if "m2phase" in simtypes
+      for key in (["Ar", "Ab", "αr", "αb", "β", "nu_r", "nu_b", "rho_0r", 
+                   "rho_0b"])
         @assert(haskey(defs, key), "`$key` is a required input");
       end
-      error("Not yet implemented");
+      fill_r = (haskey(defs, "fill_r")) ? defs["fill_r"] : (0.0, 1.0, 0.0, 1.0);
+      fill_b = (haskey(defs, "fill_b")) ? defs["fill_b"] : (0.0, 1.0, 0.0, 1.0);
+      sim = M2PhaseSim(defs["nu_r"], defs["nu_b"], defs["rho_0r"], 
+                       defs["rho_0b"], defs["ni"], defs["nj"], defs["Ar"], 
+                       defs["Ab"], defs["αr"], defs["αb"], defs["β"];
+                       fill_r=fill_r, fill_b=fill_b);
     else
-      error("`simtype` $(defs["simtype"]) is not understood");
+      lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
+      msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
+      if "default" in simtypes
+        @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
+        @assert(!("m2phase" in simtypes), "`simtype` cannot be both `default` and `m2phase`");
+        @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
+        isim = Sim(lat, msm);
+      elseif "free_surface" in simtypes
+        @assert(!("m2phase" in simtypes), "`simtype` cannot be both `free_surface` and `m2phase`");
+        @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
+        if haskey(defs, "states")
+          if haskey(defs, "fill_x") || haskey(defs, "fill_y")
+            warn("'States' matrix was already provided. 'fill_\$D' variables " *
+                 "will be ignored");
+          end
+          isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
+        elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
+          isim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
+                            defs["fill_x"], defs["fill_y"]);
+        else
+          error("No `states` matrix provided. Cannot initialize free surface flow");
+        end
+      else
+        error("`simtype` $(defs["simtype"]) is not understood");
+      end
     end
     if "adaptive" in simtypes # adaptive time stepping?
       warn("Adaptive time stepping is highly experimental. It has not yet been validated");

@@ -249,3 +249,36 @@ function m2phase_acsr(inner_acsr::LBXFunction, color::Symbol)
     error("Color $color is not understood. `red` or `blue` are valid colors.");
   end
 end
+
+#! Fluid fraction accessor for two-phase flow simulations
+#!
+#! \param   color   Color of fluid to access
+#! \return          Accessor for fluid fractions
+function fluid_frac_acsr(color::Symbol=:red)
+  if      color == :red
+    return (sim::M2PhaseSim) -> begin
+      const ni, nj  =  size(sim.simr.msm.rho);
+      ff            =  Array{Float64}(ni, nj); 
+      for j=1:nj, i=1:ni
+        ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
+        ff[i, j]      =  ρ_r / (ρ_r + ρ_b);
+      end
+      return transpose(ff);
+    end
+  elseif  color == :blue
+    return (sim::M2PhaseSim) -> begin
+      const ni, nj  =  size(sim.simr.msm.rho);
+      ff            =  Array{Float64}(ni, nj); 
+      for j=1:nj, i=1:ni
+        ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
+        ff[i, j]      =  ρ_b / (ρ_r + ρ_b);
+      end
+      return transpose(ff);
+    end 
+  else
+    error("Color $color is not understood. `red` or `blue` are valid colors.");
+  end  
+end
+
+#! Initialize a default fluid fraction accessor for red fluids
+const red_fluid_frac_acsr = fluid_frac_acsr();

@@ -1,0 +1,50 @@
+version: 1.0.0
+
+preamble: >
+  @init_plot_env();
+  const datadir       =   joinpath("data", "2phase");
+  const nu_r          =   0.2;
+  const nu_b          =   0.18;
+  const ni            =   50;
+  const nj            =   50;
+  const αr            =   1.0;
+  const αb            =   1.0;
+  const nsteps        =   50000;
+
+# data directory
+datadir:      {   value: datadir,       expr: true    }
+
+# two-phase material properties
+rho_0r:       {   value: 1.0,           expr: false   }
+nu_r:         {   value: nu_r,          expr: true    }
+Ar:           {   value: 1.0,            expr: true   }
+αr:           {   value: αr,            expr: true    }
+
+rho_0b:       {   value: 1.0,           expr: false   }
+nu_b:         {   value: nu_b,          expr: true    }
+Ab:           {   value: 1.0,            expr: true   }
+αb:           {   value: αb,            expr: true    }
+
+β:            {   value: 0.8,           expr: false   }
+
+# lattice parameters
+dx:         {   value: 1.0,           expr: false   }
+dt:         {   value: 1.0,           expr: false   }
+ni:         {   value:  ni,           expr: true    }
+nj:         {   value:  nj,           expr: true    }
+
+# simulation parameters
+simtype:    m2phase
+
+# simulation parameters
+nsteps:   { value: nsteps,   expr: true }
+col_f:    M2PhaseColFunction(BGK(init_constit_srt_const(nu_r); feq_f=init_feq_mphase_immis(αr)), BGK(init_constit_srt_const(nu_b); feq_f=init_feq_mphase_immis(αb)));
+
+# boundary conditions
+bcs:
+  - periodic_east_to_west!
+  - periodic_north_to_south!
+
+callbacks:
+  - print_step_callback(25)
+  - pycontour_callback(50, fluid_frac_acsr(:red); filled=true)
