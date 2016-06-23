@@ -25,3 +25,4 @@ include("bgk.jl");
 include("mrt.jl");
 include("entropic.jl");
 include("filtering.jl");
+include("m2phase.jl");

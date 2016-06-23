@@ -100,8 +100,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
     "rho_g"   =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
-    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
-    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
     "dx"      =>  (defs::Dict) -> begin; return 1.0; end,
     "dt"      =>  (defs::Dict) -> begin; return 1.0; end,
     "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
@@ -181,11 +179,13 @@ function parse_and_run(infile::AbstractString, args::Dict)
       end
       fill_r = (haskey(defs, "fill_r")) ? defs["fill_r"] : (0.0, 1.0, 0.0, 1.0);
       fill_b = (haskey(defs, "fill_b")) ? defs["fill_b"] : (0.0, 1.0, 0.0, 1.0);
-      sim = M2PhaseSim(defs["nu_r"], defs["nu_b"], defs["rho_0r"], 
-                       defs["rho_0b"], defs["ni"], defs["nj"], defs["Ar"], 
-                       defs["Ab"], defs["αr"], defs["αb"], defs["β"];
-                       fill_r=fill_r, fill_b=fill_b);
+      isim = M2PhaseSim(defs["nu_r"], defs["nu_b"], defs["rho_0r"], 
+                        defs["rho_0b"], defs["ni"], defs["nj"], defs["Ar"], 
+                        defs["Ab"], defs["αr"], defs["αb"], defs["β"];
+                        fill_r=fill_r, fill_b=fill_b);
     else
+      @assert(haskey(defs, "nu"), "`nu` is a required input");
+      @assert(haskey(defs, "rho_0"), "`rho_0` is a required input");
       lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
       msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
       if "default" in simtypes

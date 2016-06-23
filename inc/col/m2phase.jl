@@ -8,8 +8,8 @@ type M2PhaseColFunction <: ColFunction
   col_fb!::ColFunction;
   m2phase_col_f!::LBXFunction;
 
-  M2PhaseColFunction(col_fr!::ColFunction, col_fr!::ColFunction, 
-                     mcol_f!::LBXFunction=m2phase_col_f) = new(col_fr!, col_fb!, 
+  M2PhaseColFunction(col_fr!::ColFunction, col_fb!::ColFunction, 
+                     mcol_f!::LBXFunction=m2phase_col_f!) = new(col_fr!, col_fb!, 
                                                                mcol_f!);
 end
 

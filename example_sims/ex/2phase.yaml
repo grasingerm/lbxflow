@@ -17,12 +17,12 @@ datadir:      {   value: datadir,       expr: true    }
 # two-phase material properties
 rho_0r:       {   value: 1.0,           expr: false   }
 nu_r:         {   value: nu_r,          expr: true    }
-Ar:           {   value: 1.0,            expr: true   }
+Ar:           {   value: 1.0,           expr: false   }
 αr:           {   value: αr,            expr: true    }
 
 rho_0b:       {   value: 1.0,           expr: false   }
 nu_b:         {   value: nu_b,          expr: true    }
-Ab:           {   value: 1.0,            expr: true   }
+Ab:           {   value: 1.0,           expr: false   }
 αb:           {   value: αb,            expr: true    }
 
 β:            {   value: 0.8,           expr: false   }

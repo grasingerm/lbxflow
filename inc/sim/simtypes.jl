@@ -204,10 +204,16 @@ type M2PhaseSim <: AbstractSim
     latr = LatticeD2Q9(1.0, 1.0, ni, nj);
     latb = LatticeD2Q9(1.0, 1.0, ni, nj);
 
-    i_range_r = convert(Int, round(fill_r[1])):convert(Int, round(fill_r[2]));
-    j_range_r = convert(Int, round(fill_r[3])):convert(Int, round(fill_r[4]));
-    i_range_b = convert(Int, round(fill_b[1])):convert(Int, round(fill_b[2]));
-    j_range_b = convert(Int, round(fill_b[3])):convert(Int, round(fill_b[4]));
+    _fill_to_range(percents, nx) = begin
+      start = convert(Int, round(percents[1] * nx)) + 1;
+      fin   = convert(Int, round(percents[2] * nx));
+      return start:fin;
+    end
+    
+    i_range_r = _fill_to_range((fill_r[1], fill_r[2]), ni);
+    j_range_r = _fill_to_range((fill_r[3], fill_r[4]), nj);
+    i_range_b = _fill_to_range((fill_b[1], fill_b[2]), ni);
+    j_range_b = _fill_to_range((fill_b[3], fill_b[4]), nj);
 
     _fill_lat(latr, i_range_r, j_range_r, rho_0r);
     _fill_lat(latb, i_range_b, j_range_b, rho_0b);
