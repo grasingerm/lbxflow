@@ -193,6 +193,7 @@ type M2PhaseSim <: AbstractSim
   αr::Real;
   αb::Real;
   β::Real;
+  Δt::Real;
 
   function M2PhaseSim(nur::Real, nub::Real, rho_0r::Real, rho_0b::Real, 
                       ni::Int, nj::Int, Ar::Real, Ab::Real, αr::Real, αb::Real,
@@ -224,6 +225,6 @@ type M2PhaseSim <: AbstractSim
     map_to_macro!(latr, msmr);
     map_to_macro!(latb, msmb);
 
-    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb, β);
+    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb, β, 1.0);
   end
 end

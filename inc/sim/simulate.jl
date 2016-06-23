@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include("recolor.jl");
+
 #! Stream particle densities
 #!
 #! \param lat Lattice to stream on
@@ -107,10 +109,11 @@ function stream!(lat::Lattice, temp_f::Array{Float64,3},
 end
 
 #! Simulate a single step
-function sim_step!(sim::Sim, temp_f::Array{Float64,3},
+function sim_step!(sim::Sim,
                    sbounds::Matrix{Int64}, collision_f!::LBXFunction, 
                    cbounds::Matrix{Int64}, bcs!::Vector{LBXFunction})
   lat = sim.lat;
+  temp_f = copy(lat.f);
   msm = sim.msm;
 
   collision_f!(sim, cbounds);
@@ -124,33 +127,50 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
 end
 
 #! Simulate a step for immiscible two-phase flow
-function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3},
+function sim_step!(sim::M2PhaseSim,
                    sbounds::Matrix{Int64}, col_f!::M2PhaseColFunction, 
                    cbounds::Matrix{Int64}, bcs!::Vector{LBXFunction})
  
   # forward collision function calls
+  println("collision: ");
   col_f!(sim, cbounds);
+  println("Is there an NaN?", true in isnan(sim.simr.lat.f));
+  readline(STDIN);
 
+  println("recolor: ");
   recolor!(sim, sbounds, col_f!.col_fr!.feq_f, col_f!.col_fb!.feq_f);
+  println("Is there an NaN?", true in isnan(sim.simr.lat.f));
+  readline(STDIN);
 
-  stream!(sim.simr, temp_f, sbounds);
-  stream!(sim.simb, temp_f, sbounds);
+  println("stream: ");
+  temp_f = copy(sim.simr.lat.f);
+  stream!(sim.simr.lat, temp_f, sbounds);
+  stream!(sim.simb.lat, temp_f, sbounds);
+  println("Is there an NaN?", true in isnan(sim.simr.lat.f));
+  readline(STDIN);
 
+  println("bcs: ");
   for bc! in bcs!
     bc!(sim.simr);
     bc!(sim.simb);
   end
+  println("Is there an NaN?", true in isnan(sim.simr.lat.f));
+  readline(STDIN);
 
+  println("m2m: ");
   map_to_macro!(sim.simr.lat, sim.simr.msm);
   map_to_macro!(sim.simb.lat, sim.simb.msm);
+  println("Is there an NaN?", true in isnan(sim.simr.lat.f));
+  readline(STDIN);
 end
 
 #! Simulate a single step free surface flow step
-function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
+function sim_step!(sim::FreeSurfSim,
                    sbounds::Matrix{Int64}, collision_f!::ColFunction, 
                    cbounds::Matrix{Int64}, 
                    bcs!::Vector{LBXFunction})
   lat               =   sim.lat;
+  temp_f            =   copy(lat.f);
   msm               =   sim.msm;
   t                 =   sim.tracker;
   unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
@@ -188,17 +208,18 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 end
 
 # Adaptive time step simulation step
-function sim_step!(sim::AdaptiveTimeStepSim, temp_f::Array{Float64,3},
+function sim_step!(sim::AdaptiveTimeStepSim,
                    sbounds::Matrix{Int64}, collision_f!::ColFunction, args...)
-  sim_step!(sim.isim, temp_f, sbounds, collision_f!, args...); # forward sim_step!
+  sim_step!(sim.isim, sbounds, collision_f!, args...); # forward sim_step!
   adapt_time_step!(sim, collision_f!);
 end
 
 #! Simulate a single step
-function sim_step!(sim::Sim, temp_f::Array{Float64,3}, 
+function sim_step!(sim::Sim,
                    collision_f!::LBXFunction, active_cells::Matrix{Bool}, 
                    bcs!::Vector{LBXFunction})
   lat = sim.lat;
+  temp_f = copy(lat.f);
   msm = sim.msm;
 
   collision_f!(sim, active_cells);
@@ -212,7 +233,7 @@ function sim_step!(sim::Sim, temp_f::Array{Float64,3},
 end
 
 #! Simulate a step for immiscible two-phase flow
-function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3}, 
+function sim_step!(sim::M2PhaseSim,
                    col_f!::M2PhaseColFunction, 
                    active_cells::Matrix{Bool}, bcs!::Vector{LBXFunction})
  
@@ -221,8 +242,9 @@ function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3},
 
   recolor!(sim, active_cells, col_fr!.feq_f, col_fb!.feq_f);
 
-  stream!(sim.simr, temp_f, active_cells);
-  stream!(sim.simb, temp_f, active_cells);
+  temp_f = copy(sim.simr.lat.f);
+  stream!(sim.simr.lat, temp_f, active_cells);
+  stream!(sim.simb.lat, temp_f, active_cells);
 
   for bc! in bcs!
     bc!(sim.simr);
@@ -234,10 +256,11 @@ function sim_step!(sim::M2PhaseSim, temp_f::Array{Float64,3},
 end
 
 #! Simulate a single step free surface flow step
-function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
+function sim_step!(sim::FreeSurfSim,
                    collision_f!::ColFunction, active_cells::Matrix{Bool}, 
                    bcs!::Vector{LBXFunction})
   lat               =   sim.lat;
+  temp_f            =   copy(lat.f);
   msm               =   sim.msm;
   t                 =   sim.tracker;
   unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
@@ -276,9 +299,9 @@ function sim_step!(sim::FreeSurfSim, temp_f::Array{Float64,3},
 end
 
 # Adaptive time step simulation step
-function sim_step!(sim::AdaptiveTimeStepSim, temp_f::Array{Float64,3},
+function sim_step!(sim::AdaptiveTimeStepSim,
                    collision_f!::ColFunction, args...)
-  sim_step!(sim.isim, temp_f, collision_f!, args...); # forward sim_step!
+  sim_step!(sim.isim, collision_f!, args...); # forward sim_step!
   adapt_time_step!(sim, collision_f!);
 end
 
@@ -386,11 +409,10 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    bcs!::Vector{LBXFunction}, n_steps::Real,
                    callbacks!::Vector{LBXFunction}, k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
   while (k+=sim.Δt) <= n_steps
     try
 
-      sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+      sim_step!(sim, sbounds, collision_f!, cbounds, bcs!);
 
       for c! in callbacks!
         c!(sim, k);
@@ -399,7 +421,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
     
     catch e
 
-      @_report_and_exit(e, i);
+      @_report_and_exit(e, k);
 
     end
 
@@ -414,9 +436,8 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    collision_f!::LBXFunction, cbounds::Matrix{Int64},
                    bcs!::Vector{LBXFunction}, n_steps::Real, k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
   while (k+=sim.Δt) <= n_steps
-    try; sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+    try; sim_step!(sim, sbounds, collision_f!, cbounds, bcs!);
     catch e
 
       @_report_and_exit(e, k);
@@ -435,9 +456,7 @@ function simulate!(sim::AbstractSim, collision_f!::LBXFunction,
                    test_for_term::LBXFunction,
                    callbacks!::Vector{LBXFunction}, k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
-
-  sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
+  sim_step!(sim, collision_f!, active_cells, bcs!);
 
   for c! in callbacks!
     c!(sim, (k+=sim.Δt));
@@ -448,7 +467,7 @@ function simulate!(sim::AbstractSim, collision_f!::LBXFunction,
   while (k+=sim.Δt) <= n_steps
     try
 
-      sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
+      sim_step!(sim, collision_f!, active_cells, bcs!);
 
       for c! in callbacks!
         c!(sim, k);
@@ -482,9 +501,7 @@ function simulate!(sim::AbstractSim,
                    steps_for_term::Int, callbacks!::Vector{LBXFunction}, 
                    k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
-
-  sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
+  sim_step!(sim, collision_f!, active_cells, bcs!);
 
   for c! in callbacks!
     c!(sim, (k+=sim.Δt));
@@ -497,7 +514,7 @@ function simulate!(sim::AbstractSim,
   while (k+=sim.Δt) <= n_steps
     try
 
-      sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
+      sim_step!(sim, collision_f!, active_cells, bcs!);
 
       for c! in callbacks!
         c!(sim, k);
@@ -530,11 +547,10 @@ function simulate!(sim::AbstractSim,
                    bcs!::Vector{LBXFunction}, n_steps::Real,
                    callbacks!::Vector{LBXFunction}, k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
   while (k+=sim.Δt) <= n_steps
     try
 
-      sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
+      sim_step!(sim, collision_f!, active_cells, bcs!);
 
       for c! in callbacks!
         c!(sim, k);
@@ -556,9 +572,8 @@ function simulate!(sim::AbstractSim,
                    collision_f!::LBXFunction, active_cells::Matrix{Bool},
                    bcs!::Vector{LBXFunction}, n_steps::Real, k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
   while (k+=sim.Δt) <= n_steps
-    try; sim_step!(sim, temp_f, collision_f!, active_cells, bcs!);
+    try; sim_step!(sim, collision_f!, active_cells, bcs!);
     catch e
 
       @_report_and_exit(e, k);
