@@ -208,6 +208,14 @@ function mass_acsr(sim::AdaptiveTimeStepSim)
   return transpose(map(m -> m / sim.Δt, sim.tracker.M));
 end
 
+#! Fluid fraction accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Fluid fraction over domain
+function ff_acsr(sim::FreeSurfSim)
+  return transpose(sim.tracker.eps);
+end
+
 #! Streamline fields accessor
 #!
 #! \param   sim   Simulation object
