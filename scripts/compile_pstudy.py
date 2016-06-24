@@ -12,7 +12,6 @@ def load_names(f):
             assert len(asides) == 2, """assignment command on line {} is invald
                                      """.format(lnum+1)
             names[asides[0]] = asides[1]
-            print('{} = {}'.format(asides[0], asides[1]))
     return names
 
 def parse_s(s, names):
@@ -32,16 +31,18 @@ def parse_s(s, names):
         p = end + 1
     return new_s
 
-def parse_raw_params(params, names):
+def parse_raw_params(params, names, tnl=False):
     if len(names) == 0:
         return
     else:
         for (idx, param) in enumerate(params):
             if type(param) == str:
                 params[idx] = parse_s(param, names)
+                if tnl: params[idx] = params[idx].rstrip()
             elif type(param) == dict:
                 for (k, v) in param.items():
                     param[k] = parse_s(v, names)
+                    if tnl: param[k] = param[k].rstrip()
             else:
                 raise Exception('unexpected type')
     return
@@ -65,27 +66,31 @@ def compile_input_files(fname, *cats):
 parser = argparse.ArgumentParser(description='Compile input files for a parametric study')
 parser.add_argument('fname', help='file name of pstudy input file')
 parser.add_argument('--verbose', '-v', action='store_true', default=False,
-                    help='print diagnostic information')
+                    help='Print diagnostic information')
+parser.add_argument('--tnl', '-N', action='store_true', default=False,
+                    help='Remove trailing new lines')
 args = parser.parse_args()
 
 with open(args.fname) as f:
     params = load_raw_params(f)
     f.seek(0)
     names = load_names(f)
-    print('names: ', names)
-    parse_raw_params(params, names)
+    if args.verbose: print('names: ', names)
+    parse_raw_params(params, names, tnl=args.tnl)
     ncombos = 1
-    for param in params:
-        if type(param) == str:
-            print(param)
-            print()
-        elif type(param) == dict:
-            ncombos = ncombos * len(param)
-            for (key, val) in param.items():
-                print(key + ": " + val)
+    if args.verbose:
+        for param in params:
+            if type(param) == str:
+                print(param)
                 print()
-        else:
-            raise Exception('unexpected type')
-    print("Total combos: ", ncombos)
+            elif type(param) == dict:
+                ncombos = ncombos * len(param)
+                for (key, val) in param.items():
+                    print(key + ": " + val)
+                    print()
+            else:
+                raise Exception('unexpected type')
     
     compile_input_files("", *params)
+    print("Compilation complete")
+    if args.verbose: print("Total files: ", ncombos)
