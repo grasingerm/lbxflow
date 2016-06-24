@@ -66,7 +66,7 @@ end
 #! \param tol Threshold for determining steady state
 #! \return Flag for sim termination
 function is_steadystate_x(msm::MultiscaleMap, prev_msm::MultiscaleMap,
-  tol::AbstractFloat = 5.0e-7)
+                          tol::AbstractFloat = 5.0e-7)
 
   sum_diff = 0.0;
   sum_u = 0.0;
@@ -84,6 +84,33 @@ function is_steadystate_x(msm::MultiscaleMap, prev_msm::MultiscaleMap,
 
 end
 
+#! Test if flow is steady state
+#!
+#! \param msm Current multiscale map
+#! \param prev_msms Previous multiscale map
+#! \param tol Threshold for determining steady state
+#! \return Flag for sim termination
+function is_steadystate_x(msm::MultiscaleMap, prev_msms::Vector{MultiscaleMap},
+                          tol::AbstractFloat = 5.0e-7)
+
+  sum_diff = 0.0;
+  sum_u = 0.0;
+
+  for prev_msm in prev_msms
+    for (u, u_prev) in zip(msm.u[1,:,:], prev_msm.u[1,:,:])
+      sum_diff += abs(u - u_prev);
+      sum_u += abs(u);
+    end
+  end
+
+  if sum_diff / sum_u <= tol
+    return true;
+  end
+
+  return false;
+
+end
+
 #! Test if flow is steady state in the y-direction
 #!
 #! \param msm Current multiscale map
@@ -91,7 +118,7 @@ end
 #! \param tol Threshold for determining steady state
 #! \return Flag for sim termination
 function is_steadystate_y(msm::MultiscaleMap, prev_msm::MultiscaleMap,
-  tol::AbstractFloat = 5.0e-7)
+                          tol::AbstractFloat = 5.0e-7)
 
   sum_diff = 0.0;
   sum_u = 0.0;
@@ -99,6 +126,33 @@ function is_steadystate_y(msm::MultiscaleMap, prev_msm::MultiscaleMap,
   for (u, u_prev) in zip(msm.u[2,:,:], prev_msm.u[2,:,:])
     sum_diff += abs(u - u_prev);
     sum_u += abs(u);
+  end
+
+  if sum_diff / sum_u <= tol
+    return true;
+  end
+
+  return false;
+
+end
+
+#! Test if flow is steady state
+#!
+#! \param msm Current multiscale map
+#! \param prev_msms Previous multiscale map
+#! \param tol Threshold for determining steady state
+#! \return Flag for sim termination
+function is_steadystate_y(msm::MultiscaleMap, prev_msms::Vector{MultiscaleMap},
+                          tol::AbstractFloat = 5.0e-7)
+
+  sum_diff = 0.0;
+  sum_u = 0.0;
+
+  for prev_msm in prev_msms
+    for (u, u_prev) in zip(msm.u[2,:,:], prev_msm.u[2,:,:])
+      sum_diff += abs(u - u_prev);
+      sum_u += abs(u);
+    end
   end
 
   if sum_diff / sum_u <= tol

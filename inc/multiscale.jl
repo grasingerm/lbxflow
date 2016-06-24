@@ -38,8 +38,10 @@ macro rho(p, cssq)
   return :($p / $cssq);
 end
 
+abstract AbstractMultiscaleMap;
+
 #! Multiscale map for resolving macroscopic parameters
-immutable MultiscaleMap
+immutable MultiscaleMap <: AbstractMultiscaleMap
   rho_0::AbstractFloat;
   omega::Matrix{Float64};
   u::Array{Float64,3};
@@ -77,7 +79,7 @@ function map_to_macro!(lat::Lattice, msm::MultiscaleMap)
     end
 
     for a=1:2
-      msm.u[a,i,j] = msm.u[a,i,j] / msm.rho[i,j];
+      msm.u[a,i,j] = (msm.rho[i, j] > eps()) ? msm.u[a,i,j] / msm.rho[i,j] : 0.0;
     end
   end
 
@@ -296,5 +298,3 @@ function _cumsimp(y)
 
   return f;
 end
-
-

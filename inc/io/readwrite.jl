@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import JLD;
-
 #! Dump simulation to JLD file
-function dumpsim_jld(datadir::AbstractString, sim::AbstractSim, step::Int,
-  append_step_to_name::Bool = false)
+function dumpsim_jld(datadir::AbstractString, sim::AbstractSim, step::Real,
+                     append_step_to_name::Bool = false)
   
   const jldpath = (append_step_to_name) ? joinpath(datadir, "bak_$step.jld") :
                                           joinpath(datadir, "bak.jld");
@@ -25,10 +23,10 @@ function loadsim_jld(path::AbstractString)
 end
 
 #! Dump simulation to a text file
-function dumpsim(datadir::AbstractString, sim::Sim, step::Int)
+function dumpsim(datadir::AbstractString, sim::Sim, step::Real)
   const dumpdir = joinpath(datadir, "bak_$step");
   if !isdir(dumpdir)
-    mkdir(dumpdir);
+    mkpath(dumpdir);
   end
  
   # backup particle distributions and lattice config
@@ -199,35 +197,35 @@ end
 function write_jld_file_callback(datadir::AbstractString,
                                  append_step_to_name::Bool = false)
  
-  return (sim::AbstractSim, k::Int) -> begin
+  return (sim::AbstractSim, k::Real) -> begin
     dumpsim_jld(datadir, sim, k, append_step_to_name);
   end;
 end
 
 #! Create a callback function for writing a jld backup file
-function write_jld_file_callback(datadir::AbstractString, stepout::Int,
+function write_jld_file_callback(datadir::AbstractString, stepout::Real,
                                  append_step_to_name::Bool = false)
 
-  return (sim::AbstractSim, k::Int) -> begin
-    if k % stepout == 0
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       dumpsim_jld(datadir, sim, k, append_step_to_name);
     end
-  end;
+  end
 end
 #! Create a callback function for writing a backup file
 function write_backup_file_callback(datadir::AbstractString)
-  return (sim::Sim, k::Int) -> begin
+  return (sim::Sim, k::Real) -> begin
     dumpsim(datadir, sim, k);
   end;
 end
 
 #! Create a callback function for writing a backup file
-function write_backup_file_callback(datadir::AbstractString, stepout::Int)
-  return (sim::Sim, k::Int) -> begin
-    if k % stepout == 0
+function write_backup_file_callback(datadir::AbstractString, stepout::Real)
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       dumpsim(datadir, sim, k);
     end
-  end;
+  end
 end
 
 #! Create a callback function for writing to a delimited file
@@ -236,13 +234,36 @@ end
 #! \param stepout Number of steps in between writing
 #! \param A Function for extracting a 2D array from the sim
 #! \param delim Delimiter to separate values with
-function write_datafile_callback(pre::AbstractString, stepout::Int, A::Function,
-  dir=".", delim=',')
+function write_datafile_callback(pre::AbstractString, stepout::Real, 
+                                 A::LBXFunction; dir=".", delim=',')
 
-  return (sim::Sim, k::Int) -> begin
-    if k % stepout == 0
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
       writedlm(joinpath(dir, pre*"_step-$k.dsv"), A(sim), delim);
     end
-  end;
+  end
 
 end
+
+#! Record a snapshot in a text file
+#!
+#! \param   fname     File name
+#! \param   stepout   Number of steps in between writing
+#! \param   A         Function for extracting data points
+#! \param   delim     Delimiter for file
+#! \return            Callback function
+function take_snapshot_callback(fname::AbstractString, stepout::Real, 
+                                A::LBXFunction; dir=".", delim::Char=',')
+  if !isdir(dir); mkpath(dir); end
+  fhandle = open(joinpath(dir, fname), "a");
+  f = (sim::AbstractSim, k::Real) -> begin
+                      if k % stepout < sim.Δt
+                        write(fhandle, join(A(sim), delim));
+                        write(fhandle, '\n');
+                      end
+                    end;
+  # finalizer(f, () -> close(fhandle));
+  return f;
+end
+
+include("sample.jl");

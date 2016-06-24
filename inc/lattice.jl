@@ -105,8 +105,11 @@ function opp_lat_vec(lat::LatticeD2Q9, k::Int)
     return 5;
   elseif k == 8
     return 6;
+  elseif k == 9
+    return 9;
+  else
+    error("$k > 9 for a D2Q9 lattice. Only nine vectors (1-9) possible");
   end
-  return 9;
 end
 
 #! Opposite direction lattice vector index
@@ -116,4 +119,12 @@ end
 #! \return Index of opposite direction
 function opp_lat_vec(lat::LatticeD2Q4, k::Int)
   error("not yet implemented");
+end
+
+#! Helper function for initializing lattice
+function _fill_lat(lat::Lattice, i_range::UnitRange{Int}, j_range::UnitRange{Int}, 
+                   rho::Real)
+  for k=1:lat.n, j=j_range, i=i_range
+    lat.f[k, i, j] = rho * lat.w[k];
+  end
 end

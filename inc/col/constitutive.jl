@@ -2,24 +2,41 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#! Initialize a constant constitutive relationship
-#!
-#! \param mu Dynamic viscosity
-#! \return Constitutive relation function
-function init_constit_srt_const(mu::AbstractFloat)
-  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    return mu;
-  end
+#! Two-phase constitutive equation that relaxs interface
+#=type M2PhaseConstit
+  constit_r::LBXFunction;
+  constit_b::LBXFunction;
+
+  M2PhaseConstit(constit_r::LBXFunction, constit_b::LBXFunction, δ::Real) = (
+    new(constit_r, constit_b, δ));
 end
+
+function call(mc::M2PhaseConstit, sim::M2PhaseSim, args...)
+  const ρ_r   =   sim.simr.msm.rho[i, j] 
+  const ρ_b   =   sim.simb.msm.rho[i, j] 
+  const ψ     =   (ρ_r - ρ_b) / (ρ_r + ρ_b);
+end=#
+
+# call definition for constant constitutive relationship
+function call(cc::_ConstConstit, sim::AbstractSim, 
+              fneq::AbstractArray{Float64, 1}, i::Int, j::Int)
+  return cc.μ;
+end
+
+function call(cc::_ConstConstit, sim::AbstractSim, 
+              fneq::AbstractArray{Float64, 1}, S::Function, 
+              M::AbstractArray{Float64, 2}, iM::AbstractArray{Float64, 2}, 
+              i::Int, j::Int)
+  return cc.μ;
+end
+
 
 #! Initialize a constant constitutive relationship
 #!
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
-function init_constit_srt_const_local()
-  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    return @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
-  end
+function init_constit_srt_const(mu::AbstractFloat)
+  return _ConstConstit(mu);
 end
 
 #! Initialize an explicit bingham constitutive relationship
@@ -506,10 +523,7 @@ end
 #! \param mu Dynamic viscosity
 #! \return Constitutive relation function
 function init_constit_mrt_const(mu::AbstractFloat)
-  return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
-          M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
-    return mu;
-  end
+  return _ConstConstit(mu);
 end
 
 #! Initialize a constant constitutive relationship

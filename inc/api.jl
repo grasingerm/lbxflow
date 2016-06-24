@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# TODO this entire mess needs rewritten... If you're reading this it's too late
+
 using PyCall;
 @pyimport yaml;
 
@@ -14,15 +16,15 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "callbacks"     =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "finally"       =>  Dict{Symbol, Any}( :store => true,  :array => true,  
-                                           :type => Function ),
+                                           :type => LBXFunction ),
     "test_for_term" =>  Dict{Symbol, Any}( :store => true,  :array => false, 
-                                           :type => Function )
+                                           :type => LBXFunction )
   );
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
@@ -40,6 +42,10 @@ function parse_and_run(infile::AbstractString, args::Dict)
     if ins["version"] > args["LBX_VERSION"]
       warn("$infile recommends v$(ins["version"]), consider updating.");
     end
+
+  else
+
+    warn("$infile does not contain versioning information.");
 
   end
 
@@ -63,7 +69,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
       else
         if DEF_EXPR_ATTRS[k][:array]
           n = length(v);
-          # TODO: this syntax is soon deprecated; since when??
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
             if args["verbose"]; info("evalling... $(v[i])"); end
@@ -95,14 +100,11 @@ function parse_and_run(infile::AbstractString, args::Dict)
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
     "rho_g"   =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
-    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
-    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
     "dx"      =>  (defs::Dict) -> begin; return 1.0; end,
     "dt"      =>  (defs::Dict) -> begin; return 1.0; end,
     "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
     "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
     "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
-    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
     "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
@@ -123,6 +125,25 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["finally"][end] = write_jld_file_callback(defs["datadir"], 1);
   end
 
+  # syntactic sugar for adding obstacles
+  if haskey(defs, "obstacles")
+    defs["active_cells"]  =   fill(true, defs["ni"], defs["nj"]);
+    for obstacle_array in defs["obstacles"]
+      obs_type      =   parse(obstacle_array["type"]);
+      obs_locs      =   eval(parse(obstacle_array["coords"]));
+
+      @assert(size(obs_locs, 1) == 4, "Obstacle coordinates should be "      *
+              "organized in columns, i.e. coords[:, ...] = i_min, i_max, "   *
+              "j_min, j_max. Obstacle coordinate matrix should have exactly "*
+              "4 rows. $(size(obs_locs, 1)) != 4");
+
+      for j = 1:size(obs_locs, 2)
+        add_obstacle!(defs["active_cells"], defs["bcs"], obs_locs[1, j], 
+                      obs_locs[2, j], obs_locs[3, j], obs_locs[4, j], obs_type); 
+      end
+    end
+  end
+
   if args["verbose"]; println("$infile definitions:"); println(defs); end
 
   # if datadir does not exist, create it
@@ -134,16 +155,9 @@ function parse_and_run(infile::AbstractString, args::Dict)
   # recursively remove data from previous runs
   if args["clean"]
     for f in readdir(defs["datadir"]); rrm(joinpath(defs["datadir"], f)); end
-    if args["noexe"]; rm(defs["datadir"]); end
   end
 
-  # check for `noexe` switch
-  if args["noexe"]
-    info("`noexe` switch was passed. $infile will not be simulated.");
-    return nothing;
-  end
-
-  is_init = false;
+    is_init = false;
   if args["resume"]
     k, sim = load_latest_backup(defs["datadir"]);
     if k == 0 || sim == nothing
@@ -156,25 +170,60 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   if !is_init
     # construct objects
-    k = 0; # this is so every simulation can start from "k+1"
-    lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
-    msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
-    if defs["simtype"] == "default"; sim = Sim(lat, msm)
-    elseif defs["simtype"] == "free_surface"
-      if haskey(defs, "states")
-        if haskey(defs, "fill_x") || haskey(defs, "fill_y")
-          warn("'States' matrix was already provided. 'fill_\$D' variables " *
-               "will be ignored");
+    k = 0.0; # this is so every simulation can start from "k+1"
+    const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
+    if "m2phase" in simtypes
+      for key in (["Ar", "Ab", "αr", "αb", "β", "nu_r", "nu_b", "rho_0r", 
+                   "rho_0b"])
+        @assert(haskey(defs, key), "`$key` is a required input");
+      end
+      fill_r = (haskey(defs, "fill_r")) ? defs["fill_r"] : (0.0, 1.0, 0.0, 1.0);
+      fill_b = (haskey(defs, "fill_b")) ? defs["fill_b"] : (0.0, 1.0, 0.0, 1.0);
+      isim = M2PhaseSim(defs["nu_r"], defs["nu_b"], defs["rho_0r"], 
+                        defs["rho_0b"], defs["ni"], defs["nj"], defs["Ar"], 
+                        defs["Ab"], defs["αr"], defs["αb"], defs["β"];
+                        fill_r=fill_r, fill_b=fill_b);
+    else
+      @assert(haskey(defs, "nu"), "`nu` is a required input");
+      @assert(haskey(defs, "rho_0"), "`rho_0` is a required input");
+      lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
+      msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
+      if "default" in simtypes
+        @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
+        @assert(!("m2phase" in simtypes), "`simtype` cannot be both `default` and `m2phase`");
+        @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
+        isim = Sim(lat, msm);
+      elseif "free_surface" in simtypes
+        @assert(!("m2phase" in simtypes), "`simtype` cannot be both `free_surface` and `m2phase`");
+        @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
+        if haskey(defs, "states")
+          if haskey(defs, "fill_x") || haskey(defs, "fill_y")
+            warn("'States' matrix was already provided. 'fill_\$D' variables " *
+                 "will be ignored");
+          end
+          isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
+        elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
+          isim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
+                            defs["fill_x"], defs["fill_y"]);
+        else
+          error("No `states` matrix provided. Cannot initialize free surface flow");
         end
-        sim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
-      elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
-        sim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
-                          defs["fill_x"], defs["fill_y"]);
       else
-        error("No `states` matrix provided. Cannot initialize free surface flow");
+        error("`simtype` $(defs["simtype"]) is not understood");
+      end
+    end
+    if "adaptive" in simtypes # adaptive time stepping?
+      warn("Adaptive time stepping is highly experimental. It has not yet been validated");
+      const incr = (!haskey(defs, "incr") || defs["incr"]) ? true : false;
+      const decr = (!haskey(defs, "decr") || defs["decr"]) ? true : false;
+      const relax = (haskey(defs, "relax")) ? defs["relax"] : 1.0;
+      if haskey(defs, "xi")
+        sim = AdaptiveTimeStepSim(isim, defs["xi"]; incr=incr, decr=decr, relax=relax);
+      else
+        sim = AdaptiveTimeStepSim(isim; incr=incr, decr=decr, relax=relax);
       end
     else
-      error("`simtype` $(defs["simtype"]) is not understood");
+      sim = isim;
     end
   end
  
@@ -188,49 +237,90 @@ function parse_and_run(infile::AbstractString, args::Dict)
     defs["test_for_term"] = (msm, prev_msm) -> true;
   end
 
-  try
+  mass_matrix = (if (haskey(defs, "simtype") 
+                     && defs["simtype"] == "free_surface")
+                    sim.tracker.M
+                  else 
+                    zeros(1);
+                  end);
+
+  @_checkdebug_mass_cons("simulation", mass_matrix, try
     tic();
 
-    if !haskey(defs, "test_for_term")
-      # this simulate should be more memory and computationally efficient
-      @profif(args["profile"],
-        begin;
-          global nsim;
-          nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                           defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
-        end;
-      );
-    else
-      if haskey(defs, "test_for_term_steps")
-        @assert(defs["test_for_term_steps"] > 1, 
-                "'test_for_term_steps', i.e. the number of steps to average " *
-                "over when checking for steady-state conditions, should be "  *
-                "greater than 1 (or not specified).");
+    if !haskey(defs, "obstacles")
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin;
             global nsim;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                             defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                             defs["test_for_term_steps"], defs["callbacks"], k); 
+                             defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
           end;
         );
       else
+        if haskey(defs, "test_for_term_steps")
+          @assert(defs["test_for_term_steps"] > 1, 
+                  "'test_for_term_steps', i.e. the number of steps to average " *
+                  "over when checking for steady-state conditions, should be "  *
+                  "greater than 1 (or not specified).");
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["test_for_term_steps"], defs["callbacks"], k); 
+            end;
+          );
+        else
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["callbacks"], k); 
+            end;
+          );
+        end
+      end
+    else
+      if !haskey(defs, "test_for_term")
+        # this simulate should be more memory and computationally efficient
         @profif(args["profile"],
           begin;
             global nsim;
-            nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
-                             defs["bcs"], defs["nsteps"], defs["test_for_term"], 
-                             defs["callbacks"], k); 
+            nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                             defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
           end;
         );
+      else
+        if haskey(defs, "test_for_term_steps")
+          @assert(defs["test_for_term_steps"] > 1, 
+                  "'test_for_term_steps', i.e. the number of steps to average " *
+                  "over when checking for steady-state conditions, should be "  *
+                  "greater than 1 (or not specified).");
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["test_for_term_steps"], defs["callbacks"], k); 
+            end;
+          );
+        else
+          @profif(args["profile"],
+            begin;
+              global nsim;
+              nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
+                               defs["bcs"], defs["nsteps"], defs["test_for_term"], 
+                               defs["callbacks"], k); 
+            end;
+          );
+        end
       end
     end
 
   catch e
-    showerror(STDERR, e);
-    println();
-    Base.show_backtrace(STDERR, catch_backtrace()); # display callstack
-    warn("$infile: not completed successfully.");
+    @_report_and_exit(e, 0.0);
 
   finally
     for fin in defs["finally"]
@@ -256,6 +346,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
       println("Press enter to continue...");
       readline(STDIN);
     end
-  end
+  end, 1e-12);
 
 end

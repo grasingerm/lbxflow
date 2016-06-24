@@ -1,14 +1,14 @@
-version: 0.2.5
+version: 1.0.0
 
 # code to execute before parsing
 preamble: >
   using Base.Test;
-  const pgrad = -3e-5;
+  const pgrad = -1.102e-3;
   const F = [-pgrad; 0.0];
-  const datadir = "data/filter_srt_bingham_004_2";
+  const datadir = "data/filter_srt_bingham_004_1";
   const nsteps = 25000;
-  const ni = 120;
-  const nj = 60;
+  const ni = 40;
+  const nj = 25;
   const mu_p = 0.2;
   const tau_y = 4.0e-5;
   const m = 1.0e8;
@@ -44,7 +44,7 @@ nj:       { value: nj,      expr: true  }
 
 # simulation parameters
 nsteps:   { value: nsteps,   expr: true }
-col_f:    init_col_filter_std(init_col_srt(constit_rel_f, forcing_kf));
+col_f:    init_col_filter_std(BGK_F(constit_rel_f, forcing_kf));
 
 # boundaries
 sbounds:

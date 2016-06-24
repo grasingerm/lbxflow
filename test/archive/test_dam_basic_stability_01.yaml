@@ -1,14 +1,15 @@
-version: 0.2.6
+version: 1.0.0
 
 preamble: >
   @init_plot_env();
-  const datadir       =   joinpath("data","dam");
+  const datadir       =   joinpath("data","test_dam_01");
   const nu            =   0.2;
   const constit_rel_f =   init_constit_srt_const(nu);
   const F             =   [0.0; -1.0e-6];
-  const forcing_kf    =   init_guo_Fk(F);
+  const forcing_kf    =   init_sukop_gravity_Fk(F, :ScalableForce);
   const ni            =   50;
   const nj            =   50;
+  const nsteps        =   40000;
 
 # data directory
 datadir:    {   value: datadir,       expr: true    }
@@ -25,8 +26,8 @@ nj:         {   value:  nj,           expr: true    }
 
 # simulation parameters
 simtype:    free_surface
-col_f:      init_col_srt(constit_rel_f, forcing_kf);
-nsteps:     {   value: 250000,        expr: false   }
+col_f:      BGK_F(constit_rel_f, forcing_kf);
+nsteps:     {   value: nsteps,        expr: true   }
 
 # boundaries
 sbounds:
@@ -52,10 +53,29 @@ fill_y: { value: 1.0, expr: false }
 
 # callback functions
 callbacks:
-  - plot_mass_contours_callback(100, joinpath(datadir, "mass"))
   - print_step_callback(50, "free-surf")
-#  - write_jld_file_callback(datadir, 500)
+  - plot_mass_contours_callback(100)
+  - write_jld_file_callback(datadir, 500);
 
 # clean-up, backup, write out
-#finally:
-#  - write_jld_file_callback(datadir)
+finally:
+  - >
+    (sim::FreeSurfSim, k::Int) -> begin
+      @assert(k == nsteps, "There was an error that ended the simulation early");
+      for m in sim.tracker.M
+        @assert(-100 < m < 100, "Mass was numerically unstable");
+      end
+      for u in sim.msm.u
+        @assert(-100 < u < 100, "Velocity was numerically unstable");
+      end
+      for ρ in sim.msm.rho
+        @assert(-100 < ρ < 100, "ρ was numerically unstable");
+      end
+      for f in sim.lat.f
+        @assert(-100 < f < 100, "f was numerically unstable");
+      end
+      for ϵ in sim.tracker.eps
+        @assert(-10 < ϵ < 10, "ϵ was numerically unstable");
+      end
+      print_with_color(:green, "TEST PASSED\n");
+    end

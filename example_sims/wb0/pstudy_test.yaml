@@ -1,0 +1,266 @@
+- "": "version: 1.0.0"
+
+#!! figsize      =  4, 12
+#!! g            =  -5.0e-6
+#!! nj           =  600
+#!! ni           =  200
+#!! nsteps       =  75000
+#!! backup_steps =  5000
+#!! plot_steps   =  200
+#!! nu1          =  0.2
+#!! m            =  1e6
+#!! gamma_min    =  1e-9
+#!! max_iters    =  15
+#!! tol          =  1e-6
+#!! levs         =  [-0.5; 0.0; 0.5; 1.0; 1.5; 2.0]
+
+# Different preambles correspond to different materials
+- re-0010_bn-0000: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 0.0, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0010_bn-0001: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-5, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0010_bn-0010: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-4, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0010_bn-0025: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 2.5e-4, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+
+  re-0010_bn-0050: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 5.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0010_bn-0100: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-3, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0010_bn-1000: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   &nu1&;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1e-2, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0001_bn-0010: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   2.0;
+                             const tau_y         =   1e-4;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+
+  re-0005_bn-0010: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   0.4;
+                             const tau_y         =   2e-5;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.01;
+  re-0025_bn-0010: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   0.2;
+                             const tau_y         =   25e-6;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.025;
+  re-0050_bn-0010: |
+                   preamble: >
+                             @init_plot_env();
+                             @change_default_figsize(&figsize&);
+                             const datadir       =   joinpath("data", ~DIR_LS~);
+                             const nu            =   0.2;
+                             const tau_y         =   50e-6;
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const F             =   [0.0; &g&];
+                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const nj            =   &nj&;
+                             const ni            =   &ni&;
+                             const nsteps        =   &nsteps&;
+                             const u0            =   0.05;
+
+- "" : |
+       datadir: {   value: datadir,       expr: true    }
+
+       rho_0:   {   value: 1.0,           expr: false   }
+       nu:      {   value: nu,            expr: true    }
+
+       dx:      {   value: 1.0,           expr: false   }
+       dt:      {   value: 1.0,           expr: false   }
+       ni:      {   value:  ni,           expr: true    }
+       nj:      {   value:  nj,           expr: true    }
+
+       simtype:  "free_surface"
+       col_f:    BGK_F(constit_rel_f, forcing_kf);
+      
+       nsteps:   {   value: nsteps,        expr: true   }
+
+       bcs:
+         - west_bounce_back!
+         - east_bounce_back!
+         - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
+         - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
+         - north_mass_outlet!
+
+       rho_g:  1.0
+
+       fill_x: { value: 1.0, expr: false }
+       fill_y: { value: 0.1, expr: false }
+
+- "obs-16x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 16 80 96;]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 16/ni)]; levs=&levs&)
+                 - write_jld_file_callback(datadir, &backup_steps&)
+
+  "obs-16x2" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 16 80 96; 1 16 128 144]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 16/ni), (128, 144, 0/ni, 16/ni)]; levs=&levs&)
+                 - write_jld_file_callback(datadir, &backup_steps&)
+
+  "obs-32x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 32 80 96]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 32/ni)]; levs=&levs&)
+
+  "obs-64x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 64 80 96]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 64/ni)]; levs=&levs&)
+
+  "obs-32x2" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 32 80 96; 1 32 128 144]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 96, 0/ni, 32/ni), (128, 144, 0/ni, 32/ni)]; levs=&levs&)
+                 - write_jld_file_callback(datadir, &backup_steps&)
+
+  "obs-32xL" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 32 80 208]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(80, 208, 0/ni, 32/ni)]; levs=&levs&)
+                 - write_jld_file_callback(datadir, &backup_steps&)
+
+  "cav-16x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 16 16 80; 1 16 96 512]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(16, 80, 0/ni, 16/ni), (96, 512, 0/ni, 16/ni)]; levs=&levs&)
+
+- "" : |
+       finally:
+         - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+         - write_jld_file_callback(datadir)

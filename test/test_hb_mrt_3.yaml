@@ -1,0 +1,76 @@
+version: 1.0.0
+
+# code to execute before parsing
+preamble: >
+  using Base.Test;
+  @init_plot_env();
+  const pgrad = -1e-4;
+  const F = [-pgrad; 0.0];
+  const datadir = "data";
+  const ni = rand(40:50);
+  const nj = rand(20:35);
+  const k = rand(0.333:0.01:2.0);
+  const n = rand(0.75:0.1:1.25);
+  const tau_y = rand(4e-4:1e-4:12e-4);
+  const m     = rand(1e8:1e8:1e10);
+  const constit_rel_f =   init_constit_mrt_hb_implicit(k, n, tau_y, m, 1e-12, 10, 1e-4);
+  const forcing_kf    =   init_korner_Fk(F);
+  
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,     expr: false }
+nu:       { value: k,     expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+nsteps:   { value: 10000,   expr: false }
+col_f:    MRT_F(constit_rel_f, forcing_kf; feq_f=feq_incomp_max_entropy, S=S_luo);
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+callbacks:
+  - print_step_callback(25)
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Real) -> begin
+      us = analytical_poise_hb(k, n, tau_y, pgrad, nj);
+      i = convert(Int, round(ni/2));
+      for j = 1:nj
+        println("analyt == lbm ? $(us[j]) == $(sim.msm.u[1,i,j])"); 
+        @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1e-2
+      end
+      println("TEST PASSED");
+      info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
+      const omegas    = vec(sim.msm.omega[i,:]);
+      info("Omega_max     = $(maximum(omegas))");
+      info("Omega_min     = $(minimum(omegas))");
+      info("Omega median  = $(median(omegas))");
+      info("Omega mean    = $(mean(omegas))");
+      info("Omega std     = $(std(omegas))");
+    end 
+
+# test for conditions to end simulation
+test_for_term: is_steadystate_x

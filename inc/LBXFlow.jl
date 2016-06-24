@@ -4,15 +4,34 @@
 
 module LBXFlow
 
-include("boundary.jl");
+#TODO clean up simulate! code with some kernal functions...
+macro _report_and_exit(e, i)
+  return quote
+    const bt = catch_backtrace(); 
+    showerror(STDERR, $e, bt);
+    println();
+    println("Showing backtrace:");
+    Base.show_backtrace(STDERR, backtrace()); # display callstack
+    println();
+    warn("Simulation interrupted at step ", $i, "!");
+    return $i;
+  end
+end
+
+include("debug.jl");
+include("numerics.jl");
 include("lattice.jl");
 include("multiscale.jl");
 include(joinpath("sim","simtypes.jl"));
 include(joinpath("sim","tracking.jl"));
-include(joinpath("sim","simulate.jl"));
 include(joinpath("col","collision.jl"));
-include("convergence.jl");
+include(joinpath("sim","adapt.jl"));
+include(joinpath("sim","simulate.jl"));
+include("accessors.jl");
 include("entropy.jl");
+include("boundary.jl");
+include("obstacle.jl");
+include("convergence.jl");
 include("lbxio.jl");
 include("profile.jl");
 include("stability.jl");
