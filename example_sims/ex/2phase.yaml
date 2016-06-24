@@ -4,12 +4,15 @@ preamble: >
   @init_plot_env();
   const datadir       =   joinpath("data", "2phase");
   const nu_r          =   0.25;
-  const nu_b          =   0.75;
-  const ni            =   25;
-  const nj            =   25;
+  const nu_b          =   0.23;
+  const ni            =   100;
+  const nj            =   50;
   const αr            =   0.1;
   const αb            =   0.1;
   const nsteps        =   50000;
+  const pgrad         =   -1.102e-3;
+  const F             =   [-pgrad; 0.0];
+  const Fk            =   init_sukop_Fk(F);
 
 # data directory
 datadir:      {   value: datadir,       expr: true    }
@@ -17,12 +20,12 @@ datadir:      {   value: datadir,       expr: true    }
 # two-phase material properties
 rho_0r:       {   value: 1.0,           expr: false   }
 nu_r:         {   value: nu_r,          expr: true    }
-Ar:           {   value: 0.0,           expr: false   }
+Ar:           {   value: 1.0,           expr: false   }
 αr:           {   value: αr,            expr: true    }
 
 rho_0b:       {   value: 1.0,           expr: false   }
 nu_b:         {   value: nu_b,          expr: true    }
-Ab:           {   value: 0.0,           expr: false   }
+Ab:           {   value: 1.0,           expr: false   }
 αb:           {   value: αb,            expr: true    }
 
 β:            {   value: 0.8,           expr: false   }
@@ -47,7 +50,7 @@ simtype:    m2phase
 
 # simulation parameters
 nsteps:   { value: nsteps,   expr: true }
-col_f:    M2PhaseColFunction(BGK(init_constit_srt_const(nu_r); feq_f=init_feq_mphase_immis(αr)), BGK(init_constit_srt_const(nu_b); feq_f=init_feq_mphase_immis(αb)));
+col_f:    M2PhaseColFunction(BGK_F(init_constit_srt_const(nu_r), Fk; feq_f=init_feq_mphase_immis(αr)), BGK_F(init_constit_srt_const(nu_b), Fk; feq_f=init_feq_mphase_immis(αb)));
 #col_f:    M2PhaseColFunction(BGK(init_constit_srt_const(nu_r)), BGK(init_constit_srt_const(nu_b); feq_f=init_feq_mphase_immis(αb)));
 
 # boundary conditions
@@ -60,4 +63,4 @@ callbacks:
   - pause_sim_callback(1)
   - (sim, k) -> println(sim.simr.msm.rho);
   - print_step_callback(25)
-  - pycontour_callback(1, fluid_frac_acsr(:red); filled=true, colorbar=true, levels=[0.0; 0.25; 0.5; 0.75; 1.0])
+  - pycontour_callback(1, fluid_frac_acsr(:red); filled=true, colorbar=true, levels=[-1.0; -0.5; 0.0; 0.5; 1.0; 1.5; 2.0])

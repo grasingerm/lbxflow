@@ -174,14 +174,14 @@ function parse_and_run(infile::AbstractString, args::Dict)
     const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
     if "m2phase" in simtypes
       for key in (["Ar", "Ab", "αr", "αb", "β", "nu_r", "nu_b", "rho_0r", 
-                   "rho_0b", "δ"])
+                   "rho_0b"])
         @assert(haskey(defs, key), "`$key` is a required input");
       end
       fill_r = (haskey(defs, "fill_r")) ? defs["fill_r"] : (0.0, 1.0, 0.0, 1.0);
       fill_b = (haskey(defs, "fill_b")) ? defs["fill_b"] : (0.0, 1.0, 0.0, 1.0);
       isim = M2PhaseSim(defs["nu_r"], defs["nu_b"], defs["rho_0r"], 
                         defs["rho_0b"], defs["ni"], defs["nj"], defs["Ar"], 
-                        defs["Ab"], defs["αr"], defs["αb"], defs["β"], defs["δ"];
+                        defs["Ab"], defs["αr"], defs["αb"], defs["β"];
                         fill_r=fill_r, fill_b=fill_b);
     else
       @assert(haskey(defs, "nu"), "`nu` is a required input");
