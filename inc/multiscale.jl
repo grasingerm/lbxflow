@@ -79,7 +79,7 @@ function map_to_macro!(lat::Lattice, msm::MultiscaleMap)
     end
 
     for a=1:2
-      msm.u[a,i,j] = msm.u[a,i,j] / msm.rho[i,j];
+      msm.u[a,i,j] = (msm.rho[i, j] > eps()) ? msm.u[a,i,j] / msm.rho[i,j] : 0.0;
     end
   end
 

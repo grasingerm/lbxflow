@@ -1,7 +1,8 @@
 - "": "version: 1.0.0"
 
 #!! figsize      =  3, 15
-#!! g            =  -5.0e-6
+#!! g1           =  -5.0e-6
+#!! g2           =  -5.0e-5
 #!! nj           =  2400
 #!! ni           =  50
 #!! nsteps       =  250000
@@ -12,7 +13,7 @@
 #!! gamma_min    =  1e-9
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! levs         =  [-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5]
+#!! levs         =  collect(linspace(0.0, 1.0, 11))
 
 # Different preambles correspond to different materials
 - re-0003_bn-0000: |
@@ -22,21 +23,17 @@
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 0.0, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
                              const u0            =   0.01;
-  re-0003_bn-0001: |
+  re-0003_bn-0005: |
                    preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
-                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-5, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 2.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
@@ -48,8 +45,6 @@
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
@@ -61,22 +56,6 @@
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 1.e-3, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
-                             const nj            =   &nj&;
-                             const ni            =   &ni&;
-                             const nsteps        =   &nsteps&;
-                             const u0            =   0.01;
-
-  re-0003_bn-0050: |
-                   preamble: >
-                             @init_plot_env();
-                             @change_default_figsize(&figsize&);
-                             const datadir       =   joinpath("data", ~DIR_LS~);
-                             const nu            =   &nu1&;
-                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 2.e-3, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
@@ -88,8 +67,6 @@
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
@@ -101,8 +78,6 @@
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
@@ -115,12 +90,15 @@
                              const nu            =   0.5;
                              const tau_y         =   4.e-4;
                              const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau_y, &m&, &gamma_min&, &max_iters&, &tol&);
-                             const F             =   [0.0; &g&];
-                             const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
                              const u0            =   0.01;
+- g1 :            "          const F             =   [0.0; &g1&];"
+  g2 :            "          const F             =   [0.0; &g2&];"
+
+- "" :            "          const forcing_kf    =   init_sukop_gravity_Fk(F);\n"
+
 - "" : |
        datadir: {   value: datadir,       expr: true    }
 
@@ -146,86 +124,97 @@
 
        rho_g:  1.0
 
-       fill_x: { value: 1.0, expr: false }
-       fill_y: { value: 0.1, expr: false }
+       fill_x: { value: 1.0,  expr: false }
+       fill_y: { value: 0.02, expr: false }
 
-- "obs-15x1" : |
+- "obs-30x1" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 15 30 45;]'" 
+                   coords: "[1 30 60 120;]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(30, 45, 0/ni, 15/ni)]; levs=&levs&)
-                 - write_jld_file_callback(datadir, &backup_steps&)
-                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
-
-  "obs-15x2" : |
-               obstacles:
-                 - type:   bounce_back
-                   coords: "[1 15 30 45; 1 15 60 75]'" 
-
-               callbacks:
-                 - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(30, 45, 0/ni, 15/ni), (60, 75, 0/ni, 15/ni)]; levs=&levs&)
-                 - write_jld_file_callback(datadir, &backup_steps&)
-                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
-
-  "obs-30x1" : |
-               obstacles:
-                 - type:   bounce_back
-                   coords: "[1 30 30 45]'" 
-
-               callbacks:
-                 - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(30, 45, 0/ni, 30/ni)]; levs=&levs&)
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 30/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
   "obs-30x2" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 30 30 45; 1 30 60 75]'" 
+                   coords: "[1 30 60 120; 1 30 150 180]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(30, 45, 0/ni, 30/ni), (60, 75, 0/ni, 30/ni)]; levs=&levs&)
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 30/ni),(150, 180, 0/ni, 30/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
   "obs-30xL" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 30 30 90]'" 
+                   coords: "[1 30 60 600;]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(30, 90, 0/ni, 30/ni)]; levs=&levs&)
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 600, 0/ni, 30/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
+  "obs-40x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 40 60 120;]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 40/ni)])
+                 - write_jld_file_callback(datadir, &backup_steps&)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+
+  "obs-40x2" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 40 60 120; 1 40 150 180]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 40/ni), (150, 180, 0/ni, 40/ni)])
+                 - write_jld_file_callback(datadir, &backup_steps&)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+
+  "obs-40xL" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 40 60 600;]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 600, 0/ni, 40/ni)])
+                 - write_jld_file_callback(datadir, &backup_steps&)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+  
   "cav-15x1" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 15 15 30; 1 15 45 148]'" 
+                   coords: "[1 15 15 30; 1 15 45 2398]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(15, 30, 0/ni, 15/ni), (45, 148, 0/ni, 15/ni)]; levs=&levs&)
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(15, 30, 0/ni, 15/ni), (45, 2398, 0/ni, 15/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+
   "cav-30x1" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 30 15 30; 1 30 60 148]'" 
+                   coords: "[1 30 15 30; 1 30 60 2398]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - plot_mass_contours_callback(&plot_steps&, joinpath(datadir, "mass"), [(15, 30, 0/ni, 30/ni), (60, 148, 0/ni, 30/ni)]; levs=&levs&)
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(15, 30, 0/ni, 30/ni), (60, 2398, 0/ni, 30/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
 - "" : |
        finally:
-         - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
          - write_jld_file_callback(datadir)

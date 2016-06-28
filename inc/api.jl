@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# TODO this entire mess needs rewritten... If you're reading this it's too late
+
 using PyCall;
 @pyimport yaml;
 
@@ -67,7 +69,6 @@ function parse_and_run(infile::AbstractString, args::Dict)
       else
         if DEF_EXPR_ATTRS[k][:array]
           n = length(v);
-          # TODO: this syntax is soon deprecated; since when??
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
             if args["verbose"]; info("evalling... $(v[i])"); end
@@ -99,14 +100,11 @@ function parse_and_run(infile::AbstractString, args::Dict)
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
     "rho_g"   =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
-    "rho_0"   =>  (defs::Dict) -> begin; error("`rho_0` is a required parameter."); end,
-    "nu"      =>  (defs::Dict) -> begin; error("`nu` is a required parameter."); end,
     "dx"      =>  (defs::Dict) -> begin; return 1.0; end,
     "dt"      =>  (defs::Dict) -> begin; return 1.0; end,
     "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
     "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
     "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
-    "col_f"   =>  (defs::Dict) -> begin; error("`col_f` is a required parameter."); end,
     "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
     "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
@@ -173,27 +171,46 @@ function parse_and_run(infile::AbstractString, args::Dict)
   if !is_init
     # construct objects
     k = 0.0; # this is so every simulation can start from "k+1"
-    lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
-    msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
     const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
-    if "default" in simtypes
-      @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
-      isim = Sim(lat, msm);
-    elseif "free_surface" in simtypes
-      if haskey(defs, "states")
-        if haskey(defs, "fill_x") || haskey(defs, "fill_y")
-          warn("'States' matrix was already provided. 'fill_\$D' variables " *
-               "will be ignored");
-        end
-        isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
-      elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
-        isim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
-                          defs["fill_x"], defs["fill_y"]);
-      else
-        error("No `states` matrix provided. Cannot initialize free surface flow");
+    if "m2phase" in simtypes
+      for key in (["Ar", "Ab", "αr", "αb", "β", "nu_r", "nu_b", "rho_0r", 
+                   "rho_0b"])
+        @assert(haskey(defs, key), "`$key` is a required input");
       end
+      fill_r = (haskey(defs, "fill_r")) ? defs["fill_r"] : (0.0, 1.0, 0.0, 1.0);
+      fill_b = (haskey(defs, "fill_b")) ? defs["fill_b"] : (0.0, 1.0, 0.0, 1.0);
+      isim = M2PhaseSim(defs["nu_r"], defs["nu_b"], defs["rho_0r"], 
+                        defs["rho_0b"], defs["ni"], defs["nj"], defs["Ar"], 
+                        defs["Ab"], defs["αr"], defs["αb"], defs["β"];
+                        fill_r=fill_r, fill_b=fill_b);
     else
-      error("`simtype` $(defs["simtype"]) is not understood");
+      @assert(haskey(defs, "nu"), "`nu` is a required input");
+      @assert(haskey(defs, "rho_0"), "`rho_0` is a required input");
+      lat = LatticeD2Q9(defs["dx"], defs["dt"], defs["ni"], defs["nj"], defs["rho_0"]);
+      msm = MultiscaleMap(defs["nu"], lat, defs["rho_0"]);
+      if "default" in simtypes
+        @assert(!("free_surface" in simtypes), "`simtype` cannot be both `default` and `free_surface`");
+        @assert(!("m2phase" in simtypes), "`simtype` cannot be both `default` and `m2phase`");
+        @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
+        isim = Sim(lat, msm);
+      elseif "free_surface" in simtypes
+        @assert(!("m2phase" in simtypes), "`simtype` cannot be both `free_surface` and `m2phase`");
+        @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
+        if haskey(defs, "states")
+          if haskey(defs, "fill_x") || haskey(defs, "fill_y")
+            warn("'States' matrix was already provided. 'fill_\$D' variables " *
+                 "will be ignored");
+          end
+          isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
+        elseif haskey(defs, "fill_x") && haskey(defs, "fill_y")
+          isim = FreeSurfSim(lat, msm, defs["rho_0"], defs["rho_g"], 
+                            defs["fill_x"], defs["fill_y"]);
+        else
+          error("No `states` matrix provided. Cannot initialize free surface flow");
+        end
+      else
+        error("`simtype` $(defs["simtype"]) is not understood");
+      end
     end
     if "adaptive" in simtypes # adaptive time stepping?
       warn("Adaptive time stepping is highly experimental. It has not yet been validated");

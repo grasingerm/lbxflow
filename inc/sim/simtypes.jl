@@ -192,18 +192,29 @@ type M2PhaseSim <: AbstractSim
   Ab::Real;
   αr::Real;
   αb::Real;
+  β::Real;
+  Δt::Real;
 
   function M2PhaseSim(nur::Real, nub::Real, rho_0r::Real, rho_0b::Real, 
-                      ni::Int, nj::Int, Ar::Real, Ab::Real, αr::Real, αb::Real;
+                      ni::Int, nj::Int, Ar::Real, Ab::Real, αr::Real, αb::Real,
+                      β::Real;
                       fill_r = (0.0, 1.0, 0.0, 1.0),
                       fill_b = (0.0, 1.0, 0.0, 1.0))
+    @assert(β >= 0 && β <= 1, "β must be between 0 and 1. $(β) is invalid."); 
+
     latr = LatticeD2Q9(1.0, 1.0, ni, nj);
     latb = LatticeD2Q9(1.0, 1.0, ni, nj);
 
-    i_range_r = convert(Int, round(fill_r[1])):convert(Int, round(fill_r[2]));
-    j_range_r = convert(Int, round(fill_r[3])):convert(Int, round(fill_r[4]));
-    i_range_b = convert(Int, round(fill_b[1])):convert(Int, round(fill_b[2]));
-    j_range_b = convert(Int, round(fill_b[3])):convert(Int, round(fill_b[4]));
+    _fill_to_range(percents, nx) = begin
+      start = convert(Int, round(percents[1] * nx)) + 1;
+      fin   = convert(Int, round(percents[2] * nx));
+      return start:fin;
+    end
+    
+    i_range_r = _fill_to_range((fill_r[1], fill_r[2]), ni);
+    j_range_r = _fill_to_range((fill_r[3], fill_r[4]), nj);
+    i_range_b = _fill_to_range((fill_b[1], fill_b[2]), ni);
+    j_range_b = _fill_to_range((fill_b[3], fill_b[4]), nj);
 
     _fill_lat(latr, i_range_r, j_range_r, rho_0r);
     _fill_lat(latb, i_range_b, j_range_b, rho_0b);
@@ -214,6 +225,6 @@ type M2PhaseSim <: AbstractSim
     map_to_macro!(latr, msmr);
     map_to_macro!(latb, msmb);
 
-    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb);
+    return new(Sim(latr, msmr), Sim(latb, msmb), Ar, Ab, αr, αb, β, 1.0);
   end
 end

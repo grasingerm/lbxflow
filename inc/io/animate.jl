@@ -265,7 +265,7 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
 
       eval(if showfig == true
              quote
-               PyPlot.show();
+#               PyPlot.show();
                PyPlot.pause(0.00001);
              end
            else
@@ -275,7 +275,7 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
   end
 end
 
-#! Create a pyplot callback function for visualizing the simulation
+#! Create a pyquiver callback function for visualizing the simulation
 #!
 #! \param     stepout             Time per frame
 #! \param     accessor            Accessor function variable of interest

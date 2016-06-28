@@ -102,12 +102,27 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
+function vel_mag_acsr(sim::M2PhaseSim)
+  const ni, nj = size(sim.isim.msm);
+  u_mag = Array{Float64}(ni, nj);
+  for j=1:nj, i=1:ni
+    ux = sim.simr.msm.u[1, i, j] + sim.simb.msm.u[1, i, j];
+    uy = sim.simr.msm.u[2, i, j] + sim.simb.msm.u[2, i, j];
+    u_mag[j, i] = sqrt(ux*ux + uy*uy);
+  end
+  return u_mag;
+end
+
+#! Velocity magnitude accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Velocity magnitude over domain
 function vel_mag_acsr(sim::AdaptiveTimeStepSim)
   const ni, nj = size(sim.isim.msm);
   u_mag = Array{Float64}(ni, nj);
   for j=1:nj, i=1:ni
-    ux = sim.isim.msm[1, i, j] / sim.Δt;
-    uy = sim.isim.msm[2, i, j] / sim.Δt;
+    ux = sim.isim.msm.u[1, i, j] / sim.Δt;
+    uy = sim.isim.msm.u[2, i, j] / sim.Δt;
     u_mag[j, i] = sqrt(ux*ux + uy*uy);
   end
   return u_mag;
@@ -147,6 +162,14 @@ end
 #!
 #! \param   sim   Simulation object
 #! \return        Fluid density over domain
+function density_acsr(sim::M2PhaseSim)
+  return transpose(sim.simr.msm.rho) + transpose(sim.simb.msm.rho);
+end
+
+#! Density field accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Fluid density over domain
 function density_acsr(sim::AdaptiveTimeStepSim)
   return transpose(map(ρ -> ρ / sim.Δt, sim.isim.msm.rho));
 end
@@ -158,6 +181,15 @@ end
 function pressure_acsr(sim::AbstractSim)
   f = @anon rho -> sim.lat.cssq * rho;
   return transpose(map(f, sim.msm.rho));
+end
+
+#! Pressure field accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Fluid pressure over domain
+function pressure_acsr(sim::M2PhaseSim)
+  f = @anon rho -> sim.simr.lat.cssq * rho;
+  return transpose(map(f, sim.simr.msm.rho)) + transpose(map(f, sim.simb.msm.rho));
 end
 
 #! Mass field accessor
@@ -174,6 +206,14 @@ end
 #! \return        Fluid mass over domain
 function mass_acsr(sim::AdaptiveTimeStepSim)
   return transpose(map(m -> m / sim.Δt, sim.tracker.M));
+end
+
+#! Fluid fraction accessor
+#!
+#! \param   sim   Simulation object
+#! \return        Fluid fraction over domain
+function ff_acsr(sim::FreeSurfSim)
+  return transpose(sim.tracker.eps);
 end
 
 #! Streamline fields accessor
@@ -202,3 +242,51 @@ function streamlines_acsr(sim::AdaptiveTimeStepSim)
   return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
           u, v);
 end
+
+#! Wrapper for two-phase simulations
+#!
+#! \param   inner_acsr    Inner accessor function to apply to color
+#! \param   color         Color of fluid to access
+#! \return                Annonymous wrapper
+function m2phase_acsr(inner_acsr::LBXFunction, color::Symbol)
+  if      color == :red
+    return (sim::M2PhaseSim) -> inner_acsr(sim.simr); 
+  elseif  color == :blue
+    return (sim::M2PhaseSim) -> inner_acsr(sim.simb); 
+  else
+    error("Color $color is not understood. `red` or `blue` are valid colors.");
+  end
+end
+
+#! Fluid fraction accessor for two-phase flow simulations
+#!
+#! \param   color   Color of fluid to access
+#! \return          Accessor for fluid fractions
+function fluid_frac_acsr(color::Symbol=:red)
+  if      color == :red
+    return (sim::M2PhaseSim) -> begin
+      const ni, nj  =  size(sim.simr.msm.rho);
+      ff            =  Array{Float64}(ni, nj); 
+      for j=1:nj, i=1:ni
+        ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
+        ff[i, j]      =  ρ_r / (ρ_r + ρ_b);
+      end
+      return transpose(ff);
+    end
+  elseif  color == :blue
+    return (sim::M2PhaseSim) -> begin
+      const ni, nj  =  size(sim.simr.msm.rho);
+      ff            =  Array{Float64}(ni, nj); 
+      for j=1:nj, i=1:ni
+        ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
+        ff[i, j]      =  ρ_b / (ρ_r + ρ_b);
+      end
+      return transpose(ff);
+    end 
+  else
+    error("Color $color is not understood. `red` or `blue` are valid colors.");
+  end  
+end
+
+#! Initialize a default fluid fraction accessor for red fluids
+const red_fluid_frac_acsr = fluid_frac_acsr();

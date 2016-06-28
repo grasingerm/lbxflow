@@ -8,7 +8,9 @@ const __DEFAULT_DELTA     =   0.0;
 const __SENTINAL          =   -maxintfloat(Float64);
 __NSFLTR(x)               =   x != __SENTINAL; 
 
-#TODO clean these scale functions up with kernal functions
+#TODO clean these scale functions up with kernal functions;
+#     especially with one to find neighborhood of non-equilibrium entropy densities
+#TODO consider adding ensemble filters
 
 #! Scale based on normalized median of neighboorhood non-equilibrium entropy
 #!
@@ -177,6 +179,9 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int,
          end
 
 end
+
+#! An Ehrenfests' regularization step returns f to equilibrium
+scale_ehrenfests_step(args...) = 0.0;
 
 # Filtering constants
 const __SCALE             =   scale_root_median;
@@ -713,4 +718,18 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
     info("Percent collapsed: $(percent_filtered * 100)");
   end
 
+end
+
+#! Filtered collision function with positivity rule
+type FltrPosCol <: FltrColFunction
+  feq_f::LBXFunction;
+  inner_col_f!::ColFunction;
+
+  FltrPosCol(inner_col_f!::ColFunction) = new(inner_col_f!.feq_f, inner_col_f!);
+end
+
+#! Filtered collision function with positivity rule (call)
+function call(fpc::FltrPosCol, sim::AbstractSim, args...)
+  fpc.inner_col_f!(sim, args...);
+  map!(x -> (x < 0) ? 0.0 : x, sim.lat.f);
 end

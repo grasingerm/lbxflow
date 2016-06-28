@@ -2,6 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#! Two-phase constitutive equation that relaxs interface
+#=type M2PhaseConstit
+  constit_r::LBXFunction;
+  constit_b::LBXFunction;
+
+  M2PhaseConstit(constit_r::LBXFunction, constit_b::LBXFunction, δ::Real) = (
+    new(constit_r, constit_b, δ));
+end
+
+function call(mc::M2PhaseConstit, sim::M2PhaseSim, args...)
+  const ρ_r   =   sim.simr.msm.rho[i, j] 
+  const ρ_b   =   sim.simb.msm.rho[i, j] 
+  const ψ     =   (ρ_r - ρ_b) / (ρ_r + ρ_b);
+end=#
+
 # call definition for constant constitutive relationship
 function call(cc::_ConstConstit, sim::AbstractSim, 
               fneq::AbstractArray{Float64, 1}, i::Int, j::Int)
