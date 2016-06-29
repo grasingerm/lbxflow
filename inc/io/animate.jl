@@ -30,6 +30,15 @@ function print_step_callback(stepout::Real, name::AbstractString)
   end
 end
 
+#! Call garbage collector callback
+function gc_callback(stepout::Real)
+  return (sim::AbstractSim, k::Real) -> begin
+    if k % stepout < sim.Δt
+      gc();
+    end
+  end
+end
+
 #! Initialize plotting environment
 macro init_plot_env()
   return quote
@@ -81,7 +90,7 @@ function pyplot_callback(stepout::Real, accessor::LBXFunction;
       x, y = accessor(sim);
 
       PyPlot.clf();
-      PyPlot.plot(x, y);
+      fig = PyPlot.plot(x, y);
 
       eval(if title != ""
              :(PyPlot.title($title));
@@ -138,6 +147,8 @@ function pyplot_callback(stepout::Real, accessor::LBXFunction;
                PyPlot.show();
                PyPlot.pause(0.00001);
              end
+           else
+             :(fig = 0);
            end);
          end
        end
@@ -193,7 +204,7 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
              PyPlot.colorbar(cs);
          end
        else
-         PyPlot.contourf(mat)
+         cs = PyPlot.contourf(mat)
        end
      else
        if colorbar
@@ -205,7 +216,7 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
              PyPlot.colorbar(cs);
          end
        else
-         PyPlot.contour(mat)
+         cs = PyPlot.contour(mat)
        end
      end
       
@@ -257,6 +268,8 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
 #               PyPlot.show();
                PyPlot.pause(0.00001);
              end
+           else
+             cs = 0;
            end);
     end
   end
@@ -298,7 +311,7 @@ function pyquiver_callback(stepout::Real, accessor::LBXFunction;
       u, v = accessor(sim);
 
       PyPlot.clf();
-      PyPlot.quiver(u, v);
+      fig = PyPlot.quiver(u, v);
       
       eval(if title != ""
              :(PyPlot.title($title));
@@ -348,6 +361,8 @@ function pyquiver_callback(stepout::Real, accessor::LBXFunction;
                PyPlot.show();
                PyPlot.pause(0.00001);
              end
+           else
+             fig = 0;
            end);
          end
        end
@@ -390,7 +405,7 @@ function pystream_callback(stepout::Real, accessor::LBXFunction;
       x, y, u, v = accessor(sim);
 
       PyPlot.clf();
-      PyPlot.streamplot(x, y, u, v);
+      fig = PyPlot.streamplot(x, y, u, v);
       
       eval(if title != ""
              :(PyPlot.title($title));
@@ -440,6 +455,8 @@ function pystream_callback(stepout::Real, accessor::LBXFunction;
                PyPlot.show();
                PyPlot.pause(0.00001);
              end
+           else
+             fig = 0;
            end);
          end
        end

@@ -312,9 +312,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    test_for_term::LBXFunction,
                    callbacks!::Vector{LBXFunction}, k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
-
-  sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+  sim_step!(sim, sbounds, collision_f!, cbounds, bcs!);
 
   for c! in callbacks!
     c!(sim, (k+=sim.Δt));
@@ -325,7 +323,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
   while (k+=sim.Δt) <= n_steps
     try
 
-      sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+      sim_step!(sim, sbounds, collision_f!, cbounds, bcs!);
 
       for c! in callbacks!
         c!(sim, k);
@@ -359,9 +357,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
                    steps_for_term::Int, callbacks!::Vector{LBXFunction}, 
                    k::Real = 0)
 
-  temp_f = copy(sim.lat.f);
-
-  sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+  sim_step!(sim, sbounds, collision_f!, cbounds, bcs!);
 
   for c! in callbacks!
     c!(sim, (k+=sim.Δt));
@@ -374,7 +370,7 @@ function simulate!(sim::AbstractSim, sbounds::Matrix{Int64},
   while (k+=sim.Δt) <= n_steps
     try
 
-      sim_step!(sim, temp_f, sbounds, collision_f!, cbounds, bcs!);
+      sim_step!(sim, sbounds, collision_f!, cbounds, bcs!);
 
       for c! in callbacks!
         c!(sim, k);
