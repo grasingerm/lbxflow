@@ -9,6 +9,8 @@
 #   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
 #   relaxation-time latice Boltzmann model. Yield stress is 8e-5.
 
+version: 1.0.0
+
 preamble: >
   const ni = 128;
   const nj = 64;
@@ -67,9 +69,9 @@ finally:
     (sim::Sim, k::Int) -> begin
       vpa = vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj);
       writedlm(joinpath(datadir, "ux_profile.dsv"), 
-        sim -> begin
-          x, y = vel_prof_acsr(sim);
-          return hcat(x, y);
+        begin
+          x, y = vpa(sim);
+          hcat(x, y);
         end,
         ",");
     end

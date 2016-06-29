@@ -9,6 +9,8 @@
 #   Chen et. al. 2014, Simulations of Bingham plastic flows with the multiple-
 #   relaxation-time latice Boltzmann model. Yield stress is 8e-5.
 
+version: 1.0.0
+
 preamble: >
   const ni = 128;
   const nj = 64;
@@ -20,9 +22,9 @@ preamble: >
   const max_iters = 11;
   const tol = 1e-3;
   const nsteps = 20000;
-  const id = "poise-bgk-000008";
-  const datadir = joinpath("data","noise","bgk","000008");
-  const constit_rel_f = init_constit_srt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-8, 1.0);
+  const id = "poise-mrt-000008";
+  const datadir = joinpath("data","noise","mrt","000008");
+  const constit_rel_f = init_constit_mrt_bingham_implicit(mu_p, tau_y, m, 1.0e-9, 15, 1e-8, 1.0);
   const forcing_kf = init_korner_Fk(F);
 
 datadir:    { value: datadir,   expr: true    }
@@ -64,12 +66,12 @@ callbacks:
 # clean-up, backup, write out
 finally:
   - >
-    (sim::Sim, k::Int) -> begin
+    (sim::Sim, k::Real) -> begin
       vpa = vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj);
       writedlm(joinpath(datadir, "ux_profile.dsv"), 
-        sim -> begin
-          x, y = vel_prof_acsr(sim);
-          return hcat(x, y);
+        begin
+          x, y = vpa(sim);
+          hcat(x, y);
         end,
         ",");
     end
