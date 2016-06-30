@@ -3,7 +3,7 @@ version: 1.0.0
 # code to execute before parsing
 preamble: >
   @init_plot_env(); 
-  const pgrad = -1.102e-3;
+  const pgrad = -1e-3;
   const F = [-pgrad; 0.0];
   const constit_rel_f = init_constit_srt_const(1/6);
   const forcing_kf = init_sukop_Fk(F);
@@ -53,9 +53,9 @@ callbacks:
 # clean-up, backup, write out
 finally:
   - >
-    (sim::Sim, k::Int) -> begin
+    (sim::Sim, k::Real) -> begin
       writedlm(joinpath(datadir, "ux_profile.dsv"), 
-        extract_ux_prof_callback(convert(Int64, round(ni/2)))(sim), 
+      hcat(vel_prof_acsr(1, convert(Int64, round(ni/2)), 1:nj)(sim)...), 
         ",");
     end
   - write_jld_file_callback(datadir)

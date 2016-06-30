@@ -139,6 +139,8 @@ function _update_cell_states!(sim::FreeSurfSim,
   const ni, nj  = size(t.state);
   const nk      = length(lat.w);
 
+  excess_mass_after_redist = 0;
+
   for (i, j) in new_fluid_cells # First the neighborhood of all filled cells are prepared
     _change_state!(t, i, j, FLUID);
 
@@ -199,7 +201,7 @@ function _update_cell_states!(sim::FreeSurfSim,
   end
 
   # Redistribute excess mass from new fluid cells
-  @_checkdebug_mass_cons("redist mass from filled cells", t.M,
+  @_checkdebug_mass_cons("redist mass from cells", t.M, begin
   for (i, j) in new_fluid_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
@@ -222,17 +224,6 @@ function _update_cell_states!(sim::FreeSurfSim,
         end
       end
     end # find inteface loop
-    #=
-    @assert(length(cells_to_redist_to) != 0 || length(all_int_nbrs) != 0,
-            "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
-            "is empty. Unit normal to interface is $(unit_norm). What the "  *
-            "shit happened? Neighborhood: "                                  *
-            "$(_get_nbrhd(t.state, i, j))");
-    @assert(v_sum != 0.0 || length(all_int_nbrs) != 0,
-            "No cells to redist. to at ($i, $j). Sum of weights "            *
-            "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
-            "shit happened?");
-    =#
 
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j] - msm.rho[i, j];
@@ -243,9 +234,6 @@ function _update_cell_states!(sim::FreeSurfSim,
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
 
-      t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
-      t.eps[i, j] = 1.0;
-
     elseif length(all_int_nbrs) != 0
 
       for (ii, jj) in all_int_nbrs
@@ -253,19 +241,17 @@ function _update_cell_states!(sim::FreeSurfSim,
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
 
-      t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
-      t.eps[i, j] = 1.0;
-
     else
-      warn("Redistribution did not occur at ($i, $j). No cells to "          *
-           "redistribute to.");
+      excess_mass_after_redist += mex;
     end
 
-  end, 1e-9);
+    t.M[i, j]   = msm.rho[i, j]; # set mass to local ρ
+    t.eps[i, j] = 1.0;
+
+  end
 
   # TODO consider putting mass distribution in a kernal function
   # Redistribute excess mass from emptied cells
-  @_checkdebug_mass_cons("redist mass from emptied cells", t.M,
   for (i, j) in new_empty_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
@@ -288,18 +274,7 @@ function _update_cell_states!(sim::FreeSurfSim,
         end
       end
     end # find inteface loop
-    #=
-    @assert(length(cells_to_redist_to) != 0 || length(all_int_nbrs) != 0,
-            "No cells to redist. to at ($i, $j). cells_to_redist_to Set "    *
-            "is empty. Unit normal to interface is $(unit_norm). What the "  *
-            "shit happened? Neighborhood: "                                  *
-            " $(_get_nbrhd(t.state, i, j))");
-    @assert(v_sum != 0.0 || length(all_int_nbrs) != 0,
-            "No cells to redist. to at ($i, $j). Sum of weights "            *
-            "is $v_sum. Unit normal to interface is $(unit_norm). What the " *
-            "shit happened?");
-    =#
-
+    
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j];
     if length(cells_to_redist_to) != 0
@@ -309,25 +284,30 @@ function _update_cell_states!(sim::FreeSurfSim,
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
 
-      t.M[i, j]   = 0.0;
-      t.eps[i, j] = 0.0;
-
     elseif length(all_int_nbrs) != 0
 
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
         t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
       end
-      
-      t.M[i, j]   = 0.0;
-      t.eps[i, j] = 0.0;
 
     else
-      warn("Redistribution did not occur at ($i, $j). No cells to "          *
-           "redistribute to.");
+      excess_mass_after_redist += mex
     end
 
-  end, 1e-9);
+    t.M[i, j]   = 0.0;
+    t.eps[i, j] = 0.0;
+
+  end
+
+  # redistribute remaining mass
+  const dm  =   excess_mass_after_redist / length(t.interfacels);
+  for (i, j) in t.interfacels
+    t.M[i, j]   +=  dm;
+    t.eps[i, j]  =  t.M[i, j] / msm.rho[i, j]; 
+  end
+
+  end, 1e-9); # check mass debug macro close
 end
 
 #! Update cell states of tracker
