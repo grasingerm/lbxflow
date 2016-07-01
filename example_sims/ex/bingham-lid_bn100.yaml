@@ -1,0 +1,72 @@
+version: 1.0.0
+
+# code to execute before parsing
+preamble: >
+  const id = "lid";
+  const datadir = joinpath("data","bingham-lid","bn100);
+  const ni    = 500;
+  const nj    = 500;
+  const U     = 0.01;
+  const m     = 1e8;
+  const mu    = 0.05;
+  const tau_y = 1e-6; 
+  const Re  = U * ni / mu;
+  info("Re = $Re");
+  const Bn  = tau_y * ni / (U * mu);
+  info("Bn = $Bn");
+  const constit_rel_f =   init_constit_mrt_bingham_implicit(mu, tau_y, m, 1e-12, 10, 1e-4);
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+# TODO: specify constitutive model type (general Newtonian, Newtonian, etc.)
+rho_0:    { value: 1.0,       expr: false }
+nu:       { value: mu,      expr: true  }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+simtype:    default
+nsteps:     { value: 60000,   expr: false }
+col_f:      MRT(constit_rel_f)
+
+# boundaries
+sbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+cbounds:
+  value: "[1 ni 1 nj;]'"
+  expr: true
+
+# boundary conditions
+bcs:
+  - lat -> lid_driven!(lat, U);
+  - south_bounce_back!
+  - east_bounce_back!
+  - west_bounce_back!
+
+# callback functions
+callbacks:
+  - print_step_callback(500, id)
+  - write_jld_file_callback(datadir, 5000)
+
+# clean-up, backup, write out
+finally:
+  - write_jld_file_callback(datadir)
+  - pystream_callback(1, streamlines_ascr; showfig=false, fname=joinpath(datadir, "sl.png"), grid=true)
+  - >
+    (sim::Sim, k::Real) -> begin
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      const xs = linspace(0, 1.0, ni);
+      const ys = linspace(0, 1.0, nj);
+      writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+    end

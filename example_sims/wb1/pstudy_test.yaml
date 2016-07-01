@@ -13,7 +13,7 @@
 #!! gamma_min    =  1e-9
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! levs         =  collect(linspace(-0.2, 1.2, 8))
+#!! levs         =  collect(linspace(0.0, 1.0, 11))
 
 # Different preambles correspond to different materials
 - re-0003_bn-0000: |
@@ -127,62 +127,93 @@
        fill_x: { value: 1.0,  expr: false }
        fill_y: { value: 0.02, expr: false }
 
-- "obs-30x4" : |
+- "obs-30x1" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 30 60 120; 1 30 150 180; 1 30 210 240; 1 30 300 460]'" 
+                   coords: "[1 30 60 120;]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 30/ni),(150, 180, 0/ni, 30/ni),(210, 240, 0/ni, 30/ni),(300, 460, 0/ni, 30/ni)])
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 30/ni)])
+                 - write_jld_file_callback(datadir, &backup_steps&)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+
+  "obs-30x2" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 30 60 120; 1 30 150 180]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 30/ni),(150, 180, 0/ni, 30/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
   "obs-30xL" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 30 60 1060;]'" 
+                   coords: "[1 30 60 600;]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 1060, 0/ni, 30/ni)])
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 600, 0/ni, 30/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
-  "obs-40x4" : |
+  "obs-40x1" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 40 60 120; 1 40 150 180; 1 40 210 240; 1 40 300 460]'" 
+                   coords: "[1 40 60 120;]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 40/ni),(150, 180, 0/ni, 40/ni),(210, 240, 0/ni, 40/ni),(300, 460, 0/ni, 40/ni)])
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 40/ni)])
+                 - write_jld_file_callback(datadir, &backup_steps&)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+
+  "obs-40x2" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 40 60 120; 1 40 150 180]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 40/ni), (150, 180, 0/ni, 40/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
   "obs-40xL" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 40 60 1060;]'" 
+                   coords: "[1 40 60 600;]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 1060, 0/ni, 40/ni)])
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(60, 600, 0/ni, 40/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
-
-  "obs-mixx6" : |
+  
+  "cav-15x1" : |
                obstacles:
                  - type:   bounce_back
-                   coords: "[1 40 90 120; 1 25 130 180; 1 30 210 240; 1 25 260 460; 1 40 540 680; 1 15 700 730]'" 
+                   coords: "[1 15 15 30; 1 15 45 2398]'" 
 
                callbacks:
                  - print_step_callback(250, "free-surf")
-                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(90, 120, 0/ni, 40/ni),(130, 180, 0/ni, 25/ni),(210, 240, 0/ni, 30/ni),(260, 460, 0/ni, 25/ni),(540, 680, 0/ni, 40/ni),(700, 730, 0/ni, 15/ni)])
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(15, 30, 0/ni, 15/ni), (45, 2398, 0/ni, 15/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
-- "" : "  - write_jld_file_callback(datadir, 25000, true)"
+  "cav-30x1" : |
+               obstacles:
+                 - type:   bounce_back
+                   coords: "[1 30 15 30; 1 30 60 2398]'" 
+
+               callbacks:
+                 - print_step_callback(250, "free-surf")
+                 - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(15, 30, 0/ni, 30/ni), (60, 2398, 0/ni, 30/ni)])
+                 - write_jld_file_callback(datadir, &backup_steps&)
+                 - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
 
 - "" : |
        finally:
