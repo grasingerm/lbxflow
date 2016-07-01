@@ -17,6 +17,7 @@ south_reflect!(sim::AbstractSim)           =  south_reflect!(sim.lat);
 east_reflect!(sim::AbstractSim)            =  east_reflect!(sim.lat);
 west_reflect!(sim::AbstractSim)            =  west_reflect!(sim.lat);
 
+periodic!(sim::AbstractSim, args...)       =  periodic!(sim.lat, args...); 
 periodic_east_to_west!(sim::AbstractSim)   =  periodic_east_to_west!(sim.lat); 
 periodic_north_to_south!(sim::AbstractSim) =  periodic_north_to_south!(sim.lat); 
 
@@ -24,6 +25,7 @@ north_velocity!(sim::AbstractSim, u::Real) =  north_velocity!(sim.lat, u);
 south_velocity!(sim::AbstractSim, u::Real) =  south_velocity!(sim.lat, u);
 east_velocity!(sim::AbstractSim, u::Real)  =  east_velocity!(sim.lat, u);
 west_velocity!(sim::AbstractSim, u::Real)  =  west_velocity!(sim.lat, u);
+lid_driven!(sim::AbstractSim, u::Real)     =  lid_driven!(sim.lat, u);
 
 north_pressure!(sim::AbstractSim, ρ::Real) =  north_pressure!(sim.lat, ρ);
 south_pressure!(sim::AbstractSim, ρ::Real) =  south_pressure!(sim.lat, ρ);

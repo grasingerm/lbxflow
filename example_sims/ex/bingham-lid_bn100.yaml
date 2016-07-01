@@ -3,7 +3,7 @@ version: 1.0.0
 # code to execute before parsing
 preamble: >
   const id = "lid";
-  const datadir = joinpath("data","bingham-lid","bn100);
+  const datadir = joinpath("data","bingham-lid","bn100");
   const ni    = 500;
   const nj    = 500;
   const U     = 0.01;
@@ -59,7 +59,7 @@ callbacks:
 # clean-up, backup, write out
 finally:
   - write_jld_file_callback(datadir)
-  - pystream_callback(1, streamlines_ascr; showfig=false, fname=joinpath(datadir, "sl.png"), grid=true)
+  - pystream_callback(1, streamlines_acsr; showfig=false, fname=joinpath(datadir, "sl.png"), grid=true)
   - >
     (sim::Sim, k::Real) -> begin
       const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);

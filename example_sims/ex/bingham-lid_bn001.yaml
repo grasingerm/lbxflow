@@ -3,7 +3,7 @@ version: 1.0.0
 # code to execute before parsing
 preamble: >
   const id = "lid";
-  const datadir = joinpath("data","bingham-lid","bn001);
+  const datadir = joinpath("data","bingham-lid","bn001");
   const ni    = 500;
   const nj    = 500;
   const U     = 0.01;
@@ -12,6 +12,8 @@ preamble: >
   const tau_y = 1e-8; 
   const Re  = U * ni / mu;
   info("Re = $Re");
+  const Bn  = tau_y * ni / (U * mu);
+  info("Bn = $Bn");
   const constit_rel_f =   init_constit_mrt_bingham_implicit(mu, tau_y, m, 1e-12, 10, 1e-4);
 
 # data
@@ -57,7 +59,7 @@ callbacks:
 # clean-up, backup, write out
 finally:
   - write_jld_file_callback(datadir)
-  - pystream_callback(1, streamlines_ascr; showfig=false, fname=joinpath(datadir, "sl.png"), grid=true)
+  - pystream_callback(1, streamlines_acsr; showfig=false, fname=joinpath(datadir, "sl.png"), grid=true)
   - >
     (sim::Sim, k::Real) -> begin
       const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
