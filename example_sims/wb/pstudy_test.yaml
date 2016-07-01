@@ -13,7 +13,7 @@
 #!! gamma_min    =  1e-9
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! levs         =  collect(linspace(0.0, 1.0, 11))
+#!! levs         =  collect(linspace(-0.2, 1.2, 8))
 
 # Different preambles correspond to different materials
 - re-0003_bn-0000: |
@@ -127,7 +127,7 @@
        fill_x: { value: 1.0,  expr: false }
        fill_y: { value: 0.02, expr: false }
 
-  "obs-30x4" : |
+- "obs-30x4" : |
                obstacles:
                  - type:   bounce_back
                    coords: "[1 30 60 120; 1 30 150 180; 1 30 210 240; 1 30 300 460]'" 
@@ -181,6 +181,7 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(90, 120, 0/ni, 40/ni),(130, 180, 0/ni, 25/ni),(210, 240, 0/ni, 30/ni),(260, 460, 0/ni, 25/ni),(540, 680, 0/ni, 40/ni),(700, 730, 0/ni, 15/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+
 - "" : "  - write_jld_file_callback(datadir, 25000, true)"
 
 - "" : |
