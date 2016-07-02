@@ -91,7 +91,7 @@ end
 #! \param   pgrad     Pressure gradient
 #! \param   nnodes    Number of nodes in the channel width
 #! \return            Velocity profile array
-function analytical_poise_power_law(k::AbstractFloat, n::Real, tau::Real, 
+function analytical_poise_power_law(k::AbstractFloat, n::Real, 
                                     pgrad::Real, nnodes::Int)
   const h       =   (nnodes - 1) / 2.0;
   const n_rat   =   convert(Float64, (n + 1.0) / n);
@@ -132,7 +132,6 @@ function lbm_error(sim::AbstractSim, analytical_solution::LBXFunction, d::Int,
           "Dimension of direction is larger than dimension of lattice.");
   @assert(size(sim.msm.u, d+1) >= idx, 
           "Index in which to take cross-section is out of the domain.");
-  gd = Gadfly;
 
   const nnodes  =   (d == 1) ? size(sim.msm.u, 3) : size(sim.msm.u, 2);
   const approx  =   ((d == 1) ? vec(sim.msm.u[d, idx, :]) : 
@@ -144,6 +143,7 @@ function lbm_error(sim::AbstractSim, analytical_solution::LBXFunction, d::Int,
   end
 
   if plot_errors
+    gd = Gadfly;
     for (model_error, etype) in zip((analyt-approx, (analyt-approx)/maximum(analyt)),
                                     ("Absolute", "Relative"))
       eplt = gd.plot(x=linspace(-0.5, 0.5, nnodes), y=model_error, gd.Geom.line,
