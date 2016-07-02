@@ -1,0 +1,97 @@
+- "": "version: 1.0.0"
+
+#!! nj           =  64
+#!! ni           =  32
+#!! nsteps       =  25000
+#!! backup_steps =  2000
+#!! nu1          =  0.2
+#!! nu2          =  0.1
+#!! gamma_min    =  1e-12
+#!! max_iters    =  15
+#!! tol          =  1e-6
+#!! pgrad        =  1e-5
+
+# Different preambles correspond to different materials
+- n-050: |
+         preamble: >
+                   @init_plot_env();
+                   const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
+                   const nj            =   &nj&;
+                   const ni            =   &ni&;
+                   const nsteps        =   &nsteps&;
+                   const pgrad         =   &pgrad&;   
+                   const F             =   [-pgrad, 0.0]; 
+                   const nu            =   &nu1&;
+                   const n             =   0.5;
+                   const forcing_kf    =   init_korner_Fk(F);
+  n-075: |
+         preamble: >
+                   @init_plot_env();
+                   const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
+                   const nj            =   &nj&;
+                   const ni            =   &ni&;
+                   const nsteps        =   &nsteps&;
+                   const pgrad         =   &pgrad&;   
+                   const F             =   [-pgrad, 0.0]; 
+                   const nu            =   &nu1&;
+                   const n             =   0.75;
+                   const forcing_kf    =   init_korner_Fk(F);
+  n-125: |
+         preamble: >
+                   @init_plot_env();
+                   const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
+                   const nj            =   &nj&;
+                   const ni            =   &ni&;
+                   const nsteps        =   &nsteps&;
+                   const pgrad         =   &pgrad&;   
+                   const F             =   [-pgrad, 0.0]; 
+                   const nu            =   &nu1&;
+                   const n             =   1.25;
+  n-150: |
+         preamble: >
+                   @init_plot_env();
+                   const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
+                   const nj            =   &nj&;
+                   const ni            =   &ni&;
+                   const nsteps        =   &nsteps&;
+                   const pgrad         =   &pgrad&;   
+                   const F             =   [-pgrad, 0.0]; 
+                   const nu            =   &nu1&;
+                   const n             =   1.50;
+  
+- bgk:      "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf; feqf=feq_incomp_max_entropy))"
+  mrt:      "col_f: MRT_F(init_constit_mrt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf))"
+
+- "" : |
+       datadir: {   value: datadir,       expr: true    }
+
+       rho_0:   {   value: 1.0,           expr: false   }
+       nu:      {   value: nu,            expr: true    }
+
+       dx:      {   value: 1.0,           expr: false   }
+       dt:      {   value: 1.0,           expr: false   }
+       ni:      {   value:  ni,           expr: true    }
+       nj:      {   value:  nj,           expr: true    }
+
+       simtype:  default
+       nsteps:   {   value: nsteps,        expr: true   }
+
+       bcs:
+         - north_bounce_back!
+         - south_bounce_back!
+         - periodic_east_to_west!
+
+       callbacks:
+         - print_step_callback(250)
+         - write_jld_file_callback(datadir, &backup_steps&)
+         - write_jld_file_callback(datadir, 5000, true)
+       
+       finally:
+         - write_jld_file_callback(datadir)
+         - report_lbm_error(nn -> analytical_poise_power_law(mu, n, pgrad, nn), 1, 32, datadir)
+         - >
+           (sim, k) -> begin
+             umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
+             info("Re = $(u ^ (2 - n) * (ni ^ n) / mu)");
+           end

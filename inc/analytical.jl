@@ -207,7 +207,7 @@ end
 function report_lbm_error(f_analyt::LBXFunction, d::Int, idx::Int, 
                           datadir::AbstractString)
 
-  (sim::AbstractSim, k::Int) -> begin
+  (sim::AbstractSim, k::Real) -> begin
     const errors            =   lbm_error(sim, f_analyt, d, idx; ps=[2, Inf], 
                                           plot_errors=true, 
                                           basename=joinpath(datadir, 
