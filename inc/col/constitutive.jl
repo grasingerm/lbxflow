@@ -195,7 +195,7 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
                                                     max_iters, tol, relax);
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    const mu_max = @nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
+    const mu_min = @nu(1/rt_min, sim.lat.cssq, sim.lat.dt);
     const mu_max = @nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
     mu = inner_f(sim, fneq, i, j);
     if mu < mu_min

@@ -14,60 +14,60 @@
 # Different preambles correspond to different materials
 - n-050: |
          preamble: >
-                   @init_plot_env();
+                   @init_gadfly_plot_env()
                    const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
                    const pgrad         =   &pgrad&;   
                    const F             =   [-pgrad, 0.0]; 
-                   const nu            =   &nu1&;
+                   const mu            =   &nu1&;
                    const n             =   0.5;
                    const forcing_kf    =   init_korner_Fk(F);
   n-075: |
          preamble: >
-                   @init_plot_env();
+                   @init_gadfly_plot_env()
                    const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
                    const pgrad         =   &pgrad&;   
                    const F             =   [-pgrad, 0.0]; 
-                   const nu            =   &nu1&;
+                   const mu            =   &nu1&;
                    const n             =   0.75;
                    const forcing_kf    =   init_korner_Fk(F);
   n-125: |
          preamble: >
-                   @init_plot_env();
+                   @init_gadfly_plot_env()
                    const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
                    const pgrad         =   &pgrad&;   
                    const F             =   [-pgrad, 0.0]; 
-                   const nu            =   &nu1&;
+                   const mu            =   &nu1&;
                    const n             =   1.25;
   n-150: |
          preamble: >
-                   @init_plot_env();
+                   @init_gadfly_plot_env()
                    const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
                    const pgrad         =   &pgrad&;   
                    const F             =   [-pgrad, 0.0]; 
-                   const nu            =   &nu1&;
+                   const mu            =   &nu1&;
                    const n             =   1.50;
   
 - bgk:      "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf; feqf=feq_incomp_max_entropy))"
-  mrt:      "col_f: MRT_F(init_constit_mrt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf))"
+  bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf; feq_f=feq_incomp_max_entropy))"
+  mrt:      "col_f: MRT_F(init_constit_mrt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
 
        rho_0:   {   value: 1.0,           expr: false   }
-       nu:      {   value: nu,            expr: true    }
+       nu:      {   value: mu,            expr: true    }
 
        dx:      {   value: 1.0,           expr: false   }
        dt:      {   value: 1.0,           expr: false   }

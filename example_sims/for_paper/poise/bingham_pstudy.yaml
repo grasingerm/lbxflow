@@ -14,51 +14,52 @@
 # Different preambles correspond to different materials
 - tau-04: |
           preamble: >
-                    @init_plot_env();
+                    @init_gadfly_plot_env()
                     const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
                     const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
-                    const nu            =   &nu1&;
+                    const mu            =   &nu1&;
                     const tauy          =   4e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-08: |
           preamble: >
-                    @init_plot_env();
+                    @init_gadfly_plot_env()
                     const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
                     const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
-                    const nu            =   &nu1&;
+                    const mu            =   &nu1&;
                     const tauy          =   8e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-12: |
           preamble: >
-                    @init_plot_env();
+                    @init_gadfly_plot_env()
                     const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
                     const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
-                    const nu            =   &nu1&;
+                    const mu            =   &nu1&;
                     const tauy          =   12e-5;
                     const forcing_kf    =   init_korner_Fk(F);
+
 - bgk-5:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e5, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
   bgk-8:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
   svec:     "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.501, 8.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; feqf=feq_incomp_max_entropy))"
-  mrt:      "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf))"
+  bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; feq_f=feq_incomp_max_entropy))"
+  mrt:      "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
 
        rho_0:   {   value: 1.0,           expr: false   }
-       nu:      {   value: nu,            expr: true    }
+       nu:      {   value: mu,            expr: true    }
 
        dx:      {   value: 1.0,           expr: false   }
        dt:      {   value: 1.0,           expr: false   }
@@ -80,7 +81,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 32, datadir)
+         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 32, datadir; plot_errors=false)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
