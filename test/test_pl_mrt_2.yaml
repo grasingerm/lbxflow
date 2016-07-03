@@ -11,8 +11,7 @@ preamble: >
   const nj = rand(20:35);
   const k = rand(0.333:0.01:2.0);
   const n = rand(0.75:0.1:1.25);
-  const m     = rand(1e4:1e4:1e5);
-  const constit_rel_f =   init_constit_mrt_power_law_implicit(k, n, m, 1e-12, 10, 1e-4);
+  const constit_rel_f =   init_constit_mrt_power_law_implicit(k, n, 1e-12, 10, 1e-4);
   const forcing_kf    =   init_korner_Fk(F);
   
 # data
@@ -54,7 +53,7 @@ callbacks:
 # clean-up, backup, write out
 finally:
   - >
-    (sim::Sim, k::Real) -> begin
+    (sim::Sim, kk::Real) -> begin
       us = analytical_poise_power_law(k, n, pgrad, nj);
       i = convert(Int, round(ni/2));
       for j = 1:nj
@@ -62,7 +61,7 @@ finally:
         @test_approx_eq_eps us[j] sim.msm.u[1,i,j] 1e-2
       end
       println("TEST PASSED");
-      info("Reynolds  = $(reynolds(maximum(us), nj, mu))");
+      info("Reynolds  = $(reynolds(maximum(us), nj, k))");
       const omegas    = vec(sim.msm.omega[i,:]);
       info("Omega_max     = $(maximum(omegas))");
       info("Omega_min     = $(minimum(omegas))");

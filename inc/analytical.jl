@@ -99,7 +99,7 @@ function analytical_poise_power_law(k::AbstractFloat, n::Real,
   results       =   zeros(nnodes);
   for i = 1:nnodes
     const x       =   i - nnodes/2.0 - 0.5;
-    const l_n     =   1.0 / n_rat * (-pgrad / k);
+    const l_n     =   1.0 / n_rat * (-pgrad / k)^(1.0 / n);
     results[i]    =   l_n * (h^n_rat - abs(x)^n_rat);
   end
 
