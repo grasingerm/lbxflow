@@ -1,7 +1,7 @@
 - "": "version: 1.0.0"
 
 #!! nj           =  64
-#!! ni           =  32
+#!! ni           =  128
 #!! nsteps       =  25000
 #!! backup_steps =  2000
 #!! nu1          =  0.2
@@ -90,7 +90,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 32, datadir; plot_errors=false)
+         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 64, datadir; plot_errors=false)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));

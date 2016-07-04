@@ -1,7 +1,7 @@
 - "": "version: 1.0.0"
 
 #!! nj           =  64
-#!! ni           =  32
+#!! ni           =  128
 #!! nsteps       =  25000
 #!! backup_steps =  2000
 #!! nu1          =  0.2
@@ -9,7 +9,7 @@
 #!! gamma_min    =  1e-12
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! pgrad        =  -5e-7
+#!! pgrad        =  -5e-5
 
 # Different preambles correspond to different materials
 - n-050: |
@@ -44,6 +44,7 @@
                    const F             =   [-pgrad, 0.0]; 
                    const mu            =   &nu1&;
                    const n             =   1.25;
+                   const forcing_kf    =   init_korner_Fk(F);
   n-150: |
          preamble: >
                    const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
@@ -54,8 +55,32 @@
                    const F             =   [-pgrad, 0.0]; 
                    const mu            =   &nu1&;
                    const n             =   1.50;
-  
+                   const forcing_kf    =   init_korner_Fk(F);
+  n-175: |
+         preamble: >
+                   const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
+                   const nj            =   &nj&;
+                   const ni            =   &ni&;
+                   const nsteps        =   &nsteps&;
+                   const pgrad         =   &pgrad&;   
+                   const F             =   [-pgrad, 0.0]; 
+                   const mu            =   &nu1&;
+                   const n             =   1.75;
+                   const forcing_kf    =   init_korner_Fk(F);
+  n-200: |
+         preamble: >
+                   const datadir       =   joinpath("data", "for_paper", ~DIR_LS~);
+                   const nj            =   &nj&;
+                   const ni            =   &ni&;
+                   const nsteps        =   &nsteps&;
+                   const pgrad         =   &pgrad&;   
+                   const F             =   [-pgrad, 0.0]; 
+                   const mu            =   &nu1&;
+                   const n             =   2.0;
+                   const forcing_kf    =   init_korner_Fk(F);
+
 - bgk:      "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  svec:     "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, 0.501, 10.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
   bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf; feq_f=feq_incomp_max_entropy))"
   mrt:      "col_f: MRT_F(init_constit_mrt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
 
@@ -85,7 +110,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(nn -> analytical_poise_power_law(mu, n, pgrad, nn), 1, 32, datadir)
+         - report_lbm_error(nn -> analytical_poise_power_law(mu, n, pgrad, nn), 1, 64, datadir)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_power_law(mu, n, pgrad, nj));
