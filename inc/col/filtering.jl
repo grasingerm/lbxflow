@@ -767,8 +767,8 @@ end
 #! \return          Nonequilibrium energy flux
 function qx_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
                 f_neq::AbstractArray{Float64, 1})
-  return (-2 * f_neq[1] + 2 * f_neq[3] + f_neq[5] - f_neq[6] - f_neq[7] + 
-          f_neq[8]);
+  return abs(-2 * f_neq[1] + 2 * f_neq[3] + f_neq[5] - f_neq[6] - f_neq[7] + 
+             f_neq[8]);
 end
 
 #! Calculate the nonequilibrium energy flux
@@ -779,8 +779,8 @@ end
 #! \return          Nonequilibrium energy flux
 function qy_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
                 f_neq::AbstractArray{Float64, 1})
-  return (-2 * f_neq[2] + 2 * f_neq[4] + f_neq[5] + f_neq[6] - f_neq[7] -
-          f_neq[8]);
+  return abs(-2 * f_neq[2] + 2 * f_neq[4] + f_neq[5] + f_neq[6] - f_neq[7] -
+             f_neq[8]);
 end
 
 #! Calculate the nonequilibrium energy flux
