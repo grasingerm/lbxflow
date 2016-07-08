@@ -42,9 +42,9 @@
   bgk-8_delta-1e-3: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-3, scale=scale)"
   bgk-8_delta-1e-4: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-4, scale=scale)"
   bgk-8_delta-1e-5: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-5, scale=scale)"
-  bgk-8_delta-1e-6: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-6, scale=scale)"
-  bgk-8_delta-1e-7: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-7, scale=scale)"
-  bgk-8_delta-1e-8: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-8, scale=scale)"
+  bgk-8_delta-1e-1: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-1, scale=scale)"
+  bgk-8_delta-1:    "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1.0, scale=scale)"
+  bgk-8_delta-1e1:  "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e1, scale=scale)"
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
@@ -72,7 +72,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 64, datadir; plot_errors=false)
+         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 16, datadir; plot_errors=false)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
