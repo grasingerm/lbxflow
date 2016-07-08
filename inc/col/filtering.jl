@@ -21,8 +21,9 @@ __NSFLTR(x)               =   x != __SENTINAL;
 #! \param   noneq_entropy  Non-equilibrium entropy density
 #! \param   entropy_cache  Cache of non-equilibrium entropy densities
 #! \return                 Scale for entropic filtering
-function scale_root_median(sim::AbstractSim, i::Int, j::Int, feq_f::LBXFunction,
-                           noneq_entropy::Real, entropy_cache::EntropyCache)
+function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction,
+                           feq_f::LBXFunction, noneq_entropy::Real, 
+                           entropy_cache::EntropyCache)
 
   const ni, nj      = size(sim.msm.rho);
   nbr_densities     = Array{Float64}(sim.lat.n-1);
@@ -47,7 +48,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, feq_f::LBXFunction,
       end
 
       const f                   = sim.lat.f[:, i_nbr, j_nbr];
-      const nbr_density_k       = entropy_quadratic(f, feq, f - feq);
+      const nbr_density_k       = metric(f, feq, f - feq);
 
       nvalid                   += 1;
       nbr_densities[nvalid]     = nbr_density_k;
@@ -64,7 +65,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, feq_f::LBXFunction,
     end
 
     const f                   = sim.lat.f[:, i, j];
-    entropy_cache[(i, j)]     = entropy_quadratic(f, feq, f - feq);
+    entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
   return if nvalid > 0
@@ -81,12 +82,14 @@ end
 #! \param   sim            Simulation object
 #! \param   i              Index of node in i-direction
 #! \param   j              Index of node in j-direction
+#! \param   metric         Measure of nonequilibrium
 #! \param   feq_f          Equilibrium particle distribution function
 #! \param   noneq_entropy  Non-equilibrium entropy density
 #! \param   entropy_cache  Cache of non-equilibrium entropy densities
 #! \return                 Scale for entropic filtering
-function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, feq_f::LBXFunction,
-                           noneq_entropy::Real, entropy_cache::EntropyCache)
+function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction,
+                           feq_f::LBXFunction, noneq_entropy::Real, 
+                           entropy_cache::EntropyCache)
 
   const ni, nj      = size(sim.msm.rho);
   nbr_densities     = Array{Float64}(sim.lat.n-1);
@@ -112,7 +115,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, feq_f::LBXFunction,
         end
 
         const f                   = sim.lat.f[:, i_nbr, j_nbr];
-        const nbr_density_k       = entropy_quadratic(f, feq, f - feq);
+        const nbr_density_k       = metric(f, feq, f - feq);
 
         nvalid                   += 1;
         nbr_densities[nvalid]     = nbr_density_k;
@@ -130,7 +133,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, feq_f::LBXFunction,
     end
 
     const f                   = sim.lat.f[:, i, j];
-    entropy_cache[(i, j)]     = entropy_quadratic(f, feq, f - feq);
+    entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
   return if nvalid > 0
@@ -147,9 +150,11 @@ end
 #! \param   sim              Simulation object
 #! \param   i                Index of node in i-direction
 #! \param   j                Index of node in j-direction
+#! \param   metric           Measure of nonequilibrium
 #! \param   noneq_densities  Non-equilibrium entropy density
 #! \return                   Scale for entropic filtering
-function scale_root_median(sim::AbstractSim, i::Int, j::Int, 
+function scale_root_median(sim::AbstractSim, i::Int, j::Int,
+                           metric::LBXFunction,
                            noneq_densities::Matrix{Float64})
 
   const ni, nj      = size(sim.msm.rho);
@@ -184,6 +189,7 @@ end
 scale_ehrenfests_step(args...) = 0.0;
 
 # Filtering constants
+const __METRIC            =   entropy_quadratic;
 const __SCALE             =   scale_root_median;
 const __DS                =   1e-4;
 const __STDS              =   2.7;
@@ -213,14 +219,16 @@ end
 type FltrFixedDSCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
+  metric::LBXFunction;
   scale::LBXFunction;
   ds_threshold::Real;
   fltr_thrsh_warn::Real;
 
-  function FltrFixedDSCol(inner_col_f!::ColFunction; scale::LBXFunction=__SCALE,
-                          ds_threshold::Real=__DS, 
+  function FltrFixedDSCol(inner_col_f!::ColFunction; metric::LBXFunction=__METRIC,
+                          scale::LBXFunction=__SCALE, ds_threshold::Real=__DS, 
                           fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
-    new(inner_col_f!.feq_f, inner_col_f!, scale, ds_threshold, fltr_thrsh_warn);
+    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, ds_threshold, 
+        fltr_thrsh_warn);
   end
 end
 
@@ -253,12 +261,13 @@ function call(col_f::FltrFixedDSCol, sim::AbstractSim, bounds::Matrix{Int64})
                                                                  sim.msm,
                                                                  feq_f, i, j);
 
-        ds          =   entropy_quadratic(f, feq, fneq);
+        ds          =   col_f.metric(f, feq, fneq);
         cache[key]  =   ds; # cache this expensive operation
       end
 
       if ds > col_f.ds_threshold
-        const delta   =   col_f.scale(sim, i, j, feq_f, ds, cache);
+        const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+                                      cache);
         nfiltered    +=   1;
 
         if is_cached
@@ -314,12 +323,13 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim, bounds::Matrix{Int64})
                                                                    sim.msm,
                                                                    feq_f, i, j);
 
-          ds          =   entropy_quadratic(f, feq, fneq);
+          ds          =   col_f.metric(f, feq, fneq);
           cache[key]  =   ds; # cache this expensive operation
         end
 
         if ds > col_f.ds_threshold
-          const delta   =   col_f.scale(sim, i, j, feq_f, ds, cache);
+          const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+                                        cache);
           nfiltered    +=   1;
 
           if is_cached
@@ -377,12 +387,13 @@ function call(col_f::FltrFixedDSCol, sim::AbstractSim,
                                                                  sim.msm,
                                                                  feq_f, i, j);
 
-        ds          =   entropy_quadratic(f, feq, fneq);
+        ds          =   col_f.metric(f, feq, fneq);
         cache[key]  =   ds; # cache this expensive operation
       end
 
       if ds > col_f.ds_threshold
-        const delta   =   col_f.scale(sim, i, j, feq_f, ds, cache);
+        const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+                                      cache);
         nfiltered    +=   1;
 
         if is_cached
@@ -437,12 +448,13 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
                                                                  sim.msm,
                                                                  feq_f, i, j);
 
-        ds          =   entropy_quadratic(f, feq, fneq);
+        ds          =   col_f.metric(f, feq, fneq);
         cache[key]  =   ds; # cache this expensive operation
       end
 
       if ds > col_f.ds_threshold
-        const delta   =   col_f.scale(sim, i, j, feq_f, ds, cache);
+        const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+                                      cache);
         nfiltered    +=   1;
 
         if is_cached
@@ -473,13 +485,18 @@ end
 type FltrStdCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
+  metric::LBXFunction;
   scale::LBXFunction;
   stds::Real;
+  ds_threshold::Real;
   fltr_thrsh_warn::Real;
 
-  function FltrStdCol(inner_col_f!::ColFunction; scale::LBXFunction=__SCALE,
-                      stds::Real=__STDS, fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
-    new(inner_col_f!.feq_f, inner_col_f!, scale, stds, fltr_thrsh_warn);
+  function FltrStdCol(inner_col_f!::ColFunction; metric::LBXFunction=__METRIC,
+                      scale::LBXFunction=__SCALE, stds::Real=__STDS, 
+                      ds_threshold::Real=0.0, 
+                      fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, stds, ds_threshold,
+        fltr_thrsh_warn);
   end
 end
 
@@ -505,7 +522,7 @@ function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
                                                                 sim.msm,
                                                                 feq_f, i, j);
 
-      noneq_densities[i, j]     =   entropy_quadratic(f, feq, fneq);
+      noneq_densities[i, j]     =   col_f.metric(f, feq, fneq);
     end
   end
 
@@ -517,8 +534,10 @@ function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
       if (noneq_densities[i, j] != __SENTINAL && 
-          noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy)
-        const delta              =  col_f.scale(sim, i, j, noneq_densities);
+          noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
+          && noneq_densities[i, j] > col_f.ds_threshold)
+        const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+                                                noneq_densities);
         nfiltered               +=  1;
 
         rhoij                    =   sim.msm.rho[i,j];
@@ -568,7 +587,7 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
                                                                   sim.msm,
                                                                   feq_f, i, j);
 
-        noneq_densities[i, j]     =   entropy_quadratic(f, feq, fneq);
+        noneq_densities[i, j]     =   col_f.metric(f, feq, fneq);
       end
     end
   end
@@ -581,8 +600,10 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
     i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
       if (noneq_densities[i, j] != __SENTINAL && 
-          noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy)
-        const delta              =  col_f.scale(sim, i, j, noneq_densities);
+          noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
+          && noneq_densities[i, j] > col_f.ds_threshold)
+        const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+                                                noneq_densities);
         nfiltered               +=  1;
 
         rhoij                    =   sim.msm.rho[i,j];
@@ -628,7 +649,7 @@ function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
                                                                 sim.msm,
                                                                 feq_f, i, j);
 
-      noneq_densities[i, j]     =   entropy_quadratic(f, feq, fneq);
+      noneq_densities[i, j]     =   col_f.metric(f, feq, fneq);
     end
   end
 
@@ -638,8 +659,10 @@ function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
 
   for j=1:nj, i=1:ni
     if (noneq_densities[i, j] != __SENTINAL && 
-        noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy)
-      const delta              =  col_f.scale(sim, i, j, noneq_densities);
+        noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
+        && noneq_densities[i, j] > col_f.ds_threshold)
+      const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+                                              noneq_densities);
       nfiltered               +=  1;
 
       rhoij                    =   sim.msm.rho[i,j];
@@ -684,7 +707,7 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
                                                                 sim.msm,
                                                                 feq_f, i, j);
 
-      noneq_densities[i, j]     =   entropy_quadratic(f, feq, fneq);
+      noneq_densities[i, j]     =   col_f.metric(f, feq, fneq);
     end
   end
 
@@ -694,8 +717,10 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
 
   for j=1:nj, i=1:ni
     if (noneq_densities[i, j] != __SENTINAL && 
-        noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy)
-      const delta              =  col_f.scale(sim, i, j, noneq_densities);
+        noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
+        && noneq_densities[i, j])
+      const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+                                              noneq_densities);
       nfiltered               +=  1;
 
       rhoij                    =   sim.msm.rho[i,j];
@@ -732,4 +757,39 @@ end
 function call(fpc::FltrPosCol, sim::AbstractSim, args...)
   fpc.inner_col_f!(sim, args...);
   map!(x -> (x < 0) ? 0.0 : x, sim.lat.f);
+end
+
+#! Calculate the nonequilibrium energy flux
+#!
+#! \param   f       Particle distributions
+#! \param   f_eq    Equilibrium distributions
+#! \param   f_neq   Non-equilibrium distributions
+#! \return          Nonequilibrium energy flux
+function qx_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
+                f_neq::AbstractArray{Float64, 1})
+  return (-2 * f_neq[1] + 2 * f_neq[3] + f_neq[5] - f_neq[6] - f_neq[7] + 
+          f_neq[8]);
+end
+
+#! Calculate the nonequilibrium energy flux
+#!
+#! \param   f       Particle distributions
+#! \param   f_eq    Equilibrium distributions
+#! \param   f_neq   Non-equilibrium distributions
+#! \return          Nonequilibrium energy flux
+function qy_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
+                f_neq::AbstractArray{Float64, 1})
+  return (-2 * f_neq[2] + 2 * f_neq[4] + f_neq[5] + f_neq[6] - f_neq[7] -
+          f_neq[8]);
+end
+
+#! Calculate the nonequilibrium energy flux
+#!
+#! \param   f       Particle distributions
+#! \param   f_eq    Equilibrium distributions
+#! \param   f_neq   Non-equilibrium distributions
+#! \return          Nonequilibrium energy flux
+function qmax_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
+                  f_neq::AbstractArray{Float64, 1})
+  return max(qx_neq(f, f_eq, f_neq), qy_neq(f, f_eq, f_neq));
 end
