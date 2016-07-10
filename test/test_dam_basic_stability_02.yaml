@@ -1,0 +1,81 @@
+version: 1.0.0
+
+preamble: >
+  @init_plot_env();
+  const datadir       =   joinpath("data");
+  const nu            =   0.2;
+  const constit_rel_f =   init_constit_srt_const(nu);
+  const F             =   [0.0; -1.0e-6];
+  const forcing_kf    =   init_sukop_gravity_Fk(F);
+  const ni            =   50;
+  const nj            =   50;
+  const nsteps        =   40000;
+
+# data directory
+datadir:    {   value: datadir,       expr: true    }
+
+# material properties
+rho_0:      {   value: 1.0,           expr: false   }
+nu:         {   value: nu,            expr: true    }
+
+# lattice parameters
+dx:         {   value: 1.0,           expr: false   }
+dt:         {   value: 1.0,           expr: false   }
+ni:         {   value:  ni,           expr: true    }
+nj:         {   value:  nj,           expr: true    }
+
+# simulation parameters
+simtype:    free_surface
+col_f:      MRT_F(constit_rel_f, forcing_kf; S=S_LBGK);
+nsteps:     {   value: nsteps,        expr: true   }
+
+# boundaries
+sbounds:
+  value:  "[1 ni 1 nj;]'"
+  expr:   true
+
+cbounds:
+  value:  "[1 ni 1 nj;]'"
+  expr:   true
+
+# boundary conditions
+bcs:
+  - west_bounce_back!
+  - east_bounce_back!
+  - south_bounce_back!
+  - north_bounce_back!
+
+# free surface conditions
+rho_g: 1.0
+
+fill_x: { value: 0.5, expr: false }
+fill_y: { value: 1.0, expr: false }
+
+# callback functions
+callbacks:
+  - print_step_callback(50, "free-surf")
+  - pycontour_callback(100, mass_acsr; showfig=true, filled=true, colorbar=true, levels=[-0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5], grid=true)
+  - write_jld_file_callback(datadir, 500);
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::FreeSurfSim, k::Int) -> begin
+      @assert(k == nsteps, "There was an error that ended the simulation early");
+      for m in sim.tracker.M
+        @assert(-100 < m < 100, "Mass was numerically unstable");
+      end
+      for u in sim.msm.u
+        @assert(-100 < u < 100, "Velocity was numerically unstable");
+      end
+      for ρ in sim.msm.rho
+        @assert(-100 < ρ < 100, "ρ was numerically unstable");
+      end
+      for f in sim.lat.f
+        @assert(-100 < f < 100, "f was numerically unstable");
+      end
+      for ϵ in sim.tracker.eps
+        @assert(-10 < ϵ < 10, "ϵ was numerically unstable");
+      end
+      print_with_color(:green, "TEST PASSED\n");
+    end
