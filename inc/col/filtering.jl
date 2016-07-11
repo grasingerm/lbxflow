@@ -8,6 +8,24 @@ const __DEFAULT_DELTA     =   0.0;
 const __SENTINAL          =   -maxintfloat(Float64);
 __NSFLTR(x)               =   x != __SENTINAL; 
 
+#! Contract toward equilibrium
+function contract_eq!(lat::Lattice, i::Int, j::Int, delta::Real, 
+                      feq::AbstractArray{Float64, 1})
+  for k=lat.n
+    @inbounds lat.f[k, i, j] = feq[k] + delta * (lat.f[k, i, j] - feq[k]); 
+  end
+end
+
+#! Dissipate energy flux
+function contract_qx!(lat::Lattice, i::Int, j::Int, delta::Real,
+                      feq::AbstractArray{Float64, 1})
+  f = sub(lat.f, :, i, j);
+  qxij = qx_neq(f, feq, f-feq);
+  for (k, w) in zip(1:lat.n, [-2; 0; 2; 0; 1; -1; -1; 1])
+    @inbounds lat.f[k, i, j] -= delta * w * qxij;
+  end
+end
+
 #TODO clean these scale functions up with kernal functions;
 #     especially with one to find neighborhood of non-equilibrium entropy densities
 #TODO consider adding ensemble filters
@@ -191,6 +209,7 @@ scale_ehrenfests_step(args...) = 0.0;
 # Filtering constants
 const __METRIC            =   entropy_quadratic;
 const __SCALE             =   scale_root_median;
+const __DISS              =   contract_eq!;
 const __DS                =   1e-4;
 const __STDS              =   2.7;
 const __FLTR_THRSH_WARN   =   0.01;
@@ -221,13 +240,15 @@ type FltrFixedDSCol <: FltrColFunction
   inner_col_f!::ColFunction;
   metric::LBXFunction;
   scale::LBXFunction;
+  diss!::LBXFunction;
   ds_threshold::Real;
   fltr_thrsh_warn::Real;
 
   function FltrFixedDSCol(inner_col_f!::ColFunction; metric::LBXFunction=__METRIC,
-                          scale::LBXFunction=__SCALE, ds_threshold::Real=__DS, 
+                          scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
+                          ds_threshold::Real=__DS, 
                           fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
-    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, ds_threshold, 
+    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, ds_threshold, 
         fltr_thrsh_warn);
   end
 end
@@ -277,9 +298,7 @@ function call(col_f::FltrFixedDSCol, sim::AbstractSim, bounds::Matrix{Int64})
                                                                    i, j);
         end
 
-        for k = 1:sim.lat.n
-          @inbounds sim.lat.f[k, i, j] = feq[k] + delta * fneq[k]; 
-        end 
+        col_f.diss!(sim.lat, i, j, delta, feq); 
       end
 
     end
@@ -339,9 +358,7 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim, bounds::Matrix{Int64})
                                                                      i, j);
           end
 
-          for k = 1:sim.lat.n
-            @inbounds sim.lat.f[k, i, j] = feq[k] + delta * fneq[k]; 
-          end 
+          col_f.diss!(sim.lat, i, j, delta, feq); 
         end
       end
 
@@ -403,9 +420,7 @@ function call(col_f::FltrFixedDSCol, sim::AbstractSim,
                                                                    i, j);
         end
 
-        for k = 1:sim.lat.n
-          @inbounds sim.lat.f[k, i, j] = feq[k] + delta * fneq[k]; 
-        end 
+        col_f.diss!(sim.lat, i, j, delta, feq); 
       end
 
     end
@@ -464,9 +479,7 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
                                                                    i, j);
         end
 
-        for k = 1:sim.lat.n
-          @inbounds sim.lat.f[k, i, j] = feq[k] + delta * fneq[k]; 
-        end 
+        col_f.diss!(sim.lat, i, j, delta, feq); 
       end
     end
 
@@ -487,15 +500,17 @@ type FltrStdCol <: FltrColFunction
   inner_col_f!::ColFunction;
   metric::LBXFunction;
   scale::LBXFunction;
+  diss!::LBXFunction;
   stds::Real;
   ds_threshold::Real;
   fltr_thrsh_warn::Real;
 
   function FltrStdCol(inner_col_f!::ColFunction; metric::LBXFunction=__METRIC,
-                      scale::LBXFunction=__SCALE, stds::Real=__STDS, 
+                      scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
+                      stds::Real=__STDS, 
                       ds_threshold::Real=0.0, 
                       fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
-    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, stds, ds_threshold,
+    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, stds, ds_threshold,
         fltr_thrsh_warn);
   end
 end
@@ -542,13 +557,9 @@ function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
 
         rhoij                    =   sim.msm.rho[i,j];
         uij                      =   sub(sim.msm.u, :, i, j);
-
-        for k = 1:sim.lat.n 
-          const feq                 =   feq_f(sim.lat, rhoij, uij, k);
-          const fneq                =   sim.lat.f[k, i, j] - feq;
-          @inbounds sim.lat.f[k, i, j]  =   feq + delta * fneq; 
-        end
-
+        feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+        
+        col_f.diss!(sim.lat, i, j, delta, feq); 
       end
     end
   end
@@ -608,12 +619,9 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
 
         rhoij                    =   sim.msm.rho[i,j];
         uij                      =   sub(sim.msm.u, :, i, j);
-
-        for k = 1:sim.lat.n 
-          const feq                 =   feq_f(sim.lat, rhoij, uij, k);
-          const fneq                =   sim.lat.f[k, i, j] - feq;
-          @inbounds sim.lat.f[k, i, j]  =   feq + delta * fneq; 
-        end
+        feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+        
+        col_f.diss!(sim.lat, i, j, delta, feq); 
 
       end
     end
@@ -667,12 +675,9 @@ function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
 
       rhoij                    =   sim.msm.rho[i,j];
       uij                      =   sub(sim.msm.u, :, i, j);
-
-      for k = 1:sim.lat.n 
-        const feq                 =   feq_f(sim.lat, rhoij, uij, k);
-        const fneq                =   sim.lat.f[k, i, j] - feq;
-        @inbounds sim.lat.f[k, i, j]  =   feq + delta * fneq; 
-      end
+      feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+      
+      col_f.diss!(sim.lat, i, j, delta, feq); 
 
     end
   end
@@ -725,12 +730,9 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
 
       rhoij                    =   sim.msm.rho[i,j];
       uij                      =   sub(sim.msm.u, :, i, j);
-
-      for k = 1:sim.lat.n 
-        const feq                 =   feq_f(sim.lat, rhoij, uij, k);
-        const fneq                =   sim.lat.f[k, i, j] - feq;
-        @inbounds sim.lat.f[k, i, j]  =   feq + delta * fneq; 
-      end
+      feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+      
+      col_f.diss!(sim.lat, i, j, delta, feq); 
 
     end
   end
@@ -767,9 +769,12 @@ end
 #! \return          Nonequilibrium energy flux
 function qx_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
                 f_neq::AbstractArray{Float64, 1})
-  return abs(-2 * f_neq[1] + 2 * f_neq[3] + f_neq[5] - f_neq[6] - f_neq[7] + 
-             f_neq[8]);
+  return (-2 * f_neq[1] + 2 * f_neq[3] + f_neq[5] - f_neq[6] - f_neq[7] + 
+          f_neq[8]);
 end
+
+qx_neq_abs(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
+           f_neq::AbstractArray{Float64, 1}) = abs(qx_neq(f, f_eq, f_neq));
 
 #! Calculate the nonequilibrium energy flux
 #!
@@ -779,9 +784,12 @@ end
 #! \return          Nonequilibrium energy flux
 function qy_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
                 f_neq::AbstractArray{Float64, 1})
-  return abs(-2 * f_neq[2] + 2 * f_neq[4] + f_neq[5] + f_neq[6] - f_neq[7] -
-             f_neq[8]);
+  return (-2 * f_neq[2] + 2 * f_neq[4] + f_neq[5] + f_neq[6] - f_neq[7] -
+          f_neq[8]);
 end
+
+qy_neq_abs(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
+           f_neq::AbstractArray{Float64, 1}) = abs(qy_neq(f, f_eq, f_neq));
 
 #! Calculate the nonequilibrium energy flux
 #!
@@ -791,5 +799,5 @@ end
 #! \return          Nonequilibrium energy flux
 function qmax_neq(f::AbstractArray{Float64, 1}, f_eq::AbstractArray{Float64, 1},
                   f_neq::AbstractArray{Float64, 1})
-  return max(qx_neq(f, f_eq, f_neq), qy_neq(f, f_eq, f_neq));
+  return max(qx_neq_abs(f, f_eq, f_neq), qy_neq_abs(f, f_eq, f_neq));
 end

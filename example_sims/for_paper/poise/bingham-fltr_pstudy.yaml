@@ -38,13 +38,13 @@
                    const forcing_kf    =   init_korner_Fk(F);
                    const scale         =   scale_ehrenfests_step;
 
-- bgk-8_delta-1e-2: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-2, scale=scale)"
-  bgk-8_delta-1e-3: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-3, scale=scale)"
-  bgk-8_delta-1e-4: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-4, scale=scale)"
-  bgk-8_delta-1e-5: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-5, scale=scale)"
-  bgk-8_delta-1e-1: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e-1, scale=scale)"
-  bgk-8_delta-1:    "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1.0, scale=scale)"
-  bgk-8_delta-1e1:  "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq, ds_threshold=1e1, scale=scale)"
+- bgk-8_delta-1e-2: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1e-2, scale=scale, diss=contract_qx!)"
+  bgk-8_delta-1e-3: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1e-3, scale=scale, diss=contract_qx!)"
+  bgk-8_delta-1e-4: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1e-4, scale=scale, diss=contract_qx!)"
+  bgk-8_delta-1e-5: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1e-5, scale=scale, diss=contract_qx!)"
+  bgk-8_delta-1e-1: "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1e-1, scale=scale, diss=contract_qx!)"
+  bgk-8_delta-1:    "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1.0, scale=scale, diss=contract_qx!)"
+  bgk-8_delta-1e1:  "col_f: FltrFixedDSCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf); metric=qx_neq_abs, ds_threshold=1e1, scale=scale, diss=contract_qx!)"
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
