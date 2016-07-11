@@ -28,13 +28,13 @@
                              const ni            =   &ni&;
                              const nsteps        =   &nsteps&;
                              const u0            =   0.01;
-  re-0003_bn-0001: |
+  re-0003_bn-0005: |
                    preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
-                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-5, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 2.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
@@ -68,13 +68,13 @@
                              const nsteps        =   &nsteps&;
                              const u0            =   0.01;
 
-  re-0003_bn-0050: |
+  re-0003_bn-0001: |
                    preamble: >
                              @init_plot_env();
                              @change_default_figsize(&figsize&);
                              const datadir       =   joinpath("data", ~DIR_LS~);
                              const nu            =   &nu1&;
-                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 2.e-3, &m&, &gamma_min&, &max_iters&, &tol&);
+                             const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-4, &m&, &gamma_min&, &max_iters&, &tol&);
                              const F             =   [0.0; &g&];
                              const forcing_kf    =   init_sukop_gravity_Fk(F);
                              const nj            =   &nj&;
@@ -227,5 +227,4 @@
 
 - "" : |
        finally:
-         - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
          - write_jld_file_callback(datadir)
