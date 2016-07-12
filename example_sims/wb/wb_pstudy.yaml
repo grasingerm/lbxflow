@@ -1,7 +1,7 @@
 - "": "version: 1.0.0"
 
 #!! figsize      =  4, 15
-#!! g            =  -5.0e-6
+#!! g            =  -5.0e-4
 #!! nj           =  500
 #!! ni           =  50
 #!! nsteps       =  50000
@@ -228,12 +228,13 @@
 - "" : |
        finally:
          - write_jld_file_callback(datadir)
-         - (sim, k) -> begin
+         - >
+           (sim, k) -> begin
              global defs;
              ffd = readdlm(joinpath(datadir, "ff.csv"), ',');
              map!(val -> (val > 1.0) ? 1.0 : (val < 0.0) ? 0.0 : val, ffd);
              fill_max = 0;
-             cl_max_min = 50;
+             cl_max_min = nj;
              for k=1:size(ffd, 1)
                ts = reshape(sub(ffd, k, :), (ni, nj));
                fill = sum(ts);
@@ -258,11 +259,11 @@
                if cl_max < cl_max_min
                  cl_max_min = cl_max;
                end
-             end
-             if cl_max < cl_max_min
-               cl_max_min = cl_max;
+               println("time step $k, cl_max: $cl_max");
              end
              println("Greatest fill is $fill_max / $(sum(defs["active_cells"]))");
              println("Greatest fill is $(fill_max / sum(defs["active_cells"]))");
+             println("Least voids: $(1.0 - fill_max / sum(defs["active_cells"]))");
              println("Smallest, greatest channel length is $cl_max_min");
+             println("Smallest, greatest channel length is $(cl_max_min/nj)");
            end

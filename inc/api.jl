@@ -58,7 +58,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
     eval(parse(pre));
   end
 
-  defs = Dict();
+  global defs = Dict();
   for (k, v) in ins
 
     if haskey(DEF_EXPR_ATTRS, k)
