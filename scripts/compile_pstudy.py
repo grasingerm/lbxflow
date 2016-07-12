@@ -26,8 +26,11 @@ def parse_s(s, names):
         assert end != -1, """there was an opening '&' without a
                              closing '&' in {}[{}]""".format(s, p)
         key = s[start+1:end]
-        assert key in names.keys(), key + ' not found in names'
-        new_s = new_s + s[p:start] + names[key]
+        if end != start+1:
+            assert key in names.keys(), key + ' not found in names'
+            new_s = new_s + s[p:start] + names[key]
+        else: # found an '&&'
+            new_s = new_s + s[p:end+1]
         p = end + 1
     return new_s
 
