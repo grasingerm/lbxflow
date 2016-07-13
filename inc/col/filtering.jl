@@ -21,9 +21,33 @@ function contract_qx!(lat::Lattice, i::Int, j::Int, delta::Real,
                       feq::AbstractArray{Float64, 1})
   f = sub(lat.f, :, i, j);
   qxij = qx_neq(f, feq, f-feq);
-  for (k, w) in zip(1:lat.n, [-2; 0; 2; 0; 1; -1; -1; 1])
-    @inbounds lat.f[k, i, j] -= delta * w * qxij;
+
+  ρ_i = 0.0;
+  u_i = zeros(2);
+  for k=1:lat.n
+    ρ_i += lat.f[k, i, j];
+    u_i += lat.f[k, i, j] * lat.c[:, k];
   end
+  u_i /= ρ_i;
+
+  lat.f[3, i, j] += sign(qxij) * delta;
+  lat.f[6, i, j] -= sign(qxij) * delta / 2;
+  lat.f[7, i, j] -= sign(qxij) * delta / 2;
+
+  lat.f[1, i, j] -= sign(qxij) * delta;
+  lat.f[5, i, j] += sign(qxij) * delta / 2;
+  lat.f[8, i, j] += sign(qxij) * delta / 2;
+
+  ρ_f = 0.0;
+  u_f = zeros(2);
+  for k=1:lat.n
+    ρ_f += lat.f[k, i, j];
+    u_f += lat.f[k, i, j] * lat.c[:, k];
+  end
+  u_f /= ρ_f;
+
+  @assert(abs(ρ_i - ρ_f) / ρ_i < 1e-5, "ρ_i != ρ_f, $(ρ_i) != $(ρ_f)");
+  @assert(norm(u_i - u_f, Inf) / norm(u_i, Inf) < 1e-5, "u_i != u_f, $(u_i) != $(u_f)");
 end
 
 #TODO clean these scale functions up with kernal functions;

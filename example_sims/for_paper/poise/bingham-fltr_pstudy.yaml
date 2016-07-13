@@ -23,7 +23,7 @@
                    const mu            =   &nu1&;
                    const tauy          =   16e-5;
                    const forcing_kf    =   init_korner_Fk(F);
-                   const scale         =   scale_root_median; 
+                   const scale         =   (args...) -> scale_root_median(args...) / 4; 
 
   ehren: |
           preamble: >
