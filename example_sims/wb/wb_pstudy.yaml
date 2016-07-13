@@ -4,7 +4,7 @@
 #!! g            =  -5.0e-4
 #!! nj           =  500
 #!! ni           =  50
-#!! nsteps       =  50000
+#!! nsteps       =  100000
 #!! backup_steps =  2000
 #!! plot_steps   =  100
 #!! nu1          =  0.2
@@ -12,7 +12,7 @@
 #!! gamma_min    =  1e-9
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! levs         =  [-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5]
+#!! levs         =  [-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5; 3.0; 3.5; 4.0; 4.5; 5.0]
 
 # Different preambles correspond to different materials
 - re-0003_bn-0000: |
