@@ -144,7 +144,6 @@ function pyplot_callback(stepout::Real, accessor::LBXFunction;
 
       eval(if showfig == true
              quote
-               PyPlot.show();
                PyPlot.pause(0.00001);
              end
            else
@@ -265,7 +264,6 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
 
       eval(if showfig == true
              quote
-#               PyPlot.show();
                PyPlot.pause(0.00001);
              end
            else
@@ -358,7 +356,6 @@ function pyquiver_callback(stepout::Real, accessor::LBXFunction;
 
       eval(if showfig == true
              quote
-               PyPlot.show();
                PyPlot.pause(0.00001);
              end
            else
@@ -452,7 +449,6 @@ function pystream_callback(stepout::Real, accessor::LBXFunction;
 
       eval(if showfig == true
              quote
-               PyPlot.show();
                PyPlot.pause(0.00001);
              end
            else
