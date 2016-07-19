@@ -17,9 +17,9 @@ df4 =   DataFrame(x = Float64[], y = Float64[], Series = AbstractString[]);
 for (τ, ex) in zip(τs, exs) 
   us  =   LBXFlow.analytical_poise_bingham(ν, τ, ∇p, n);
   df1 =   vcat(df1, DataFrame(x = xs, y = us, 
-                              Series = fill("τ<sub>y</sub> = $(τ)", n)));
+                              Series = fill("tau<sub>y</sub> = $(τ)", n)));
   df2 =   vcat(df2, DataFrame(x = xs, y = us / maximum(us), 
-                              Series = fill("τ<sub>y</sub> = $(τ)", n)));
+                              Series = fill("tau<sub>y</sub> = $(τ)", n)));
   us  =   LBXFlow.analytical_poise_power_law(ν, ex, ∇p / 10, n);
   df3 =   vcat(df3, DataFrame(x = xs, y = us, 
                               Series = fill("n = $(ex)", n)));
@@ -38,7 +38,7 @@ draw(PNG("bingham_normalized.png", 5.5inch, 3inch),
        plot(df2, x=:x, y=:y, color=:Series,
        Geom.line,
        Guide.XLabel("y / H"),
-       Guide.YLabel("u (lat / sec)")
+       Guide.YLabel("u / u<sub>max</sub>")
        ));
 
 draw(PNG("power-law.png", 5.5inch, 3inch),
@@ -52,5 +52,5 @@ draw(PNG("power-law_normalized.png", 5.5inch, 3inch),
        plot(df4, x=:x, y=:y, color=:Series,
        Geom.line,
        Guide.XLabel("y / H"),
-       Guide.YLabel("u (lat / sec)")
+       Guide.YLabel("u / u<sub>max</sub>")
        ));
