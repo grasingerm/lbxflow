@@ -1,0 +1,50 @@
+version: 1.0.0
+preamble: >
+          @init_plot_env();
+          @change_default_figsize(4, 14);
+          const datadir       =   joinpath("data", "re-0003", "bn-0010", "g1", "obs-30x2");
+          const nu            =   0.2;
+          const constit_rel_f =   init_constit_srt_bingham_implicit(nu, 4.e-4, 1e6, 1e-9, 15, 1e-6);
+          const nj            =   2400;
+          const ni            =   50;
+          const nsteps        =   250000;
+          const u0            =   0.01;
+          const F             =   [0.0; -5.0e-7];
+          const forcing_kf    =   init_sukop_gravity_Fk(F);
+datadir: {   value: datadir,       expr: true    }
+
+rho_0:   {   value: 1.0,           expr: false   }
+nu:      {   value: nu,            expr: true    }
+
+dx:      {   value: 1.0,           expr: false   }
+dt:      {   value: 1.0,           expr: false   }
+ni:      {   value:  ni,           expr: true    }
+nj:      {   value:  nj,           expr: true    }
+
+simtype:  "free_surface"
+col_f:    BGK_F(constit_rel_f, forcing_kf);
+
+nsteps:   {   value: nsteps,        expr: true   }
+
+bcs:
+  - west_bounce_back!
+  - east_bounce_back!
+  - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
+  - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
+  - north_mass_outlet!
+
+rho_g:  1.0
+
+fill_x: { value: 1.0,  expr: false }
+fill_y: { value: 0.02, expr: false }
+obstacles:
+  - type:   bounce_back
+    coords: "[1 30 60 120; 1 30 150 180]'" 
+
+callbacks:
+  - print_step_callback(250, "free-surf")
+  - pycontour_callback(250, ff_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(0.0, 1.0, 11)), fname=joinpath(datadir, "mass"), rects=[(60, 120, 0/ni, 30/ni),(150, 180, 0/ni, 30/ni)])
+  - write_jld_file_callback(datadir, 2000)
+  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+finally:
+  - write_jld_file_callback(datadir)

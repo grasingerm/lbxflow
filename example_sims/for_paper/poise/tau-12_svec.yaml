@@ -1,0 +1,54 @@
+version: 1.0.0
+preamble: >
+          const datadir       =   joinpath("data", "for_paper", "tau-12", "svec");
+          const nj            =   64;
+          const ni            =   128;
+          const nsteps        =   25000;
+          const pgrad         =   -1e-5;   
+          const F             =   [-pgrad, 0.0]; 
+          const mu            =   0.2;
+          const tauy          =   12e-5;
+          const forcing_kf    =   init_korner_Fk(F);
+col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.501, 8.0, 1e-12, 15, 1e-6), forcing_kf)
+datadir: {   value: datadir,       expr: true    }
+
+rho_0:   {   value: 1.0,           expr: false   }
+nu:      {   value: mu,            expr: true    }
+
+dx:      {   value: 1.0,           expr: false   }
+dt:      {   value: 1.0,           expr: false   }
+ni:      {   value:  ni,           expr: true    }
+nj:      {   value:  nj,           expr: true    }
+
+simtype:  default
+nsteps:   {   value: nsteps,        expr: true   }
+
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+callbacks:
+  - print_step_callback(250)
+  - write_jld_file_callback(datadir, 2000)
+  - write_jld_file_callback(datadir, 5000, true)
+
+finally:
+  - write_jld_file_callback(datadir)
+  - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 64, datadir; plot_errors=false)
+  - >
+    (sim, k) -> begin
+      umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
+      info("Re = $(reynolds(umax, nj, mu))");
+      info("Bn = $(bingham_number(umax, nj, mu, tauy))");
+    end
+  - >
+    (sim, k) -> begin
+      vpa = vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj);
+      writedlm(joinpath(datadir, "ux_profile.dsv"), 
+        begin
+          x, y = vpa(sim);
+          hcat(x, y);
+        end,
+        ",");
+    end

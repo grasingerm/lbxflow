@@ -3,7 +3,7 @@ using LBXFlow
 using Gadfly
 using DataFrames
 
-τs  =   map(x -> 2^x-1, 0:4);
+τs  =   [0.0, 25.0];
 exs =   vcat([1], map(x -> (1-2.0^(-x)), 4:-1:1));
 ν   =   1.0;
 ∇p  =   -3.0;
