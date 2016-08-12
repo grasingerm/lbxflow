@@ -6,3 +6,12 @@ data/*
 # ignore swap files from vim
 *.swp
 
+# ignore documentation output files
+doc/*.aux
+doc/*.log
+doc/*.out
+doc/*.nav
+doc/*.snm
+doc/*.toc
+doc/*.dvi
+doc/*.pdf

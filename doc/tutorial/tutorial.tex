@@ -1,0 +1,71 @@
+\documentclass[pdf]{beamer}
+\mode<presentation>{}
+
+\usetheme{metropolis}
+\usepackage{graphicx}
+
+\input{src/notation.tex}
+
+\newcommand{\pw}{0.4\textwidth}
+\newcommand{\ph}{0.4\textheight}
+
+\AtBeginSection[]
+{
+  \begin{frame}{Table of Contents}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\title{An introduction to lbxflow: an open-source, computational fluid dynamics solver using the Lattice Boltzmann method}
+\author{Matthew Grasinger}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section{A first example}
+
+\begin{frame}{Frame title}
+  The body of the frame.
+\end{frame}
+
+\section{Input file parameters}
+
+\begin{frame}{Frame title}
+  Watch this slide grow.
+  \pause
+  \begin{itemize}
+    \item Hello, World!
+      \pause
+    \item Hello, Mars!
+      \pause
+    \item Hello, Alpha Centauri!
+  \end{itemize}
+\end{frame}
+
+\section{Boundary conditions}
+
+\begin{frame}{Frame title}
+  \begin{columns}
+    \column{0.5\textwidth}
+    Left column
+    \column{0.5\textwidth}
+    \begin{block}{Observation 1}
+      Yolo
+    \end{block}
+    \begin{block}{Observation 2}
+      Nolo
+    \end{block}
+  \end{columns}
+\end{frame}
+
+\section{Collision operators}
+
+\subsection{Constitutive relationship}
+\subsection{Quasiequilibrium}
+\subsection{External forcing}
+\section{Callback functions}
+
+\end{document}
