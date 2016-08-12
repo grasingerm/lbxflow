@@ -2,6 +2,8 @@
 \mode<presentation>{}
 
 \usetheme{metropolis}
+\usepackage[T1]{fontenc}
+\usepackage{minted}
 \usepackage{graphicx}
 
 \input{src/notation.tex}
@@ -27,8 +29,63 @@
 
 \section{A first example}
 
-\begin{frame}{Frame title}
-  The body of the frame.
+\subsection{Problem description}
+
+\begin{frame}{Physical problem}
+  Poiseuille flow
+  \begin{itemize}
+    \item Flow through a two-dimensional channel
+    \item Flow driven by a constant pressure gradient
+    \item No-slip boundary conditions at walls
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Physical problem}
+  \begin{figure} \label{fig:poise-schematic}
+    \includegraphics[width=\linewidth]{figs/poise-schematic}
+    \caption{Schematic of Poiseuille flow; no-slip boundary conditions are enforced at the top and bottom boundaries, and periodic boundary conditions are enforced at the left and right boundaries.}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Physical problem}
+  \begin{itemize}
+    \item Domain: $L = 20, H = 12$
+    \pause
+    \item Pressure gradient: $\nabla p = -10^{-3}$
+    \pause
+    \item Material properties 
+      \begin{itemize}
+        \item $\nu = 0.167$
+        \item $\rho = 1.0$
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Input file}
+  \tiny
+  \begin{minted}[gobble=4, frame=single, linenos]{yaml}
+    # simulation parameters
+    nsteps: { value: 2000, expr: false}
+    col_f: >
+           BGK_F(init_constit_srt_const(1/6),
+                 init_sukop_Fk([1e-3; 0.0]))
+
+    # lattice specifications
+    ni:     { value: 20,   expr: false}
+    nj:     { value: 12,   expr: false}
+    dx:     { value: 1.0,  expr: false}
+    dt:     { value: 1.0,  expr: false}
+
+    # material properties
+    rho_0:  { value: 1.0,  expr: false}
+    nu:     { value: 1/6,  expr: true}
+
+    # boundary conditions
+    bcs:
+      - north_bounce_back!
+      - south_bounce_back!
+      - periodic_east_to_west!
+  \end{minted}
 \end{frame}
 
 \section{Input file parameters}

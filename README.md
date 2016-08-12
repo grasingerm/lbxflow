@@ -21,7 +21,7 @@ to approximate hydrodynamics.
     cd lbxflow
     julia scripts/install_dependencies.jl
     julia lbxflow.jl --help
-    julia lbxflow.jl -vf example_sims/ex/ex1.yaml
+    julia lbxflow.jl -vf example_sims/poiseuille/poiseuille_velocity-profile.yaml
 
 ## Input Files
 
