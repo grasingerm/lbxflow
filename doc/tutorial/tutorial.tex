@@ -7,6 +7,7 @@
 \usepackage{graphicx}
 
 \input{src/notation.tex}
+\input{src/julia-setup.tex}
 
 \newcommand{\pw}{0.4\textwidth}
 \newcommand{\ph}{0.4\textheight}
@@ -47,45 +48,146 @@
   \end{figure}
 \end{frame}
 
-\begin{frame}{Physical problem}
-  \begin{itemize}
-    \item Domain: $L = 20, H = 12$
-    \pause
-    \item Pressure gradient: $\nabla p = -10^{-3}$
-    \pause
-    \item Material properties 
+\begin{frame}[fragile]{Input file}
+  \begin{columns}
+    \column{0.6\textwidth}
+      \tiny
       \begin{itemize}
-        \item $\nu = 0.167$
-        \item $\rho = 1.0$
+        \item[] <1->
+      \begin{minted}[gobble=4, frame=single]{yaml}
+        # simulation parameters
+        nsteps: { value: 2000, expr: false}
+        col_f: >
+               BGK_F(init_constit_srt_const(1/6),
+                     init_sukop_Fk([1e-3; 0.0]))
+      \end{minted}
+
+    \item[] <2->
+      \begin{minted}[gobble=4, frame=single]{yaml}
+        # lattice specifications
+        ni:     { value: 20,   expr: false}
+        nj:     { value: 12,   expr: false}
+        dx:     { value: 1.0,  expr: false}
+        dt:     { value: 1.0,  expr: false}
+      \end{minted}
+
+    \item[] <3->
+      \begin{minted}[gobble=4, frame=single]{yaml}
+        # material properties
+        rho_0:  { value: 1.0,  expr: false}
+        nu:     { value: 1/6,  expr: true}
+      \end{minted}
+
+    \item[] <4->
+      \begin{minted}[gobble=4, frame=single]{yaml}
+        # boundary conditions
+        bcs:
+          - north_bounce_back!
+          - south_bounce_back!
+          - periodic_east_to_west!
+      \end{minted}
       \end{itemize}
-  \end{itemize}
+    \column{0.4\textwidth}
+      \small
+      \begin{itemize}
+        \item <1-> Time steps: 2000
+        \item Pressure gradient: $\nabla p = -10^{-3}$
+        \item Collision operator: BGK
+        \item <2-> Domain: $L = 20, H = 12$
+        \item <3-> Material properties 
+          \begin{itemize}
+            \item $\nu = 0.167$
+            \item $\rho = 1.0$
+          \end{itemize}
+        \item <4-> Boundary conditions
+          \begin{itemize}
+            \item No-slip on north and south walls
+            \item Periodic east--west
+          \end{itemize}
+      \end{itemize}
+  \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Input file}
+\begin{frame}[fragile]{Input file} \label{frm:input-file-start}
+      \tiny
+  \begin{columns}
+    \column{0.6\textwidth}
+      \begin{minted}[gobble=4, frame=single,linenos]{yaml}
+        # simulation parameters
+        nsteps: { value: 2000, expr: false}
+        col_f: >
+               BGK_F(init_constit_srt_const(1/6),
+                     init_sukop_Fk([1e-3; 0.0]))
+        # lattice specifications
+        ni:     { value: 20,   expr: false}
+        nj:     { value: 12,   expr: false}
+        dx:     { value: 1.0,  expr: false}
+        dt:     { value: 1.0,  expr: false}
+        # material properties
+        rho_0:  { value: 1.0,  expr: false}
+        nu:     { value: 1/6,  expr: true}
+        # boundary conditions
+        bcs:
+          - north_bounce_back!
+          - south_bounce_back!
+          - periodic_east_to_west!
+      \end{minted}
+    \column{0.4\textwidth}
+    \begin{block}{To run}
+    \begin{enumerate}
+     \item save the input file in a text file called \texttt{first-example.yaml} in the \texttt{lbxflow} root directory.
+     \item run \texttt{julia lbxflow -f first-example.yaml} from a terminal.
+     \item after a short pause, the simulation will complete and \texttt{lbxflow} will terminate.
+    \end{enumerate}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Callback functions}
+  \begin{itemize}
+    \item Input file on the previous slide will simulate the problem, but will not create any interesting output.
+      \pause
+    \item Need to also tell \texttt{lbxflow} what and how to process and post-process.
+    \item Introduce \textit{callback functions}
+      \begin{itemize}
+        \item Functions of the form \texttt{f(sim, t)} where \text{sim} represents a \texttt{Simulation} object and \texttt{t} represents the current simulation time.
+        \item Example:
+        \begin{lstlisting}
+        (sim, t) -> if (t % 100 == 0)
+          println("Current time: ", t);
+        end
+        \end{lstlisting}
+      \item Above example will print simulation time every 100 time steps.
+      \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}[fragile]{Callback functions}
+  Add the following to the input file started on slide \ref{frm:input-file-start}; it creates a comma delimited file where each subsequent row is the flow velocity profile at $x = 10$ after 100 time steps:
   \tiny
-  \begin{minted}[gobble=4, frame=single, linenos]{yaml}
-    # simulation parameters
-    nsteps: { value: 2000, expr: false}
-    col_f: >
-           BGK_F(init_constit_srt_const(1/6),
-                 init_sukop_Fk([1e-3; 0.0]))
-
-    # lattice specifications
-    ni:     { value: 20,   expr: false}
-    nj:     { value: 12,   expr: false}
-    dx:     { value: 1.0,  expr: false}
-    dt:     { value: 1.0,  expr: false}
-
-    # material properties
-    rho_0:  { value: 1.0,  expr: false}
-    nu:     { value: 1/6,  expr: true}
-
-    # boundary conditions
-    bcs:
-      - north_bounce_back!
-      - south_bounce_back!
-      - periodic_east_to_west!
+  \begin{minted}[gobble=4, frame=single]{yaml}
+    # Callback Functions:
+    # * callback functions are written in the julia language
+    # * sim.msm.u is a 3D array of flow velocity values
+    # * sim.msm.u[c, i, j] is the 'c' component of velocity at the 'i'th node in the 
+    #     x-direction and 'j'th node in the y-direction.
+    callbacks:
+      - >
+        (sim, t) -> begin
+          if t % 100 == 0
+            open(f -> write(f, join(vec(sim.msm.u[1, 10, :]), ',') * "\n"), 
+                 "u_profiles.txt", "a");
+          end
+        end
   \end{minted}
+\end{frame}
+
+\begin{frame}{Callback functions}
+  \begin{itemize}
+    \item Callback functions can sometimes be verbose
+    \item Many are provided or created by other functions
+  \end{itemize}
 \end{frame}
 
 \section{Input file parameters}
