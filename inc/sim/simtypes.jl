@@ -94,6 +94,16 @@ immutable Tracker
   end
 end
 
+macro _safe_calc_eps(mass, rho)
+  return quote
+    if $mass != 0.0 && $rho != 0.0
+      $mass / $rho;
+    else
+      0.0;
+    end
+  end
+end
+
 #! Free surface flow simulation object
 #! lat Lattice
 #! msm Multiscal map

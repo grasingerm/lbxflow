@@ -88,7 +88,11 @@ function feq_incomp_max_entropy(lat::LatticeD2Q9, rho::AbstractFloat,
 
   for j=1:nj
     x1      =   sqrt(1 + 3.0*u[j]^2);
-    prod    *=  (2 - x1) * ( (2*u[j] + x1) / (1 - u[j]) )^lat.c[j,k]; 
+    prod    *=  if u[j] != 1
+                  (2 - x1) * ( (2*u[j] + x1) / (1 - u[j]) )^lat.c[j,k];
+                else
+                  1.0;
+                end;
   end
 
   return lat.w[k] * rho * prod;

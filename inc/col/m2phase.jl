@@ -67,20 +67,30 @@ function m2phase_col_f!(sim::M2PhaseSim, cbounds::Matrix{Int64})
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = sub(cbounds, :, r);
     for j=j_min:j_max, i=i_min:i_max
-      const F         = _color_grad(sim, cbounds, i, j);
+      const F         =   _color_grad(sim, cbounds, i, j);
       const Fmag      =   norm(F, 2);
       if (Fmag*Fmag > eps())
         for k=1:sim.simr.lat.n
           Fdotcsq   =   (dot(F, sub(sim.simr.lat.c, :, k)))^2;
-          sim.simr.lat.f[k, i, j] += (sim.Ar/2 * Fmag * 
-                                      (sim.simr.lat.w[k] * Fdotcsq/(Fmag*Fmag) - __B[k]));
+          sim.simr.lat.f[k, i, j] += if Fmag != 0.0
+                                       (sim.Ar/2 * Fmag * 
+                                         (sim.simr.lat.w[k] * 
+                                          Fdotcsq/(Fmag*Fmag) - __B[k]));
+                                     else
+                                       0.0;
+                                     end
           if isnan(sim.simr.lat.f[k, i, j])
             @show F, sub(sim.simr.lat.c, :, k)
             @show Fdotcsq, sim.Ar/2, Fmag, sim.simr.lat.w[k], __B[k];
             @show k, i, j, sim.simr.lat.f[k, i, j]
           end
-          sim.simb.lat.f[k, i, j] += (sim.Ab/2 * Fmag * 
-                                      (sim.simb.lat.w[k] * Fdotcsq/(Fmag*Fmag) - __B[k]));
+          sim.simb.lat.f[k, i, j] += if Fmag != 0.0
+                                       (sim.Ab/2 * Fmag * 
+                                        (sim.simb.lat.w[k] * 
+                                         Fdotcsq/(Fmag*Fmag) - __B[k]));
+                                     else
+                                       0.0;
+                                     end
         end
       end
     end
@@ -98,11 +108,21 @@ function m2phase_col_f!(sim::M2PhaseSim, active_cells::Matrix{Bool})
         for k=1:sim.simr.lat.n
           Fdotcsq   =   (dot(F, sub(sim.simr.lat.c, :, k)))^2;
           @show Fdotcsq, sim.Ar/2, Fmag, sim.simr.lat.w[k], __B[k];
-          sim.simr.lat.f[k, i, j] += (sim.Ar/2 * Fmag * 
-                                      (sim.simr.lat.w[k] * Fdotcsq/(Fmag*Fmag) - __B[k]));
+          sim.simr.lat.f[k, i, j] += if Fmag != 0.0
+                                       (sim.Ar/2 * Fmag * 
+                                         (sim.simr.lat.w[k] * 
+                                          Fdotcsq/(Fmag*Fmag) - __B[k]));
+                                     else
+                                       0.0;
+                                     end
           @show sim.simr.lat.f[k, i, j]
-          sim.simb.lat.f[k, i, j] += (sim.Ab/2 * Fmag * 
-                                      (sim.simb.lat.w[k] * Fdotcsq/(Fmag*Fmag) - __B[k]));
+          sim.simb.lat.f[k, i, j] += if Fmag != 0.0
+                                       (sim.Ab/2 * Fmag * 
+                                        (sim.simb.lat.w[k] * 
+                                         Fdotcsq/(Fmag*Fmag) - __B[k]));
+                                     else
+                                       0.0;
+                                     end
         end
       end
     end

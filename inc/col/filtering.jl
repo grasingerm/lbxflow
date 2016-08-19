@@ -28,7 +28,11 @@ function contract_qx!(lat::Lattice, i::Int, j::Int, delta::Real,
     ρ_i += lat.f[k, i, j];
     u_i += lat.f[k, i, j] * lat.c[:, k];
   end
-  u_i /= ρ_i;
+  u_i /= if ρ_i != 0.0
+           ρ_i;
+         else
+           0.0;
+         end
 
   lat.f[3, i, j] += sign(qxij) * delta;
   lat.f[6, i, j] -= sign(qxij) * delta / 2;
@@ -44,7 +48,11 @@ function contract_qx!(lat::Lattice, i::Int, j::Int, delta::Real,
     ρ_f += lat.f[k, i, j];
     u_f += lat.f[k, i, j] * lat.c[:, k];
   end
-  u_f /= ρ_f;
+  u_f /= if ρ_f != 0.0
+           ρ_f;
+         else
+           0.0;
+         end
 
   @assert(abs(ρ_i - ρ_f) / ρ_i < 1e-5, "ρ_i != ρ_f, $(ρ_i) != $(ρ_f)");
   @assert(norm(u_i - u_f, Inf) / norm(u_i, Inf) < 1e-5, "u_i != u_f, $(u_i) != $(u_f)");
@@ -110,7 +118,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
     entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
-  return if nvalid > 0
+  return if nvalid > 0 && entropy_cache[(i, j)] != 0.0
             const   med_nbr_density   =   median(nbr_densities[1:nvalid]);
             (sign(med_nbr_density) * 
              sqrt( abs(med_nbr_density) / entropy_cache[(i, j)] ));
@@ -178,7 +186,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
     entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
-  return if nvalid > 0
+  return if nvalid > 0 && entropy_cache[(i, j)] != 0.0
             const   med_nbr_density   =   median(nbr_densities[1:nvalid]);
             (sign(med_nbr_density) * 
              sqrt( abs(med_nbr_density) / entropy_cache[(i, j)] ));
@@ -217,7 +225,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int,
   end
 
   @assert(noneq_densities[i, j] != __SENTINAL);
-  return if nvalid > 0
+  return if nvalid > 0 && noneq_densities[i, j] != 0.0
             const   med_nbr_density   =   median(nbr_densities[1:nvalid]);
             (sign(med_nbr_density) * 
              sqrt( abs(med_nbr_density) / noneq_densities[i, j] ));

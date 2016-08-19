@@ -5,6 +5,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{minted}
 \usepackage{graphicx}
+\usepackage{tabularx}
 
 \input{src/notation.tex}
 \input{src/julia-setup.tex}
@@ -113,6 +114,7 @@
   \begin{columns}
     \column{0.6\textwidth}
       \begin{minted}[gobble=4, frame=single,linenos]{yaml}
+        version: 1.0.0
         # simulation parameters
         nsteps: { value: 2000, expr: false}
         col_f: >
@@ -136,7 +138,7 @@
     \begin{block}{To run}
     \begin{enumerate}
      \item save the input file in a text file called \texttt{first-example.yaml} in the \texttt{lbxflow} root directory.
-     \item run \texttt{julia lbxflow -f first-example.yaml} from a terminal.
+     \item run \texttt{julia lbxflow -f first-example.yaml} (in the \texttt{lbxflow} directory) from a terminal.
      \item after a short pause, the simulation will complete and \texttt{lbxflow} will terminate.
     \end{enumerate}
     \end{block}
@@ -148,6 +150,7 @@
     \item Input file on the previous slide will simulate the problem, but will not create any interesting output.
       \pause
     \item Need to also tell \texttt{lbxflow} what and how to process and post-process.
+      \pause
     \item Introduce \textit{callback functions}
       \begin{itemize}
         \item Functions of the form \texttt{f(sim, t)} where \text{sim} represents a \texttt{Simulation} object and \texttt{t} represents the current simulation time.
@@ -188,6 +191,62 @@
     \item Callback functions can sometimes be verbose
     \item Many are provided or created by other functions
   \end{itemize}
+
+  \begin{table}
+    \tiny
+    \centering
+    \caption{Some example callback functions}
+    \begin{tabularx}{\textwidth}{l X}
+      \textbf{Callback function} & \textbf{Description} \\
+      \hline \\
+      \texttt{print\_step\_callback(stepout, name)} & Print out current time step every \texttt{stepout} steps \\
+      \\
+      \texttt{pyplot\_callback(stepout, accessor)} & Create plot from vectors returned from \texttt{accessor} every \texttt{stepout} steps \\
+      \\
+      \texttt{pycontour\_callback(stepout, accessor)} & Create contour plot from matrix returned from \texttt{accessor} every \texttt{stepout} steps \\
+      \\
+      \texttt{write\_jld\_file\_callback(datadir, stepout)} & Create a backup file of the simulation in the directory \texttt{datadir} every \texttt{stepout} steps \\
+    \end{tabularx}
+  \end{table}
+
+\end{frame}
+
+\begin{frame}[fragile]{Callback functions}
+  Change the callback list of the input file started on slide \ref{frm:input-file-start} so that it matches the following, then re-run:
+  \tiny
+  \begin{minted}[gobble=4, frame=single]{yaml}
+    callbacks:
+      # plot the velocity profile at x = 10, y = 1:12
+      - pyplot_callback(25, vel_prof_acsr(1, 10, 1:12); showfig=true, grid=true)
+      - print_step_callback(50, "first-example")
+  \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Preamble}
+  \begin{itemize}
+    \item A preamble section of the input file can be provided.
+    \item Any \texttt{julia} code in the preamble is executed before the rest of the input file is parsed and evaluated.
+    \item Useful for importing packages and defining variables (to be used in other parts of the input file).
+  \end{itemize}
+  \tiny
+  \begin{minted}[gobble=4, frame=single]{yaml}
+    preamble: >
+              const ni = 20;
+              const nj = 12;
+  \end{minted}
+  ...
+  \begin{minted}[gobble=4, frame=single]{yaml}
+    ni:       { value: ni, expr: true }
+    nj:       { value: nj, expr: true }
+  \end{minted}
+  ...
+  \begin{minted}[gobble=4, frame=single]{yaml}
+    callbacks:
+      - >
+        pyplot_callback(25, vel_prof_acsr(1, convert(Int, ni/2), 1:nj); 
+                        showfig=true, grid=true)
+      - print_step_callback(50, "first-example")
+  \end{minted}
 \end{frame}
 
 \section{Input file parameters}

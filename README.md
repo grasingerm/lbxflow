@@ -10,8 +10,11 @@ to approximate hydrodynamics.
 * PyCall
 * PyPlot
 * HDF5
-* ArrayViews
+* JLD
+* ArgParse
 * ProfileView
+* Roots
+* FastAnonymous
 * PyYaml       (python library)
 * numpy        (python library)
 * matplotlib   (python library)

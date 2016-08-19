@@ -103,7 +103,11 @@ _tp_vec(cssq) = [1/3; 1/3; 1/3; 1/3; 1/12; 1/12; 1/12; 1/12; 1 - 5/3 * cssq];
 #! \return (momentum_function, forcing_function)
 function init_gs_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
   return eval(:($ftype(
-          (sim, i, j) -> sim.msm.u[:, i, j] + 0.5 * $g / sim.msm.rho[i, j],
+          (sim, i, j) -> if sim.msm.rho[i, j] != 0.0
+                           sim.msm.u[:, i, j] + 0.5 * $g / sim.msm.rho[i, j]
+                         else
+                           sim.msm.u[:, i, j] + 0.5 * $g
+                         end,
           (sim, omega, k, i, j) -> (_tp_vec(sim.lat.cssq)[k] * 
                                     dot(sub(sim.lat.c, :, k), $g))
     )));

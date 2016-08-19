@@ -488,7 +488,11 @@ function search_alpha_newton_entropic_involution(lat::Lattice,
     fe  =  __F_ENTROPY(lat, x_n, f, feq);
     fep =  __F_PRIME_ENTROPY(lat, x_n, f, feq);
 
-    x_n -= fe / fep;
+    x_n -= if feq != 0.0
+             fe / fep;
+           else
+             fe;
+           end
 
     #=for i=1:lat.n # heuristic, don't want to fall out of polytope
       if f[i] + x_n * (feq[i]-f[i]) < -2*eps()
@@ -560,7 +564,11 @@ function search_alpha_newton_entropic_contraction(lat::Lattice,
     fe  =  __FC_ENTROPY(lat, x_n, f, feq, omega);
     fep =  __F_PRIME_ENTROPY(lat, x_n, f, feq);
 
-    x_n -= fe / fep;
+    x_n -= if fep != 0.0
+             fe / fep;
+           else
+             fe;
+           end
 
     #=for i=1:lat.n # heuristic, don't want to fall out of polytope
       if f[i] + x_n * (feq[i]-f[i]) < -2*eps()

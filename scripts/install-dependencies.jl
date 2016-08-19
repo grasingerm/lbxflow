@@ -21,7 +21,6 @@ if confirm("Would you like to update Julia packages (Y/N)?: ")
     "YAML",
     "HDF5",
     "JLD",
-    "ArrayViews",
     "ProfileView",
     "Roots",
     "FastAnonymous"
@@ -31,11 +30,6 @@ if confirm("Would you like to update Julia packages (Y/N)?: ")
     Pkg.add(pkgname);
   end
 
-  try
-    Pkg.clone("https://github.com/grasingerm/LazyViews.jl.git");
-  catch e
-    warn("unable to clone LazyViews.jl");
-  end
 end
 
 if confirm("Would you like to add LBXFlow.jl module to your load path (Y/N)? (NOT recommended): ")

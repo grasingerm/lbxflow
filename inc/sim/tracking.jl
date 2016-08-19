@@ -91,7 +91,7 @@ function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   new_fluid_cells   = Set{Tuple{Int, Int}}();
 
   for (i, j) in t.interfacels
-    t.eps[i, j] =   t.M[i, j] / sim.msm.rho[i, j];
+    t.eps[i, j] =   @_safe_calc_eps(t.M[i, j], sim.msm.rho[i, j]);
 
     if      t.M[i, j] > (1 + kappa) * sim.msm.rho[i, j]
       push!(new_fluid_cells, (i, j));
@@ -162,8 +162,14 @@ function _update_cell_states!(sim::FreeSurfSim,
       ρ_sum           +=     msm.rho[i_nbr, j_nbr];
       u_sum           +=     msm.u[:, i_nbr, j_nbr];
     end
-    ρ_avg           =       ρ_sum / counter;
-    u_avg           =       u_sum / counter;
+
+    if counter != 0.0
+      ρ_avg            =     ρ_sum / counter;
+      u_avg            =     u_sum / counter;
+    else
+      ρ_avg            =     1.0;
+      u_avg            =     zeros(2);
+    end
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
@@ -227,18 +233,18 @@ function _update_cell_states!(sim::FreeSurfSim,
 
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j] - msm.rho[i, j];
-    if length(cells_to_redist_to) != 0
+    if length(cells_to_redist_to) != 0 && v_sum != 0.0
 
       for (ii, jj, v_i) in cells_to_redist_to
         t.M[ii, jj]      +=   v_i / v_sum * mex;
-        t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
+        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     elseif length(all_int_nbrs) != 0
 
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
-        t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
+        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     else
@@ -277,18 +283,18 @@ function _update_cell_states!(sim::FreeSurfSim,
     
     # redistribute mass amoung valid neighbors
     const mex = t.M[i, j];
-    if length(cells_to_redist_to) != 0
+    if length(cells_to_redist_to) != 0 && v_sum != 0.0
 
       for (ii, jj, v_i) in cells_to_redist_to
         t.M[ii, jj]      +=   v_i / v_sum * mex;
-        t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
+        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     elseif length(all_int_nbrs) != 0
 
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
-        t.eps[ii, jj]     =   t.M[ii, jj] / msm.rho[ii, jj];
+        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     else
@@ -302,9 +308,11 @@ function _update_cell_states!(sim::FreeSurfSim,
 
   # redistribute remaining mass
   const dm  =   excess_mass_after_redist / length(t.interfacels);
-  for (i, j) in t.interfacels
-    t.M[i, j]   +=  dm;
-    t.eps[i, j]  =  t.M[i, j] / msm.rho[i, j]; 
+  if !isnan(dm)
+    for (i, j) in t.interfacels
+      t.M[i, j]   +=  dm;
+      t.eps[i, j]  =  @_safe_calc_eps(t.M[i, j], msm.rho[i, j]); 
+    end
   end
 
   end, 1e-9); # check mass debug macro close
