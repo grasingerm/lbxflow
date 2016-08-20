@@ -130,18 +130,20 @@ end
 #! \param f_neq Non-equilibrium distribution (f_neq1, f_neq2, ..., f_neq9)
 #! \param omega Collision frequency
 #! \return D Strain rate matrix
-function strain_rate_tensor(lat::Lattice, rho::Number, fneq::Vector{Float64},
+function strain_rate_tensor(lat::Lattice, rho::Real, fneq::Vector{Float64},
                             omega::Number)
 
   D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
   const ni = length(fneq);
 
-  for alpha=1:2, beta=1:2
-    sum = 0;
-    for i=1:ni
-      sum += lat.c[alpha,i] * lat.c[beta,i] * fneq[i];
+  if rho != 0.0
+    for alpha=1:2, beta=1:2
+      sum = 0;
+      for i=1:ni
+        @inbounds sum += lat.c[alpha,i] * lat.c[beta,i] * fneq[i];
+      end
+      @inbounds D[alpha, beta] = -omega / (2.0 * rho * lat.cssq * lat.dt) * sum;
     end
-    D[alpha, beta] = -omega / (2.0 * rho * lat.cssq * lat.dt) * sum;
   end
 
   return D;
@@ -156,24 +158,27 @@ end
 #! \param M Transformation matrix to map f from velocity space to momentum space
 #! \param S (Sparse) diagonal relaxation matrix
 #! \return D Strain rate matrix
-function strain_rate_tensor(lat::Lattice, rho::Number, fneq::Vector{Float64},
+function strain_rate_tensor(lat::Lattice, rho::Real, fneq::Vector{Float64},
                             M::Matrix{Float64}, iM::Matrix{Float64},
                             S::SparseMatrixCSC)
 
   D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
-  const ni = length(fneq);
-  const MiSM = iM * S * M;
 
-  for alpha=1:2, beta=1:2
-    sum = 0;
-    for i=1:ni
-      MiSMsum = 0;
-      for j=1:ni
-        MiSMsum += MiSM[i,j] * fneq[j];
+  if rho != 0.0
+    const ni = length(fneq);
+    const MiSM = iM * S * M;
+
+    for alpha=1:2, beta=1:2
+      sum = 0;
+      for i=1:ni
+        MiSMsum = 0;
+        for j=1:ni
+          @inbounds MiSMsum += MiSM[i,j] * fneq[j];
+        end
+        @inbounds sum += lat.c[alpha,i] * lat.c[beta,i] * MiSMsum;
       end
-      sum += lat.c[alpha,i] * lat.c[beta,i] * MiSMsum;
+      @inbounds D[alpha, beta] = -1.0 / (2.0 * rho * lat.cssq * lat.dt) * sum;
     end
-    D[alpha, beta] = -1.0 / (2.0 * rho * lat.cssq * lat.dt) * sum;
   end
 
   return D;

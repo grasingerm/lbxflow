@@ -96,7 +96,8 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
     omegaij = msm.omega[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    const muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    const muo = (omegaij != 0.0) ? @nu(omegaij, sim.lat.cssq, sim.lat.dt) : 1.0;
+    @assert(!isnan(muo), "Initial guess is for mu is NaN");
 
     # iteratively determine mu
     iters = 0;
@@ -108,6 +109,7 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
 
       D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
       gamma = @strain_rate(D);
+      @assert(!isnan(gamma), "GAMMA IS NAN");
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
@@ -116,6 +118,7 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
       omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
+      @assert(!isnan(omegaij), "This shit should never be NaN");
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol

@@ -269,13 +269,9 @@ function sim_step!(sim::FreeSurfSim,
   # Algorithm should be:
   # 1.  mass transfer
   @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, active_cells), 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after mass transfer");
-  @assert(!(true in isnan(lat.f)), "NaN after mass transfer");
 
   # 2.  stream
   @_checkdebug_mass_cons("stream!", t.M, stream!(lat, temp_f, active_cells, t), 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after stream");
-  @assert(!(true in isnan(lat.f)), "NaN after stream");
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
@@ -283,33 +279,23 @@ function sim_step!(sim::FreeSurfSim,
   for (i, j) in t.interfacels #TODO maybe abstract out interface list...
     unorms[(i, j)] = f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
   end, 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after reconstructing f");
-  @assert(!(true in isnan(lat.f)), "NaN after reconstructing f");
 
   # 5.  particle collisions
   @_checkdebug_mass_cons("collision_f!", t.M, collision_f!(sim, active_cells), 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after collision");
-  @assert(!(true in isnan(lat.f)), "NaN after collision");
   
   # 6.  enforce boundary conditions
   @_checkdebug_mass_cons("bcs!", t.M, for bc! in bcs!
     bc!(sim);
   end, 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after bcs");
-  @assert(!(true in isnan(lat.f)), "NaN after bcs");
 
   # 7.  calculate macroscopic variables
   @_checkdebug_mass_cons("map_to_macro!", t.M, map_to_macro!(lat, msm), 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after map to macro");
-  @assert(!(true in isnan(lat.f)), "NaN after map to macro");
 
   # 8.  update fluid fractions
   # 9.  update cell states
   @_checkdebug_mass_cons("update!", t.M, 
     update!(sim, collision_f!.feq_f, unorms), 1e-9);
   end, 1e-9);
-  @assert(!(true in isnan(t.M)), "NaN after updating cell states");
-  @assert(!(true in isnan(lat.f)), "NaN after updating cell states");
 end
 
 # Adaptive time step simulation step

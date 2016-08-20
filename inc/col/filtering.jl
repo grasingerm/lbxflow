@@ -734,7 +734,7 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, active_cells);
 
   # Calculate nonequilibrium entropy densities
   for j=1:nj, i=1:ni
@@ -755,7 +755,7 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
   for j=1:nj, i=1:ni
     if (noneq_densities[i, j] != __SENTINAL && 
         noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
-        && noneq_densities[i, j])
+        && noneq_densities[i, j] > col_f.ds_threshold)
       const delta              =  col_f.scale(sim, i, j, col_f.metric, 
                                               noneq_densities);
       nfiltered               +=  1;

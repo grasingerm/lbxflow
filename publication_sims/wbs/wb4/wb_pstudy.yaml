@@ -1,9 +1,9 @@
 - "": "version: 1.0.0"
 
 #!! figsize      =  4, 14
-#!! nj           =  450
+#!! nj           =  750
 #!! ni           =  150
-#!! nsteps       =  25000
+#!! nsteps       =  30000
 #!! backup_steps =  2000
 #!! plot_steps   =  250
 #!! nu1          =  0.2
@@ -141,7 +141,7 @@
        nj:      {   value:  nj,           expr: true    }
 
        simtype:  "free_surface"
-       col_f:    BGK_F(constit_rel_f, forcing_kf);
+       col_f:    FltrStdCol(BGK_F(constit_rel_f, forcing_kf); ds_threshold=1e-6);
       
        nsteps:   {   value: nsteps,        expr: true   }
 
@@ -151,6 +151,7 @@
          - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
          - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
          - north_mass_outlet!
+         - north_open!
 
        rho_g:  1.0
 
@@ -229,6 +230,7 @@
                    coords: "[1 ni2 ni2 3*ni2; 1 ni2 3*ni2+ni2 nj-2]'" 
 
                callbacks:
+                 - stabilize_mass_callback!
                  - print_step_callback(250, "free-surf")
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(ni2, 3*ni2, 0/ni, ni2/ni), (3*ni2+ni2, nj-2, 0/ni, ni2/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
@@ -236,7 +238,7 @@
 
 - "" : |
        finally:
-         - write_jld_file_callback(datadir)
+         - write_jld_file_callback(datadir, true)
          - >
            (sim, k) -> begin
              global defs;
