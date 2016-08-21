@@ -118,7 +118,6 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
                 + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
       omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
-      @assert(!isnan(omegaij), "This shit should never be NaN");
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol

@@ -151,7 +151,7 @@
          - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
          - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
          - north_mass_outlet!
-         - north_open!
+         - FastAnonymous.@anon (sim) -> north_pressure!(sim.lat, 1.0)
 
        rho_g:  1.0
 

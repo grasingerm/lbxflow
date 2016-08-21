@@ -574,31 +574,21 @@ end
 function north_pressure!(lat::LatticeD2Q9, rhoo::Real)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
 
-  error("Check implementation details of north pressure BC.");
-
   for i=1:ni
     v = (-1. + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
          + 2. * (lat.f[2,i,nj] + lat.f[5,i,nj] + lat.f[6,i,nj])) / rhoo);
     ru = rhoo * v;
     lat.f[4,i,nj] = lat.f[2,i,nj] - (2./3.)*ru;
-    lat.f[7,i,nj] = lat.f[5,i,nj] - (1./6.)*ru
-                      + 0.5 * (lat.f[1,i,nj] - lat.f[3,i,nj]);
-    lat.f[8,i,nj] = lat.f[6,i,nj] - (1./6.)*ru
-                      + 0.5 * (lat.f[3,i,nj] - lat.f[1,i,nj]);
+    lat.f[7,i,nj] = (lat.f[5,i,nj] - (1./6.)*ru
+                     + 0.5 * (lat.f[1,i,nj] - lat.f[3,i,nj]));
+    lat.f[8,i,nj] = (lat.f[6,i,nj] - (1./6.)*ru
+                     + 0.5 * (lat.f[3,i,nj] - lat.f[1,i,nj]));
   end
-end
-
-#! Pressure north direction
-function north_pressure!(lat::Lattice, rho::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  north_pressure!(lat, rho, 1, ni, nj);
 end
 
 #! Pressure south direction
 function south_pressure!(lat::LatticeD2Q9, rhoo::Real)
   const ni, nj = size(lat.f, 2), size(lat.f, 3);
-
-  error("Check implementation details of south pressure BC.");
 
   for i=1:ni
     v = (-1. + (lat.f[9,i,1] + lat.f[1,i,1] + lat.f[3,i,1]
@@ -610,12 +600,6 @@ function south_pressure!(lat::LatticeD2Q9, rhoo::Real)
     lat.f[6,i,1] = (lat.f[8,i,1] - (1./6.)*ru
                     + 0.5 * (lat.f[1,i,1] - lat.f[3,i,1]));
   end
-end
-
-#! Pressure north direction
-function south_pressure!(lat::Lattice, rho::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  south_pressure!(lat, rho, 1, ni, 1);
 end
 
 #! Pressure east direction
