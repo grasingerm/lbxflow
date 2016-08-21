@@ -1,9 +1,9 @@
 - "": "version: 1.0.0"
 
-#!! figsize      =  4, 14
-#!! nj           =  750
+#!! figsize      =  4, 15
+#!! nj           =  1250
 #!! ni           =  150
-#!! nsteps       =  30000
+#!! nsteps       =  50000
 #!! backup_steps =  2000
 #!! plot_steps   =  250
 #!! nu1          =  0.2
@@ -11,7 +11,7 @@
 #!! gamma_min    =  1e-9
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! levs         =  collect(linspace(0.0, 1.0, 11))
+#!! levs         =  collect(linspace(-0.2, 1.2, 8))
 #!! n1           =  convert(Int, round(0.15 * ni));
 #!! n2           =  convert(Int, round(0.3 * ni));
 
