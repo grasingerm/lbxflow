@@ -789,8 +789,23 @@ end
 
 #! Filtered collision function with positivity rule (call)
 function call(fpc::FltrPosCol, sim::AbstractSim, args...)
+  const ni, nj = size(sim.msm.rho);
   fpc.inner_col_f!(sim, args...);
-  map!(x -> (x < 0) ? 0.0 : x, sim.lat.f);
+  for j=1:nj, i=1:ni
+    for k=1:sim.lat.n
+      # If any collisions results in a negative f, back up until zero
+      if sim.lat.f[k, i, j] < 0
+        const feq   = map(k -> fpc.feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+
+        const δ     = sim.lat.f[k, i, j] / (feq[k] - sim.lat.f[k, i, j]);
+        for k=1:lat.n
+          sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
+        end
+
+        break;
+      end
+    end
+  end
 end
 
 #! Calculate the nonequilibrium energy flux

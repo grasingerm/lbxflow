@@ -141,7 +141,9 @@
        nj:      {   value:  nj,           expr: true    }
 
        simtype:  "free_surface"
-       col_f:    FltrStdCol(BGK_F(constit_rel_f, forcing_kf); ds_threshold=1e-6);
+       col_f:    >
+                 FltrPosCol(FltrStdCol(BGK_F(constit_rel_f, forcing_kf);
+                                       ds_threshold=1e-6));
       
        nsteps:   {   value: nsteps,        expr: true   }
 
