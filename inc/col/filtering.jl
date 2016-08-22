@@ -479,7 +479,7 @@ function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
-  col_f.inner_col_f!(sim, bounds);
+  col_f.inner_col_f!(sim, active_cells);
 
   for j = 1:nj, i = 1:ni
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
