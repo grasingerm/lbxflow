@@ -766,18 +766,23 @@ function call(fpc::FltrPosCol, sim::AbstractSim, args...)
   const ni, nj = size(sim.msm.rho);
   fpc.inner_col_f!(sim, args...);
   for j=1:nj, i=1:ni
-    for k=1:sim.lat.n
-      # If any collisions results in a negative f, back up until zero
-      if sim.lat.f[k, i, j] < 0
-        const feq   = map(k -> fpc.feq_f(sim.lat, sim.msm.rho[i, j], 
-                                         sub(sim.msm.u, :, i, j), k), 1:sim.lat.n);
+    # find minimum value of f
+    min_f, min_k = sim.lat.f[1, i, j], 1;
+    for k=2:sim.lat.n
+      if sim.lat.f[k, i, j] < min_f
+        min_f = sim.lat.f[k, i, j];
+        min_k = k;
+      end
+    end
+    
+    # If any collisions results in a negative f, back up until zero
+    if min_f < 0
+      const feq   = map(k -> fpc.feq_f(sim.lat, sim.msm.rho[i, j], 
+                                       sub(sim.msm.u, :, i, j), k), 1:sim.lat.n);
 
-        const δ     = sim.lat.f[k, i, j] / (feq[k] - sim.lat.f[k, i, j]);
-        for k=1:lat.n
-          sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
-        end
-
-        break;
+      const δ     = min_f / (feq[min_k] - min_f);
+      for k=1:lat.n
+        sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
       end
     end
   end
