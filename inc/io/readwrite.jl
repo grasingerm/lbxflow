@@ -137,7 +137,7 @@ function load_latest_backup(datadir::AbstractString)
 
   step = 0;
   latest_path = "";
-  paths = filter((p) -> beginswith(p, "bak"), readdir(datadir));
+  paths = filter((p) -> startswith(p, "bak"), readdir(datadir));
   for path in paths
     if contains(path, "_")
       this_step = parse(split(split(path, "_")[2], ".")[1]);
@@ -168,10 +168,10 @@ function load_latest_jld(datadir::AbstractString)
 
   step = 0;
   latest_path = "";
-  paths = filter((p) -> beginswith(p, "bak") && endswith(".jld"),
+  paths = filter((p) -> startswith(p, "bak") && endswith(".jld"),
                  readdir(datadir));
   for path in paths
-    this_step = split(split(path, "_")[2], ".")[1];
+    this_step = parse(split(split(path, "_")[2], ".")[1]);
     if this_step > step
       step = this_step;
       latest_path = path;
