@@ -327,8 +327,10 @@ function parse_and_run(infile::AbstractString, args::Dict)
       fin(sim, nsim);
     end
 
-    println("$infile:\tSteps simulated: $nsim");
-    toc();
+    if args["verbose"]
+      println("$infile:\tSteps simulated: $nsim");
+      toc();
+    end
 
     if args["profile"]
       Profile.print(args["profile-io"], cols=args["profile-cols"]);

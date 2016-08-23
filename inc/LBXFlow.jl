@@ -9,10 +9,10 @@ macro _report_and_exit(e, i)
   return quote
     const bt = catch_backtrace(); 
     showerror(STDERR, $e, bt);
-    println();
-    println("Showing backtrace:");
+    warn();
+    warn("Showing backtrace:");
     Base.show_backtrace(STDERR, backtrace()); # display callstack
-    println();
+    warn();
     warn("Simulation interrupted at step ", $i, "!");
     return $i;
   end

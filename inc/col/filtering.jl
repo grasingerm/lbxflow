@@ -18,44 +18,18 @@ end
 
 #! Dissipate energy flux
 function contract_qx!(lat::Lattice, i::Int, j::Int, delta::Real,
-                      feq::AbstractArray{Float64, 1})
+                      feq::AbstractArray{Float64, 1}; weight_a::Real=0.5)
   f = sub(lat.f, :, i, j);
   qxij = qx_neq(f, feq, f-feq);
-
-  ρ_i = 0.0;
-  u_i = zeros(2);
-  for k=1:lat.n
-    ρ_i += lat.f[k, i, j];
-    u_i += lat.f[k, i, j] * lat.c[:, k];
-  end
-  u_i /= if ρ_i != 0.0
-           ρ_i;
-         else
-           0.0;
-         end
+  weight_b = 1.0 - weight_a;
 
   lat.f[3, i, j] += sign(qxij) * delta;
-  lat.f[6, i, j] -= sign(qxij) * delta / 2;
-  lat.f[7, i, j] -= sign(qxij) * delta / 2;
+  lat.f[6, i, j] -= sign(qxij) * delta * weight_a;
+  lat.f[7, i, j] -= sign(qxij) * delta * weight_b;
 
   lat.f[1, i, j] -= sign(qxij) * delta;
-  lat.f[5, i, j] += sign(qxij) * delta / 2;
-  lat.f[8, i, j] += sign(qxij) * delta / 2;
-
-  ρ_f = 0.0;
-  u_f = zeros(2);
-  for k=1:lat.n
-    ρ_f += lat.f[k, i, j];
-    u_f += lat.f[k, i, j] * lat.c[:, k];
-  end
-  u_f /= if ρ_f != 0.0
-           ρ_f;
-         else
-           0.0;
-         end
-
-  @assert(abs(ρ_i - ρ_f) / ρ_i < 1e-5, "ρ_i != ρ_f, $(ρ_i) != $(ρ_f)");
-  @assert(norm(u_i - u_f, Inf) / norm(u_i, Inf) < 1e-5, "u_i != u_f, $(u_i) != $(u_f)");
+  lat.f[5, i, j] += sign(qxij) * delta * weight_b;
+  lat.f[8, i, j] += sign(qxij) * delta * weight_a;
 end
 
 #TODO clean these scale functions up with kernal functions;

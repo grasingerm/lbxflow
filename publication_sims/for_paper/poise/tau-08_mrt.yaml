@@ -3,7 +3,7 @@ preamble: >
           const datadir       =   joinpath("data", "for_paper", "tau-08", "mrt");
           const nj            =   64;
           const ni            =   128;
-          const nsteps        =   25000;
+          const nsteps        =   15000;
           const pgrad         =   -1e-5;   
           const F             =   [-pgrad, 0.0]; 
           const mu            =   0.2;
@@ -32,6 +32,8 @@ callbacks:
   - print_step_callback(250)
   - write_jld_file_callback(datadir, 2000)
   - write_jld_file_callback(datadir, 5000, true)
+
+test_for_term:  is_steadystate_x
 
 finally:
   - write_jld_file_callback(datadir)
