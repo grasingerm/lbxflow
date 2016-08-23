@@ -795,7 +795,8 @@ function call(fpc::FltrPosCol, sim::AbstractSim, args...)
     for k=1:sim.lat.n
       # If any collisions results in a negative f, back up until zero
       if sim.lat.f[k, i, j] < 0
-        const feq   = map(k -> fpc.feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+        const feq   = map(k -> fpc.feq_f(sim.lat, sim.msm.rho[i, j], 
+                                         sub(sim.msm.u, :, i, j), k), 1:sim.lat.n);
 
         const δ     = sim.lat.f[k, i, j] / (feq[k] - sim.lat.f[k, i, j]);
         for k=1:lat.n
