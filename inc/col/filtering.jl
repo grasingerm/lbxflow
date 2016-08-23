@@ -781,7 +781,7 @@ function call(fpc::FltrPosCol, sim::AbstractSim, args...)
                                        sub(sim.msm.u, :, i, j), k), 1:sim.lat.n);
 
       const δ     = min_f / (feq[min_k] - min_f);
-      for k=1:lat.n
+      for k=1:sim.lat.n
         sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
       end
     end
