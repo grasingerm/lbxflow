@@ -1,0 +1,93 @@
+version: 1.0.0
+preamble: >
+          @init_plot_env();
+          @change_default_figsize(4, 15);
+          const datadir       =   joinpath("data", "re-0050", "bn-0005", "wt-0025", "obs-15x1");
+          const nu            =   0.2;
+          const tau           =   4.44e-4;
+          const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 1e6, 1e-9, 15, 1e-6);
+          const nj            =   1250;
+          const ni            =   150;
+          const nsteps        =   50000;
+          const u0            =   2.0 / 30.0;
+          const F             =   [0.0; -7.41e-7];
+          const forcing_kf    =   init_sukop_gravity_Fk(F);
+          const ni1           =   convert(Int, round(0.15 * ni));;
+          const ni2           =   convert(Int, round(0.3 * ni));;
+datadir: {   value: datadir,       expr: true    }
+
+rho_0:   {   value: 1.0,           expr: false   }
+nu:      {   value: nu,            expr: true    }
+
+dx:      {   value: 1.0,           expr: false   }
+dt:      {   value: 1.0,           expr: false   }
+ni:      {   value:  ni,           expr: true    }
+nj:      {   value:  nj,           expr: true    }
+
+simtype:  "free_surface"
+col_f:    >
+          FltrPosCol(FltrFixedDSCol(BGK_F(constit_rel_f, forcing_kf);
+                                    ds_threshold=1e-5,
+                                    fltr_thrsh_warn=0.15));
+
+nsteps:   {   value: nsteps,        expr: true   }
+
+bcs:
+  - west_bounce_back!
+  - east_bounce_back!
+  - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
+  - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
+  - north_mass_outlet!
+  - FastAnonymous.@anon (sim) -> north_pressure!(sim.lat, 1.0)
+
+rho_g:  1.0
+
+fill_x: { value: 1.0,  expr: false }
+fill_y: { value: 0.02, expr: false }
+
+callbacks:
+  - print_step_callback(250, "free-surf")
+  - pycontour_callback(250, ff_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.2, 1.2, 8)), fname=joinpath(datadir, "mass"))
+  - write_jld_file_callback(datadir, 2000)
+  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+finally:
+  - write_jld_file_callback(datadir, true)
+  - >
+    (sim, k) -> begin
+      global defs;
+      ffd = readdlm(joinpath(datadir, "ff.csv"), ',');
+      map!(val -> (val > 1.0) ? 1.0 : (val < 0.0) ? 0.0 : val, ffd);
+      fill_max = 0;
+      cl_max_min = nj;
+      for k=1:size(ffd, 1)
+        ts = reshape(sub(ffd, k, :), (ni, nj));
+        fill = sum(ts);
+        if fill > fill_max
+          fill_max = fill;
+        end
+        cl_max = 0;
+        cl = 0;
+        for j=1:nj
+          if defs["active_cells"][1, j] && ts[1, j] < 0.90
+            cl += 1;
+          else
+            if cl > cl_max
+              cl_max = cl;
+            end
+            cl = 0;
+          end
+        end
+        if cl > cl_max
+          cl_max = cl;
+        end
+        if cl_max < cl_max_min
+          cl_max_min = cl_max;
+        end
+        println("time step $k, cl_max: $cl_max");
+      end
+      println("Greatest fill is $fill_max / $(sum(defs["active_cells"]))");
+      println("Greatest fill is $(fill_max / sum(defs["active_cells"]))");
+      println("Least voids: $(1.0 - fill_max / sum(defs["active_cells"]))");
+      println("Smallest, greatest channel length is $cl_max_min");
+      println("Smallest, greatest channel length is $(cl_max_min/nj)");
+    end
