@@ -3,9 +3,9 @@ preamble: >
           using Roots;
           @init_plot_env();
           @change_default_figsize(4, 15);
-          const datadir       =   joinpath("data", "re-0050", "bn-0005", "wt-0250", "no-obs");
+          const datadir       =   joinpath("data", "re-0050", "bn-00005", "wt-2500", "obs-15x1");
           const nu            =   0.2;
-          const tau           =   4.44e-4;
+          const tau           =   4.44e-5;
           const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 1e6, 1e-9, 15, 1e-6);
           const nj            =   1250;
           const ni            =   150;
@@ -21,6 +21,7 @@ preamble: >
           __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
           pgrad = fzero(__f, -1e-5; order=8);
           u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+          info("pgrad = $pgrad");
 
 datadir: {   value: datadir,       expr: true    }
 
@@ -51,17 +52,22 @@ bcs:
     end;
   - north_mass_outlet!
   - FastAnonymous.@anon (sim) -> north_pressure!(sim.lat, 1.0)
+  - FastAnonymous.@anon (sim) -> north_bounce_back!(sim.lat, 1, ni, 2*ni2)
+  - FastAnonymous.@anon (sim) -> west_bounce_back!(sim.lat, ni, 2*ni2, 2*ni2+ni1)
+  - FastAnonymous.@anon (sim) -> south_bounce_back!(sim.lat, 1, ni, 2*ni2+ni1)
 
 rho_g:  1.0
 
 fill_x: { value: 1.0,  expr: false }
-fill_y: { value: 0.2, expr: false  }
+fill_y: { value: 0.1, expr: false }
+
+obstacles:
+  - type:   bounce_back
+    coords: "[1 ni1 3*ni2 3*ni2+ni1;]'" 
 
 callbacks:
   - print_step_callback(250, "free-surf")
-  - pycontour_callback(250, ff_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.2, 1.2, 8)), fname=joinpath(datadir, "ff"))
-  - pycontour_callback(250, mass_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.5, 5.5, 7)), fname=joinpath(datadir, "mass"))
-  - pycontour_callback(250, density_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.5, 5.5, 7)), fname=joinpath(datadir, "density"))
+  - pycontour_callback(250, ff_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.2, 1.2, 8)), fname=joinpath(datadir, "mass"), rects=[(2*ni2, 2*ni2+ni1, 0/ni, ni1/ni)])
   - write_jld_file_callback(datadir, 2000)
   - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
   - >

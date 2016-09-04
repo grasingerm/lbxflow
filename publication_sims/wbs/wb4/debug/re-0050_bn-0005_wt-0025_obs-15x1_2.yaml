@@ -2,7 +2,7 @@ version: 1.0.0
 preamble: >
           @init_plot_env();
           @change_default_figsize(4, 15);
-          const datadir       =   joinpath("data", "re-0050", "bn-0005", "wt-0025", "obs-15x1");
+          const datadir       =   joinpath("data", "re-0050", "bn-0005", "wt-0025", "obs-15x1_2");
           const nu            =   0.2;
           const tau           =   4.44e-4;
           const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 1e6, 1e-9, 15, 1e-6);
@@ -35,8 +35,8 @@ nsteps:   {   value: nsteps,        expr: true   }
 bcs:
   - west_bounce_back!
   - east_bounce_back!
-  - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
-  - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
+  - south_mass_inlet!
+  - south_velocity_profile!(ni, u0)
   - north_mass_outlet!
   - FastAnonymous.@anon (sim) -> north_pressure!(sim.lat, 1.0)
   - FastAnonymous.@anon (sim) -> north_bounce_back!(sim.lat, 1, ni, 2*ni2)
@@ -46,12 +46,13 @@ bcs:
 rho_g:  1.0
 
 fill_x: { value: 1.0,  expr: false }
-fill_y: { value: 0.02, expr: false }
-#obstacles:
-#  - type:   bounce_back
-#    coords: "[1 ni1 2*ni2 2*ni2+ni1;]'" 
-sbounds: "[1 ni 1 2*ni2; ni1 ni 2*ni2 2*ni2+ni1; 1 ni 2*ni2+ni1 nj]'" 
-cbounds: "[1 ni 1 2*ni2; ni1 ni 2*ni2+1 2*ni2+ni1-1; 1 ni 2*ni2+ni1 nj]'" 
+fill_y: { value: 0.2, expr: false }
+
+obstacles:
+  - type:   bounce_back
+    coords: "[1 ni1 2*ni2 2*ni2+ni1;]'" 
+#sbounds: { value: "[1 ni 1 2*ni2; ni1 ni 2*ni2 2*ni2+ni1; 1 ni 2*ni2+ni1 nj]'", expr: true} 
+#cbounds: { value: "[1 ni 1 2*ni2; ni1 ni 2*ni2+1 2*ni2+ni1-1; 1 ni 2*ni2+ni1 nj]'", expr: true} 
 
 callbacks:
   - print_step_callback(250, "free-surf")

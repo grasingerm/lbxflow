@@ -566,6 +566,20 @@ function lid_driven!(lat::LatticeD2Q9, u::Real)
   end
 end
 
+#! Velocity boundary condition with velocity profile
+#!
+#! \param   L       Length of opening
+#! \param   u_avg   Desired average velocity
+#! \return          Boundary condition
+function south_velocity_profile!(L::Int, u_avg::Real)
+  const h       =   (L - 1) / 2.0;
+  const pgrad   =   -3.0 * u_avg / (h^2);
+  const us      =   analytical_poise_newton(1.0, pgrad, L);
+  return (sim) -> begin
+    south_velocity!(sim.lat, us, 1, 1); 
+  end
+end
+
 # =========================================================================== #
 # ============================ pressure BCs ================================= #
 # =========================================================================== #

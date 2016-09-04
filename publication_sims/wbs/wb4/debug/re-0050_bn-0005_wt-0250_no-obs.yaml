@@ -6,7 +6,7 @@ preamble: >
           const datadir       =   joinpath("data", "re-0050", "bn-0005", "wt-0250", "no-obs");
           const nu            =   0.2;
           const tau           =   4.44e-4;
-          const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 1e6, 1e-9, 15, 1e-6);
+          const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 1e5, 1e-9, 15, 1e-6);
           const nj            =   1250;
           const ni            =   150;
           const nsteps        =   50000;

@@ -1,0 +1,46 @@
+version: 1.0.0
+preamble: >
+         const datadir       =   joinpath("data", "for_paper", "median", "bgk-12", "opt");
+         const nj            =   64;
+         const ni            =   32;
+         const nsteps        =   15000;
+         const pgrad         =   -1e-5;   
+         const F             =   [-pgrad, 0.0]; 
+         const mu            =   0.2;
+         const tauy          =   12e-5;
+         const forcing_kf    =   init_korner_Fk(F);
+
+col_f: >
+       FltrStdCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 1e-12, 15, 1e-6), forcing_kf);
+                  metric=qx_neq_abs,
+                  scale=(args...) -> scale_root_median(args...) / 19.620654296874996,
+                  diss=(args...)->contract_qx!(args...; weight_a=0.35283203125),
+                  stds=3.610400390625,
+                  ds_threshold=0.020082373046875
+                  )
+
+datadir: {   value: datadir,       expr: true    }
+
+rho_0:   {   value: 1.0,           expr: false   }
+nu:      {   value: mu,            expr: true    }
+
+dx:      {   value: 1.0,           expr: false   }
+dt:      {   value: 1.0,           expr: false   }
+ni:      {   value:  ni,           expr: true    }
+nj:      {   value:  nj,           expr: true    }
+
+simtype:  default
+nsteps:   {   value: nsteps,        expr: true   }
+
+bcs:
+  - north_bounce_back!
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+callbacks:
+  - write_jld_file_callback(datadir, 2000)
+  - write_jld_file_callback(datadir, 5000, true)
+
+finally:
+  - write_jld_file_callback(datadir)
+  - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 16, datadir; plot_errors=false)

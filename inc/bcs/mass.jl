@@ -40,6 +40,48 @@ function west_mass_inlet!(sim::FreeSurfSim, m::Real)
   mass_inlet!(sim, 1, 1:nj, m);
 end
 
+#! Mass inlet
+function mass_inlet!(sim::FreeSurfSim, i::Int, j_range::UnitRange{Int})
+  for j in j_range
+    if sim.tracker.state[i, j] != GAS
+      sim.tracker.M[i, j] = sim.msm.rho[i, j];
+    end
+  end
+end
+
+#! Mass inlet
+function mass_inlet!(sim::FreeSurfSim, i_range::UnitRange{Int}, j::Int)
+  for i in i_range
+    if sim.tracker.state[i, j] != GAS
+      sim.tracker.M[i, j] = sim.msm.rho[i, j];
+    end
+  end
+end
+
+#! Mass inlet
+function north_mass_inlet!(sim::FreeSurfSim)
+  const ni, nj = size(sim.msm.rho);
+  mass_inlet!(sim, 1:ni, nj);
+end
+
+#! Mass inlet
+function south_mass_inlet!(sim::FreeSurfSim)
+  const ni = size(sim.msm.rho, 1);
+  mass_inlet!(sim, 1:ni, 1);
+end
+
+#! Mass inlet
+function east_mass_inlet!(sim::FreeSurfSim)
+  const ni, nj = size(sim.msm.rho);
+  mass_inlet!(sim, ni, 1:nj);
+end
+
+#! Mass inlet
+function west_mass_inlet!(sim::FreeSurfSim)
+  const ni, nj = size(sim.msm.rho);
+  mass_inlet!(sim, 1, 1:nj);
+end
+
 #! Mass outlet
 function mass_outlet!(sim::FreeSurfSim, i::Int, j_range::UnitRange{Int}, 
                       ks::Vector{Int})
