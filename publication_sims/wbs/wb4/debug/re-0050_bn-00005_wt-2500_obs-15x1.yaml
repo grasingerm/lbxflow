@@ -51,10 +51,7 @@ bcs:
       south_velocity!(sim.lat, u0s * Cu, 1, 1);
     end;
   - north_mass_outlet!
-  - FastAnonymous.@anon (sim) -> north_pressure!(sim.lat, 1.0)
-  - FastAnonymous.@anon (sim) -> north_bounce_back!(sim.lat, 1, ni, 2*ni2)
-  - FastAnonymous.@anon (sim) -> west_bounce_back!(sim.lat, ni, 2*ni2, 2*ni2+ni1)
-  - FastAnonymous.@anon (sim) -> south_bounce_back!(sim.lat, 1, ni, 2*ni2+ni1)
+  - north_open!
 
 rho_g:  1.0
 
@@ -67,15 +64,14 @@ obstacles:
 
 callbacks:
   - print_step_callback(250, "free-surf")
-  - pycontour_callback(250, ff_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.2, 1.2, 8)), fname=joinpath(datadir, "mass"), rects=[(2*ni2, 2*ni2+ni1, 0/ni, ni1/ni)])
+  - pycontour_callback(250, ff_acsr; showfig=false, filled=true, colorbar=true, levels=collect(linspace(-0.2, 1.2, 8)), fname=joinpath(datadir, "mass"), rects=[(3*ni2, 3*ni2+ni1, 0/ni, ni1/ni)])
   - write_jld_file_callback(datadir, 2000)
   - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
   - >
     (sim, k) -> begin;
       global Cu;
-      if Cu < 1.0
-        Cu += 1.0 / ramp;
-      end
+      C = k / ramp;
+      Cu = (C < 1.0) ? C : 1.0;
     end;
 
 finally:
