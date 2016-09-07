@@ -1,8 +1,8 @@
 - "": "version: 1.0.0"
 
-#!! figsize      =  4, 15
-#!! nj           =  1250
-#!! ni           =  150
+#!! figsize      =  6, 15
+#!! nj           =  900
+#!! ni           =  300
 #!! nsteps       =  50000
 #!! backup_steps =  2000
 #!! plot_steps   =  250
@@ -33,6 +33,13 @@
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
   re-0100_bn-0003_wt-0050: |
      preamble: >
                using Roots;
@@ -50,6 +57,13 @@
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
   re-0150_bn-0003_wt-0050: |
      preamble: >
                using Roots;
@@ -57,80 +71,119 @@
                @change_default_figsize(&figsize&);
                const datadir       =   joinpath("data", ~DIR_LS~);
                const nu            =   &nu1&;
-               const tau           =   6.67e-4;
+               const tau           =   2e-4;
                const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 0.501, 8.0, &m&, &gamma_min&, &max_iters&, &tol&);
                const nj            =   &nj&;
                const ni            =   &ni&;
                const nsteps        =   &nsteps&;
                const u0            =   3.0 / 30.0;
-               const F             =   [0.0; -1.11e-6];
+               const F             =   [0.0; -3.33e-7];
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
-  re-0050_bn-0001_wt-0025: |
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
+  re-0100_bn-0001_wt-0050: |
      preamble: >
+               using Roots;
                @init_plot_env();
                @change_default_figsize(&figsize&);
                const datadir       =   joinpath("data", ~DIR_LS~);
                const nu            =   &nu1&;
-               const tau           =   8.89e-5;
+               const tau           =   4.44e-5;
                const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 0.501, 8.0, &m&, &gamma_min&, &max_iters&, &tol&);
                const nj            =   &nj&;
                const ni            =   &ni&;
                const nsteps        =   &nsteps&;
                const u0            =   2.0 / 30.0;
-               const F             =   [0.0; -1.48e-7];
+               const F             =   [0.0; -7.41e-8];
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
-  re-0050_bn-0010_wt-0025: |
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
+  re-0100_bn-0005_wt-0050: |
      preamble: >
+               using Roots;
                @init_plot_env();
                @change_default_figsize(&figsize&);
                const datadir       =   joinpath("data", ~DIR_LS~);
                const nu            =   &nu1&;
-               const tau           =   8.89e-4;
+               const tau           =   2.22e-4;
                const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 0.501, 8.0, &m&, &gamma_min&, &max_iters&, &tol&);
                const nj            =   &nj&;
                const ni            =   &ni&;
                const nsteps        =   &nsteps&;
                const u0            =   2.0 / 30.0;
-               const F             =   [0.0; -1.48e-6];
+               const F             =   [0.0; -3.7e-7];
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
-  re-0050_bn-0005_wt-0005: |
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
+  re-0100_bn-0003_wt-0025: |
      preamble: >
+               using Roots;
                @init_plot_env();
                @change_default_figsize(&figsize&);
                const datadir       =   joinpath("data", ~DIR_LS~);
                const nu            =   &nu1&;
-               const tau           =   4.44e-4;
+               const tau           =   1.33e-4;
                const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 0.501, 8.0, &m&, &gamma_min&, &max_iters&, &tol&);
                const nj            =   &nj&;
                const ni            =   &ni&;
                const nsteps        =   &nsteps&;
                const u0            =   2.0 / 30.0;
-               const F             =   [0.0; -1.48e-7];
+               const F             =   [0.0; -1.11e-7];
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
-  re-0050_bn-0005_wt-0045: |
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
+  re-0100_bn-0003_wt-0100: |
      preamble: >
+               using Roots;
                @init_plot_env();
                @change_default_figsize(&figsize&);
                const datadir       =   joinpath("data", ~DIR_LS~);
                const nu            =   &nu1&;
-               const tau           =   4.44e-4;
+               const tau           =   1.33e-4;
                const constit_rel_f =   init_constit_srt_bingham_implicit(nu, tau, 0.501, 8.0, &m&, &gamma_min&, &max_iters&, &tol&);
                const nj            =   &nj&;
                const ni            =   &ni&;
                const nsteps        =   &nsteps&;
                const u0            =   2.0 / 30.0;
-               const F             =   [0.0; -1.33e-6];
+               const F             =   [0.0; -4.44e-7];
                const forcing_kf    =   init_sukop_gravity_Fk(F);
                const ni1           =   &n1&;
                const ni2           =   &n2&;
+               global Cu           =   0.0;
+               const ramp          =   2500.0;
+               const h             =   (ni - 1) / 2;
+               __f(pgrad) = u0 - 1 / (2*nu) * -pgrad * (h^2 - (tau / pgrad)^2) + tau / nu * (h - tau / pgrad);
+               pgrad = fzero(__f, -1e-5; order=8);
+               u0s = analytical_poise_bingham(nu, tau, pgrad, ni);
+               info("pgrad = $pgrad");
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
@@ -144,10 +197,7 @@
        nj:      {   value:  nj,           expr: true    }
 
        simtype:  "free_surface"
-       col_f:    >
-                 FltrPosCol(FltrFixedDSCol(BGK_F(constit_rel_f, forcing_kf);
-                                           ds_threshold=1e-5,
-                                           fltr_thrsh_warn=0.15));
+       col_f:    FltrPosCol(BGK_F(constit_rel_f, forcing_kf));
       
        nsteps:   {   value: nsteps,        expr: true   }
 
@@ -155,7 +205,11 @@
          - west_bounce_back!
          - east_bounce_back!
          - FastAnonymous.@anon (sim) -> south_mass_inlet!(sim, 1.0)
-         - FastAnonymous.@anon (sim) -> south_velocity!(sim.lat, u0)
+         - >
+           (sim) -> begin;
+             global Cu;
+             south_velocity!(sim.lat, u0s * Cu, 1, 1);
+           end;
          - north_mass_outlet!
          - FastAnonymous.@anon (sim) -> north_pressure!(sim.lat, 1.0)
 
@@ -174,6 +228,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(2*ni2, 2*ni2+ni1, 0/ni, ni1/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
   "obs-15x2" : |
                obstacles:
@@ -185,6 +245,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(2*ni2, 2*ni2+ni1, 0/ni, ni1/ni), (3*ni2, 3*ni2+ni1, 0/ni, ni1/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
   "obs-30x1" : |
                obstacles:
@@ -196,6 +262,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(2*ni2, 2*ni2+ni2, 0/ni, ni2/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
   "obs-30x2" : |
                obstacles:
@@ -207,6 +279,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(2*ni2, 2*ni2+ni2, 0/ni, ni2/ni), (4*ni2, 4*ni2+ni2, 0/ni, ni2/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
   "obs-30xL" : |
                obstacles:
@@ -218,6 +296,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(2*ni2, 6*ni2, 0/ni, ni2/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
   "cav-15x1" : |
                obstacles:
@@ -229,6 +313,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(ni2, 3*ni2, 0/ni, ni1/ni), (3*ni2+ni1, nj-2, 0/ni, ni1/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
   "cav-30x1" : |
                obstacles:
@@ -241,6 +331,12 @@
                  - pycontour_callback(&plot_steps&, ff_acsr; showfig=false, filled=true, colorbar=true, levels=&levs&, fname=joinpath(datadir, "mass"), rects=[(ni2, 3*ni2, 0/ni, ni2/ni), (3*ni2+ni2, nj-2, 0/ni, ni2/ni)])
                  - write_jld_file_callback(datadir, &backup_steps&)
                  - take_snapshot_callback("ff.csv", 250, (sim) -> sim.tracker.eps; dir=datadir)
+                 - >
+                   (sim, k) -> begin;
+                     global Cu;
+                     C = k / ramp;
+                     Cu = (C < 1.0) ? C : 1.0;
+                   end;
 
 - "" : |
        finally:
