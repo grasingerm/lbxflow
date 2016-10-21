@@ -23,7 +23,7 @@ function stabilize_mass_callback!(sim::FreeSurfSim, k::Real)
         for k=1:sim.lat.n-1
           const i_nbr = i + sim.lat.c[1, k];
           const j_nbr = j + sim.lat.c[2, k];
-          if (inbounds(i_nbr, j_nbr, [1 ni 1 nj]) && 
+          if (inbounds(i_nbr, j_nbr, [1; ni; 1; nj;]) && 
               !isnan(sim.tracker.M[i_nbr, j_nbr]) &&
               !isinf(sim.tracker.M[i_nbr, j_nbr]))
             counter += 1;
