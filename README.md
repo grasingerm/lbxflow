@@ -9,18 +9,22 @@ to approximate hydrodynamics.
 ## Dependencies
 
 * Julia language
-** PyCall
-** PyPlot
-** HDF5
-** JLD
-** ArgParse
-** ProfileView
-** Roots
-** FastAnonymous
 * Python language
-** PyYaml       (python library)
-** numpy        (python library)
-** matplotlib   (python library)
+
+### Julia language
+* PyCall
+* PyPlot
+* HDF5
+* JLD
+* ArgParse
+* ProfileView
+* Roots
+* FastAnonymous
+
+### Python language
+* PyYaml       (python library)
+* numpy        (python library)
+* matplotlib   (python library)
 
 ## Quick Start
 
