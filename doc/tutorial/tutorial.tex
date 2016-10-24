@@ -29,6 +29,10 @@
 \titlepage
 \end{frame}
 
+\begin{frame}{Preface}
+  If you haven't already done so, follow the instructions for installation at \href{https://github.com/grasingerm/lbxflow}{github.com/grasingerm/lbxflow}
+\end{frame}
+
 \section{A first example}
 
 \subsection{Problem description}
@@ -48,6 +52,22 @@
     \caption{Schematic of Poiseuille flow; no-slip boundary conditions are enforced at the top and bottom boundaries, and periodic boundary conditions are enforced at the left and right boundaries.}
   \end{figure}
 \end{frame}
+
+\begin{frame}{Input file}
+  To simulate a physical problem using \texttt{lbxflow}, a plain-text, input file must be created.
+  The following slides go through creating an input file for a Poiseuille flow problem.
+  Open a text editor and follow along.
+  \vspace{0.4in}
+  \begin{columns}
+  \small 
+    \column{0.6\textwidth}
+    Input file text will be on the left
+    \column{0.4\textwidth}
+    A description of the parameters will be on the right
+  \end{columns}
+\end{frame}
+
+\subsection{Simulation input file}
 
 \begin{frame}[fragile]{Input file}
   \begin{columns}
@@ -107,6 +127,22 @@
           \end{itemize}
       \end{itemize}
   \end{columns}
+\end{frame}
+
+\begin{frame}{Input file (Aside)}
+  \begin{itemize}
+    \item <1-> Note: input parameters (generally) have a \texttt{value} property and an \texttt{expr} property.
+    \item <2-> The \texttt{value} property is straight-forward.
+          It is the value to either be stored, or parsed and evaulated.
+    \item <3-> The \texttt{expr} property is a boolean (true or false) that describes whether \texttt{value} is an \textit{expression}.
+      If \texttt{expr} is true, then \texttt{value} is parsed and evaluated.
+      The \texttt{expr} flag allows users to pass Julia code in as a \texttt{value}.
+    \item <4-> A simple example. The following line
+
+      \texttt{nu:     \{ value: atan(1.0),  expr: true \}}
+
+      sets the kinematic viscosity, \texttt{nu}, to $\pi / 4$.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]{Input file} \label{frm:input-file-start}
@@ -212,25 +248,29 @@
 \end{frame}
 
 \begin{frame}[fragile]{Callback functions}
-  Change the callback list of the input file started on slide \ref{frm:input-file-start} so that it matches the following, then re-run:
-  \tiny
+  Change the callback list of the input file started on slide \ref{frm:input-file-start} so that it matches the following:
+  {\tiny
   \begin{minted}[gobble=4, frame=single]{yaml}
     callbacks:
       # plot the velocity profile at x = 10, y = 1:12
       - pyplot_callback(25, vel_prof_acsr(1, 10, 1:12); showfig=true, grid=true)
       - print_step_callback(50, "first-example")
-  \end{minted}
+  \end{minted} 
+  }
+  This would visualize the simulation results, however a module needs to be loaded in order to use the visualization functions.
+  To do this, we will introduce the \texttt{preamble} section.
 \end{frame}
 
 \begin{frame}[fragile]{Preamble}
   \begin{itemize}
     \item A preamble section of the input file can be provided.
     \item Any \texttt{julia} code in the preamble is executed before the rest of the input file is parsed and evaluated.
-    \item Useful for importing packages and defining variables (to be used in other parts of the input file).
+    \item Useful for importing packages and defining variables.
   \end{itemize}
   \tiny
   \begin{minted}[gobble=4, frame=single]{yaml}
     preamble: >
+              import PyPlot; 
               const ni = 20;
               const nj = 12;
   \end{minted}
@@ -249,41 +289,321 @@
   \end{minted}
 \end{frame}
 
+\begin{frame}{A first example--concluding remarks}
+  \begin{itemize}
+    \item <1-> Note: the \texttt{preamble} section in the previous slide allowed us to keep the input file \href{https://en.wikipedia.org/wiki/Don\%27t\_repeat\_yourself}{DRY}.
+  We defined variables \texttt{ni} and \texttt{nj} to describe the number of nodes in the lattice and then used them throughout the input file.
+\item <2-> For more examples similar to this one, see the \texttt{example\_sims/poiseuille} directory.
+  \begin{itemize}
+      \tiny
+    \item \texttt{julia lbxflow.jl -f example\_sims/poiseuille/poiseuille\_velocity-profile.yaml}
+    \item \texttt{julia lbxflow.jl -f example\_sims/poiseuille/poiseuille\_pressure-contours.yaml}
+  \end{itemize}
+\item <3-> For other examples, explore subdirectories in the \texttt{example\_sims}.
+  \end{itemize}
+\end{frame}
+
 \section{Input file parameters}
 
-\begin{frame}{Frame title}
-  Watch this slide grow.
-  \pause
-  \begin{itemize}
-    \item Hello, World!
-      \pause
-    \item Hello, Mars!
-      \pause
-    \item Hello, Alpha Centauri!
-  \end{itemize}
+\begin{frame}{Input file parameters}
+  What follows is a list of input file parameters accompanied by a brief description for each.
+  Then more detailed information about boundary conditions and collision operators is covered.
+\end{frame}
+
+\begin{frame}{Input file parameters}
+\begin{table}
+    \tiny
+    \centering
+    \caption{Brief description of input file parameters}
+    \begin{tabularx}{\textwidth}{l X}
+      \textbf{Parameter name} & \textbf{Description} \\
+      \hline \\
+      \texttt{version} & Version of \texttt{lbxflow} required to run the input file \\
+      \\
+      \texttt{preamble} & (Optional) Julia source code to be evaluated and parsed in the global scope. Particularly useful for importing modules, defining variables, and defining functions. Evaluated as an expression by default. \\
+      \\
+      \texttt{datadir} & Directory to store simulation data that, if does not exist, is created. If run with the \texttt{-R} flag, \texttt{lbxflow} checks this directory for a backup file. \\
+      \\
+      \texttt{rho\_0} & Reference density. Lattice is initialized with this density. \\
+      \\
+      \texttt{nu} & Reference kinematic viscosity. For non-Newtonian constitutive relationships this is the initial guess for effective viscosity. \\
+      \\
+      \texttt{dx} & (Optional) Distance between lattice sites. \textbf{Note:} this parameter is not yet used for anything. It is 1.0 by default\\
+      \\
+      \texttt{dt} & (Optional) Time step size. \textbf{Note:} this parameter is not yet used for anything. It is 1.0 by default\\
+      \\
+      \texttt{ni} & Number of nodes in the x-direction (horizontal). \\
+      \\
+      \texttt{nj} & Number of nodes in the y-direction (vertical). \\
+      \\
+    \end{tabularx}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Input file parameters}
+\begin{table}
+    \tiny
+    \centering
+    \begin{tabularx}{\textwidth}{l X}
+      \textbf{Parameter name} & \textbf{Description} \\
+      \hline \\
+      \texttt{simtype} & (Optional) Simulation type. \texttt{free\_surface} is for a free surface flow simulation. \\
+      \\
+      \texttt{nsteps} & Number of time steps to be simulated. \\
+      \\
+      \texttt{col\_f} & Collision operator function. Evaluated as an expression by default. \\
+      \\
+      \texttt{bcs} & List of boundary conditions. These are evaluated as expressions by default. Boundary conditions can be found in \texttt{inc/boundary.jl}\\
+      \\
+      \texttt{callbacks} & (Optional) List of processing and post-processing functions.Must be of the interface \texttt{(AbstractSim, Real) -> Void}. These are evaluated as expressions by default. Functions for creating callback functions are available in \texttt{inc/io/readwrite.jl} and \texttt{inc/io/animate.jl}\\
+      \\
+      \texttt{test\_for\_term} & (Optional) A function that takes two \texttt{MultiscaleMap}s as parameters and, if returns true, ends the simulation. Typically tests to see if flow has reached steady state. Predefined functions can be found in \texttt{inc/convergence.jl}.\\
+      \\
+      \texttt{finally} & List of functions to be executed when simulation has ended. Typically processing and post-processing functions. Of interface \texttt{(AbstractSim) -> Void}\\
+      \\
+    \end{tabularx}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Input file parameters}
+  Different simulation types, such as \texttt{free\_surface} simulations, require additional parameters. Check \texttt{example\_sims/free\_surface} for examples.
 \end{frame}
 
 \section{Boundary conditions}
 
-\begin{frame}{Frame title}
-  \begin{columns}
-    \column{0.5\textwidth}
-    Left column
-    \column{0.5\textwidth}
-    \begin{block}{Observation 1}
-      Yolo
-    \end{block}
-    \begin{block}{Observation 2}
-      Nolo
-    \end{block}
-  \end{columns}
+\begin{frame}{Boundary conditions}
+\begin{table}
+    \tiny
+    \centering
+    \begin{tabularx}{\textwidth}{l X}
+      \textbf{Boundary condition} & \textbf{Description} \\
+      \hline \\
+      \texttt{north\_bounce\_back!} & No slip boundary condition where flow is assumed to be south of the boundary. \\
+      \\
+      \texttt{south\_bounce\_back!} & No slip boundary condition where flow is assumed to be north of the boundary. \\
+      \\
+      \texttt{east\_bounce\_back!} & No slip boundary condition where flow is assumed to be west of the boundary. \\
+      \\
+      \texttt{west\_bounce\_back!} & No slip boundary condition where flow is assumed to be east of the boundary. \\
+      \\
+      \texttt{north\_reflect!} & Pure slip boundary condition where flow is assumed to be south of the boundary. \\
+      \\
+      \texttt{south\_reflect!} & Pure slip boundary condition where flow is assumed to be north of the boundary. \\
+      \\
+      \texttt{east\_reflect!} & Pure slip boundary condition where flow is assumed to be west of the boundary. \\
+      \\
+      \texttt{west\_reflect!} & Pure slip boundary condition where flow is assumed to be east of the boundary. \\
+      \\
+    \end{tabularx}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Boundary conditions}
+\begin{table}
+    \tiny
+    \centering
+    \begin{tabularx}{\textwidth}{l X}
+      \textbf{Boundary condition} & \textbf{Description} \\
+      \hline \\
+      \texttt{periodic\_east\_to\_west!} & Periodic boundary conditions between the east and west parts of the domain. \\
+      \\
+      \texttt{periodic\_north\_to\_south!} & Periodic boundary conditions between the north and south parts of the domain. \\
+      \\
+      \texttt{north\_velocity!} & Velocity inlet or outlet where flow is occuring south of the boundary. \\
+      \\
+      \texttt{south\_velocity!} & Velocity inlet or outlet where flow is occuring north of the boundary. \\
+      \\
+      \texttt{east\_velocity!} & Velocity inlet or outlet where flow is occuring west of the boundary. \\
+      \\
+      \texttt{west\_velocity!} & Velocity inlet or outlet where flow is occuring east of the boundary. \\
+      \\
+      \texttt{north\_pressure!} & Pressure inlet or outlet where flow is occuring south of the boundary. \\
+      \\
+      \texttt{south\_pressure!} & Pressure inlet or outlet where flow is occuring north of the boundary. \\
+      \\
+      \texttt{east\_pressure!} & Pressure inlet or outlet where flow is occuring west of the boundary. \\
+      \\
+      \texttt{west\_pressure!} & Pressure inlet or outlet where flow is occuring east of the boundary. \\
+      \\
+    \end{tabularx}
+  \end{table}
+\end{frame}
+
+\begin{frame}{Boundary conditions}
+\begin{table}
+    \tiny
+    \centering
+    \begin{tabularx}{\textwidth}{l X}
+      \textbf{Boundary condition} & \textbf{Description} \\
+      \hline \\
+      \texttt{north\_open!} & Pressure gradient normal to boundary is set to zero. Flow is assumed to be occuring south of boundary. \\
+      \\
+      \texttt{south\_open!} & Pressure gradient normal to boundary is set to zero. Flow is assumed to be occuring north of boundary. \\
+      \\
+      \texttt{east\_open!} & Pressure gradient normal to boundary is set to zero. Flow is assumed to be occuring west of boundary. \\
+      \\
+      \texttt{west\_open!} & Pressure gradient normal to boundary is set to zero. Flow is assumed to be occuring east of boundary. \\
+      \\
+    \end{tabularx}
+  \end{table}
 \end{frame}
 
 \section{Collision operators}
 
+\begin{frame}{Collision operators}
+  \begin{itemize}
+    \item <1-> Collision operators control much of the physics of interest (constitutive relationship, external forcing, etc.)
+    \item <2-> The BGK collision operator is more computationally efficient than the MRT collision operator. However, the MRT collision operator is more numerically stable, and as a consequence, is usually more accurate.
+    \item <3-> Both the BGK and MRT collision operators can have artificial dissipation added. Artificial dissipation is analogous to flux limiters in FEM and FVM. Artificial dissipation is generally used to enhance numerical stability. Collision functions with artificial dissipation can be found in \texttt{inc/col/filtering.jl}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{BGK collision operator}
+  \texttt{inc/col/bgk.jl}
+  \tiny
+  \begin{lstlisting}
+#! Bhatnagar-Gross-Krook collision operator 
+type BGK <: ColFunction
+  feq_f::LBXFunction;
+  constit_relation_f::LBXFunction;
+
+  BGK(constit_relation_f::LBXFunction; feq_f::LBXFunction=feq_incomp) = (
+                                                new(feq_f, constit_relation_f));
+end
+
+#! Bhatnagar-Gross-Krook collision operator with forcing 
+type BGK_F <: ColFunction
+  feq_f::LBXFunction;
+  constit_relation_f::LBXFunction;
+  forcing_f::Force;
+
+  BGK_F(constit_relation_f::LBXFunction,
+        forcing_f::Force; 
+        feq_f::LBXFunction=feq_incomp) = (
+                                    new(feq_f, constit_relation_f, forcing_f));
+end
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{BGK collision operator}
+  \begin{itemize}
+    \item \texttt{constit\_relation\_f} - Constitutive relationship function. These can be found in \texttt{inc/col/constitutive.jl}. Note: must be an srt constitutive relationship.
+    \item \texttt{forcing\_f} - Forcing function. These can be found in \texttt{inc/col/forcing.jl}.
+    \item \texttt{feq\_f} - Quasiequilibrium distribution function. This is \texttt{feq\_incomp}, or the quasiequilibrium distribution function for incompressible flow, by default.
+  \end{itemize}
+  Example: \texttt{col\_f:      BGK(init\_constit\_srt\_const(0.2))}
+\end{frame}
+
+\begin{frame}[fragile]{MRT collision operator}
+  \texttt{inc/col/mrt.jl}
+  \tiny
+  \begin{lstlisting}
+#! Multiple relaxation time collision operator 
+type MRT <: ColFunction
+  feq_f::LBXFunction;
+  constit_relation_f::LBXFunction;
+  M::Matrix{Float64};
+  iM::Matrix{Float64};
+  S::LBXFunction;
+
+  function MRT(constit_relation_f::LBXFunction; feq_f::LBXFunction=feq_incomp,
+               S::LBXFunction=S_fallah)
+    const M   = @DEFAULT_MRT_M;
+    const iM  = @DEFAULT_MRT_IM;
+    return new(feq_f, constit_relation_f, M, iM, S);
+  end
+end
+
+#! Multiple relaxation time collision operator with forcing 
+type MRT_F <: ColFunction
+  feq_f::LBXFunction;
+  constit_relation_f::LBXFunction;
+  forcing_f::Force;
+  M::Matrix{Float64};
+  iM::Matrix{Float64};
+  S::LBXFunction;
+
+  function MRT_F(constit_relation_f::LBXFunction,
+                 forcing_f::Force; 
+                 feq_f::LBXFunction=feq_incomp, S::LBXFunction=S_fallah)
+    const M   = @DEFAULT_MRT_M;
+    const iM  = @DEFAULT_MRT_IM;
+    return new(feq_f, constit_relation_f, forcing_f, M, iM, S);
+  end
+end
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{MRT collision operator}
+  \begin{itemize}
+    \item \texttt{constit\_relation\_f} - Constitutive relationship function. These can be found in \texttt{inc/col/constitutive.jl}. Note: must be an mrt constitutive relationship.
+    \item \texttt{forcing\_f} - Forcing function. These can be found in \texttt{inc/col/forcing.jl}.
+    \item \texttt{feq\_f} - Quasiequilibrium distribution function. This is \texttt{feq\_incomp}, or the quasiequilibrium distribution function for incompressible flow, by default.
+    \item \texttt{S} - Relaxation matrix function. These can be found in \texttt{inc/col/mrt\_matrices.jl}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Filtered collision operators}
+  \texttt{inc/col/filtering.jl}
+  \tiny
+  \begin{lstlisting}
+#! Filtered collision function with fixed DS threshold
+type FltrFixedDSCol <: FltrColFunction
+  feq_f::LBXFunction;
+  inner_col_f!::ColFunction;
+  metric::LBXFunction;
+  scale::LBXFunction;
+  diss!::LBXFunction;
+  ds_threshold::Real;
+  fltr_thrsh_warn::Real;
+
+  function FltrFixedDSCol(inner_col_f!::ColFunction; metric::LBXFunction=__METRIC,
+                          scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
+                          ds_threshold::Real=__DS, 
+                          fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+    new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, ds_threshold, 
+        fltr_thrsh_warn);
+  end
+end
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Filtered collision operator}
+  \begin{itemize}
+    \item \texttt{inner\_col\_f!} - Collision function to filter.
+    \item \texttt{metric} - Function for measuring how far a lattice site is from equilibrium.
+    \item \texttt{scale} - Function for determining how to rescale distribution functions.
+    \item \texttt{diss!} - Function that introduces artificial dissipation.
+    \item \texttt{ds\_threshold} - Define threshold that, if exceeded, artificial dissipation is introduced.
+    \item \texttt{fltr\_thrsh\_warn} - If the percentage of lattice sites that were dissipated exceeds this value then warn the user that results may be nonphysical.
+  \end{itemize}
+\end{frame}
+
 \subsection{Constitutive relationship}
+
+\begin{frame}{Constitutive relationship}
+  \begin{itemize}
+    \item \texttt{init\_constit\_srt\_const(mu)} - Newtonian relationships for BGK collision operator with dynamic viscosity \texttt{mu}.
+    \item \texttt{init\_constit\_mrt\_const(mu)} - Newtonian relationships for MRT collision operator with dynamic viscosity \texttt{mu}.
+    \item Constitutive relationships for power law fluids, Bingham plastic fluids, and Herschel-Bulkley fluids. See \texttt{inc/col/constitutive.jl} for more details.
+  \end{itemize}
+\end{frame}
+
 \subsection{Quasiequilibrium}
+
+\begin{frame}{Quasiequilibrium}
+  See \texttt{inc/col/equilibrium.jl} for more details.
+\end{frame}
+
 \subsection{External forcing}
-\section{Callback functions}
+
+\begin{frame}{External forcing}
+  See \texttt{inc/col/forcing.jl} for more details.
+\end{frame}
+
+\begin{frame}{Concluding remarks}
+  Any questions, concerns, errors, bugs, etc. can be directed to grasingerm@gmail.com.
+  Please notify the author of any spelling mistakes, grammatical errors, etc. found in this tutorial or elsewhere in the documentation by email grasingerm@gmail.com.
+\end{frame}
 
 \end{document}
