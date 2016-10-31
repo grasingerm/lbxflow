@@ -1,0 +1,39 @@
+version: 1.0.0
+
+# code to execute before parsing
+preamble: >
+  @init_plot_env(); 
+  const u = 0.01;
+  const nu = 0.3
+  const constit_rel_f = init_constit_srt_const(nu);
+  const datadir = "data/couette";
+  const ni = 32;
+  const nj = 32;
+
+# data
+datadir:  { value: datadir, expr: true  }
+
+# material properties
+rho_0:    { value: 1.0,     expr: false }
+nu:       { value: nu,     expr: true   }
+
+# lattice parameters
+dx:       { value: 1.0,     expr: false }
+dt:       { value: 1.0,     expr: false }
+ni:       { value: ni,      expr: true  }
+nj:       { value: nj,      expr: true  }
+
+# simulation parameters
+nsteps:   { value: 10000,   expr: false }
+col_f:    BGK_F(constit_rel_f);
+
+# boundary conditions
+bcs:
+  - (sim) -> lid_driven(sim, u) 
+  - south_bounce_back!
+  - periodic_east_to_west!
+
+# callback functions
+callbacks:
+  - pyplot_callback(25, vel_prof_acsr(1, convert(Int, ni/2), 1:nj); showfig=true, grid=true)
+  - print_step_callback(50, "couette-example")

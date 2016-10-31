@@ -8,8 +8,6 @@ const LBX_VERSION = v"1.0.1";
 # load dependencies
 using ArgParse;
 
-const term_rows, term_cols = Base.tty_size();
-
 s = ArgParseSettings();
 @add_arg_table s begin
   "--file", "-f"
@@ -58,7 +56,7 @@ s = ArgParseSettings();
   "--profile-cols"
     help = "number of columns in Profile.print"
     arg_type = Int
-    default = term_cols
+    default = 40
   "--version"
     help = "display information about the program"
     action = :store_true
