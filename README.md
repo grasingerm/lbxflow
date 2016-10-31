@@ -9,18 +9,22 @@ to approximate hydrodynamics.
 ## Dependencies
 
 * Julia language
-** PyCall
-** PyPlot
-** HDF5
-** JLD
-** ArgParse
-** ProfileView
-** Roots
-** FastAnonymous
 * Python language
-** PyYaml       (python library)
-** numpy        (python library)
-** matplotlib   (python library)
+
+### Julia language
+* PyCall
+* PyPlot
+* HDF5
+* JLD
+* ArgParse
+* ProfileView
+* Roots
+* FastAnonymous
+
+### Python language
+* PyYaml       (python library)
+* numpy        (python library)
+* matplotlib   (python library)
 
 ## Quick Start
 
@@ -35,7 +39,7 @@ Install the both the [julia language](http://julialang.org/) and
 
 ## Documentation
 
-An introductory [https://github.com/grasingerm/lbxflow/tree/master/doc/tutorial/tutorial.pdf](tutorial) 
+An introductory [tutorial](https://github.com/grasingerm/lbxflow/tree/master/doc/tutorial/tutorial.pdf) 
 is available in the `doc` directory. Currently documentation is sparse, but the
 source files are all well documented and I am responsive to questions and feedback.
 Example input files are available in the `example_sims` directory.
@@ -43,7 +47,7 @@ Example input files are available in the `example_sims` directory.
 ## Bugs
 
 Please report all bugs and issues using the 
-[https://github.com/grasingerm/lbxflow/issues](github ticketing system).
+[github ticketing system](https://github.com/grasingerm/lbxflow/issues).
 
 ## TODO list
 * [ ] add capability for 3D simulations
