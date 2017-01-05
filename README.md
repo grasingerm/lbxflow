@@ -29,7 +29,7 @@ to approximate hydrodynamics.
 ## Quick Start
 
 Install the both the [julia language](http://julialang.org/) and 
-[python](https://www.python.org/), if you haven't already done so.
+[python](https://www.python.org/). Note: the install script assumes an Ubuntu environment and that pip is installed.
 
     git clone https://github.com/grasingerm/lbxflow.git
     cd lbxflow
