@@ -57,11 +57,11 @@
                    const n             =   1.50;
                    const forcing_kf    =   init_korner_Fk(F);
 
-- svec-1:       "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.501, 8.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  svec-2:       "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.510, 6.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  svec-3:       "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.600, 4.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  mrt-fallah:   "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; S=S_fallah)"
-  mrt-luo:      "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; S=S_luo)"
+- svec-1:       "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, 0.501, 8.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  svec-2:       "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, 0.510, 6.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  svec-3:       "col_f: BGK_F(init_constit_srt_power_law_implicit(mu, n, 0.600, 4.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  mrt-fallah:   "col_f: MRT_F(init_constit_mrt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf; S=S_fallah)"
+  mrt-luo:      "col_f: MRT_F(init_constit_mrt_power_law_implicit(mu, n, &gamma_min&, &max_iters&, &tol&), forcing_kf; S=S_luo)"
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
