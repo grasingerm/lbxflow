@@ -89,7 +89,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(nn -> analytical_poise_power_law(mu, n, pgrad, nn), 1, 64, datadir)
+         - report_lbm_error(nn -> analytical_poise_power_law(mu, n, pgrad, nn), 1, div(ni, 2), datadir)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_power_law(mu, n, pgrad, nj));
@@ -97,7 +97,7 @@
            end
          - >
            (sim, k) -> begin
-             vpa = vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj);
+             vpa = vel_prof_acsr(1, div(ni, 2), 1:nj);
              writedlm(joinpath(datadir, "ux_profile.dsv"), 
                begin
                  x, y = vpa(sim);

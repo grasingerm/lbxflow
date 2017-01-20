@@ -90,7 +90,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 64, datadir; plot_errors=false)
+         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, div(ni, 2), datadir; plot_errors=false)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
@@ -99,7 +99,7 @@
            end
          - >
            (sim, k) -> begin
-             vpa = vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj);
+             vpa = vel_prof_acsr(1, div(ni, 2), 1:nj);
              writedlm(joinpath(datadir, "ux_profile.dsv"), 
                begin
                  x, y = vpa(sim);
