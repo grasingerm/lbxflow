@@ -1,7 +1,7 @@
 - "": "version: 1.0.0"
 
-#!! nj           =  64
-#!! ni           =  128
+#!! nj           =  128
+#!! ni           =  64
 #!! nsteps       =  25000
 #!! backup_steps =  2000
 #!! nu1          =  0.2
@@ -18,10 +18,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   &pgrad&;   
+                    const pgrad         =   -3.445e-6;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   4e-5;
+                    const tauy          =   4.017578125e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-08: |
           preamble: >
@@ -29,10 +29,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   &pgrad&;   
+                    const pgrad         =   -4.81438e-5;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   8e-5;
+                    const tauy          =   7.985e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-12: |
           preamble: >
@@ -40,10 +40,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   &pgrad&;   
+                    const pgrad         =   -6.3381e-6;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   12e-5;
+                    const tauy          =   11.99e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
   tau-16: |
@@ -52,10 +52,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   &pgrad&;   
+                    const pgrad         =   -7.934e-6;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   16e-5;
+                    const tauy          =   15.9e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
 - bgk-5:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e5, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
