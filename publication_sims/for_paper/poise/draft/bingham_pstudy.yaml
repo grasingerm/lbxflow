@@ -1,7 +1,7 @@
 - "": "version: 1.0.0"
 
-#!! nj           =  128
-#!! ni           =  64
+#!! nj           =  64
+#!! ni           =  32
 #!! nsteps       =  25000
 #!! backup_steps =  2000
 #!! nu1          =  0.2
@@ -18,10 +18,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -3.445e-6;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   4.017578125e-5;
+                    const tauy          =   4e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-08: |
           preamble: >
@@ -29,10 +29,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -4.81438e-5;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   7.985e-5;
+                    const tauy          =   8e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-12: |
           preamble: >
@@ -40,10 +40,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -6.3381e-6;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   11.99e-5;
+                    const tauy          =   12e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
   tau-16: |
@@ -52,17 +52,17 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -7.934e-6;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   15.9e-5;
+                    const tauy          =   16e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
-- svec-1:       "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.501, 8.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  svec-2:       "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.510, 6.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  svec-3:       "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.600, 4.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
-  mrt-fallah:   "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; S=S_fallah)"
-  mrt-luo:      "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; S=S_luo)"
+- bgk-5:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e5, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  bgk-8:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  svec:     "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.501, 8.0, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
+  bgk-fltr: "col_f: FltrStdCol(BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf; feq_f=feq_incomp_max_entropy))"
+  mrt:      "col_f: MRT_F(init_constit_mrt_bingham_implicit(mu, tauy, 1e8, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
 
 - "" : |
        datadir: {   value: datadir,       expr: true    }
@@ -90,7 +90,7 @@
        
        finally:
          - write_jld_file_callback(datadir)
-         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, div(ni, 2), datadir; plot_errors=false)
+         - report_lbm_error(n -> analytical_poise_bingham(mu, tauy, pgrad, n), 1, 64, datadir; plot_errors=false)
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
@@ -99,7 +99,7 @@
            end
          - >
            (sim, k) -> begin
-             vpa = vel_prof_acsr(1, div(ni, 2), 1:nj);
+             vpa = vel_prof_acsr(1, convert(Int, round(ni/2)), 1:nj);
              writedlm(joinpath(datadir, "ux_profile.dsv"), 
                begin
                  x, y = vpa(sim);
