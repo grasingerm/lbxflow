@@ -1,7 +1,7 @@
 - "": "version: 1.0.0"
 
 #!! nj           =  128
-#!! ni           =  64
+#!! ni           =  32
 #!! nsteps       =  25000
 #!! backup_steps =  2000
 #!! nu1          =  0.2
@@ -21,7 +21,7 @@
                     const pgrad         =   -3.445e-6;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   4.017578125e-5;
+                    const tauy          =   4.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-08: |
           preamble: >
@@ -32,7 +32,7 @@
                     const pgrad         =   -4.81438e-5;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   7.985e-5;
+                    const tauy          =   8.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-12: |
           preamble: >
@@ -43,7 +43,7 @@
                     const pgrad         =   -6.3381e-6;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   11.99e-5;
+                    const tauy          =   12.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
   tau-16: |
@@ -55,7 +55,7 @@
                     const pgrad         =   -7.934e-6;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   15.9e-5;
+                    const tauy          =   16.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
 - bgk-5:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e5, &gamma_min&, &max_iters&, &tol&), forcing_kf)"
@@ -94,8 +94,11 @@
          - >
            (sim, k) -> begin
              umax = maximum(analytical_poise_bingham(mu, tauy, pgrad, nj));
-             info("Re = $(reynolds(umax, nj, mu))");
-             info("Bn = $(bingham_number(umax, nj, mu, tauy))");
+             umax_approx = maximum(vec(sim.msm.u[1,10,:]));
+             info("Re analyt = $(reynolds(umax, nj, mu))");
+             info("Bn analyt = $(bingham_number(umax, nj, mu, tauy))");
+             info("Re approx = $(reynolds(umax_approx, nj, mu))");
+             info("Bn approx = $(bingham_number(umax_approx, nj, mu, tauy))");
            end
          - >
            (sim, k) -> begin
