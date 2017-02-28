@@ -18,7 +18,7 @@
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
-                   const pgrad         =   -1.7566e-5;   
+                   const pgrad         =   -1.58345e-5;   
                    const F             =   [-pgrad, 0.0]; 
                    const mu            =   &nu1&;
                    const n             =   0.5;
@@ -29,7 +29,7 @@
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
-                   const pgrad         =   -1.44602e-5;   
+                   const pgrad         =   -1.07318802e-5;   
                    const F             =   [-pgrad, 0.0]; 
                    const mu            =   &nu1&;
                    const n             =   0.75;
@@ -40,7 +40,7 @@
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
-                   const pgrad         =   -1.01383395e-6;   
+                   const pgrad         =   -2.43542e-6;   
                    const F             =   [-pgrad, 0.0]; 
                    const mu            =   &nu1&;
                    const n             =   1.25;
@@ -51,7 +51,7 @@
                    const nj            =   &nj&;
                    const ni            =   &ni&;
                    const nsteps        =   &nsteps&;
-                   const pgrad         =   -8.483548e-6;   
+                   const pgrad         =   -3.82526e-7;   
                    const F             =   [-pgrad, 0.0]; 
                    const mu            =   &nu1&;
                    const n             =   1.50;

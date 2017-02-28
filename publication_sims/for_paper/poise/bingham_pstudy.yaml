@@ -9,7 +9,7 @@
 #!! gamma_min    =  1e-12
 #!! max_iters    =  15
 #!! tol          =  1e-6
-#!! pgrad        =  -1e-5
+#!! pgrad        =  -1.234e-6
 
 # Different preambles correspond to different materials
 - tau-04: |
@@ -18,10 +18,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -3.445e-6;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   4.0e-5;
+                    const tauy          =   1.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-08: |
           preamble: >
@@ -29,10 +29,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -4.81438e-5;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   8.0e-5;
+                    const tauy          =   2.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
   tau-12: |
           preamble: >
@@ -40,10 +40,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -6.3381e-6;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   12.0e-5;
+                    const tauy          =   3.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
   tau-16: |
@@ -52,10 +52,10 @@
                     const nj            =   &nj&;
                     const ni            =   &ni&;
                     const nsteps        =   &nsteps&;
-                    const pgrad         =   -7.934e-6;   
+                    const pgrad         =   &pgrad&;   
                     const F             =   [-pgrad, 0.0]; 
                     const mu            =   &nu1&;
-                    const tauy          =   16.0e-5;
+                    const tauy          =   4.0e-5;
                     const forcing_kf    =   init_korner_Fk(F);
 
 - bgk-5:    "col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e5, &gamma_min&, &max_iters&, &tol&), forcing_kf)"

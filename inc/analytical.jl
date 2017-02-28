@@ -93,7 +93,7 @@ end
 #! \return            Velocity profile array
 function analytical_poise_power_law(k::AbstractFloat, n::Real, 
                                     pgrad::Real, nnodes::Int)
-  const h       =   (nnodes - 1) / 2.0;
+  const h       =   (nnodes - 1.0) / 2.0;
   const n_rat   =   convert(Float64, (n + 1.0) / n);
 
   results       =   zeros(nnodes);
