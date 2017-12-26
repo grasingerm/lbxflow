@@ -32,7 +32,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK, sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::BGK)(sim::AbstractSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -42,13 +42,13 @@ function call(col_f::BGK, sim::AbstractSim, bounds::Matrix{Int64})
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   msm.u[:,i,j];
+
+      @inbounds uij   =   view(msm.u, :, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
       for k = 1:lat.n 
-        @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+        @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
@@ -70,7 +70,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK_F, sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::BGK_F)(sim::AbstractSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -80,13 +80,12 @@ function call(col_f::BGK_F, sim::AbstractSim, bounds::Matrix{Int64})
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
     for j = j_min:j_max, i = i_min:i_max
 
-      @inbounds rhoij =   msm.rho[i,j];
       @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
       for k = 1:lat.n 
-        @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+        @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
@@ -109,7 +108,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::BGK)(sim::FreeSurfSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -121,13 +120,12 @@ function call(col_f::BGK, sim::FreeSurfSim, bounds::Matrix{Int64})
 
       @inbounds if sim.tracker.state[i, j] != GAS
 
-        @inbounds rhoij =   msm.rho[i,j];
-        @inbounds uij   =   msm.u[:, i, j];
+        @inbounds uij   =   view(msm.u, :, i, j);
         feq             =   Vector{Float64}(lat.n);
         fneq            =   Vector{Float64}(lat.n);
 
         for k = 1:lat.n 
-          @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+          @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
@@ -151,7 +149,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::BGK_F)(sim::FreeSurfSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -163,13 +161,12 @@ function call(col_f::BGK_F, sim::FreeSurfSim, bounds::Matrix{Int64})
 
       @inbounds if sim.tracker.state[i, j] != GAS
 
-        @inbounds rhoij =   msm.rho[i,j];
         @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
         feq             =   Vector{Float64}(lat.n);
         fneq            =   Vector{Float64}(lat.n);
 
         for k = 1:lat.n 
-          @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+          @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
@@ -195,7 +192,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK, sim::AbstractSim, active_cells::Matrix{Bool})
+function (col_f::BGK)(sim::AbstractSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -204,13 +201,12 @@ function call(col_f::BGK, sim::AbstractSim, active_cells::Matrix{Bool})
       
     @inbounds if active_cells[i, j]
 
-      @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   msm.u[:, i, j];
+      @inbounds uij   =   view(msm.u, :, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
       for k = 1:lat.n 
-        @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+        @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
@@ -232,7 +228,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK_F, sim::AbstractSim, active_cells::Matrix{Bool})
+function (col_f::BGK_F)(sim::AbstractSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -241,13 +237,12 @@ function call(col_f::BGK_F, sim::AbstractSim, active_cells::Matrix{Bool})
     
     @inbounds if active_cells[i, j]
 
-      @inbounds rhoij =   msm.rho[i,j];
       @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
       for k = 1:lat.n 
-        @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+        @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
@@ -270,7 +265,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK, sim::FreeSurfSim, active_cells::Matrix{Bool})
+function (col_f::BGK)(sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -279,13 +274,12 @@ function call(col_f::BGK, sim::FreeSurfSim, active_cells::Matrix{Bool})
 
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
 
-      @inbounds rhoij =   msm.rho[i,j];
-      @inbounds uij   =   msm.u[:, i, j];
+      @inbounds uij   =   view(msm.u, :, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
       for k = 1:lat.n 
-        @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+        @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
@@ -308,7 +302,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::BGK_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
+function (col_f::BGK_F)(sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   const ni, nj  =   size(msm.rho);
@@ -317,13 +311,12 @@ function call(col_f::BGK_F, sim::FreeSurfSim, active_cells::Matrix{Bool})
 
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
 
-      @inbounds rhoij =   msm.rho[i,j];
       @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
       feq             =   Vector{Float64}(lat.n);
       fneq            =   Vector{Float64}(lat.n);
 
       for k = 1:lat.n 
-        @inbounds feq[k]          =   col_f.feq_f(lat, rhoij, uij, k);
+        @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 

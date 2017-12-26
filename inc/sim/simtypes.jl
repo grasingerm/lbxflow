@@ -21,14 +21,19 @@ function inbounds(i::Int, j::Int, sbound::Vector{Int64})
 end
 
 # Setting up types that will be used throughout module
-using FastAnonymous;
+#using FastAnonymous;
+macro anon(expr)
+  return expr;
+end # empty macro
+
 abstract ColFunction;
 abstract FltrColFunction <: ColFunction;
 type _ConstConstit
   μ::Real
   _ConstConstit(μ::Real) = new(μ);
 end
-typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction, _ConstConstit};
+#typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction, _ConstConstit};
+typealias LBXFunction Union{Function, ColFunction, _ConstConstit};
 
 abstract AbstractSim;
 

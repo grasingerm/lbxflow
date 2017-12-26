@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ccall(:jl_exit_on_sigint, Void, (Cint,), 0); # Allows Ctrl+C to be caught
-const LBX_VERSION = v"1.0.1";
+const LBX_VERSION = v"1.1.0";
 
 # load dependencies
 using ArgParse;
@@ -12,10 +12,8 @@ s = ArgParseSettings();
 @add_arg_table s begin
   "--file", "-f"
     help = "path to input file"
-    arg_type = AbstractString
   "--dir", "-d"
     help = "directory with input file(s)"
-    arg_type = AbstractString
   "--recursive", "-r"
     help = "recursively search directories for input file(s)"
     action = :store_true
@@ -45,13 +43,12 @@ s = ArgParseSettings();
     action = :store_true
   "--profile-file", "-p"
     help = "file for profiler to print to"
-    arg_type = AbstractString
   "--profile-view", "-V"
     help = "load and use the ProfileView package"
     action = :store_true
   "--profile-delay", "-D"
     help = "time delay between calls to sampler"
-    arg_type = Number
+    arg_type = Real
     default = 0.001
   "--profile-cols"
     help = "number of columns in Profile.print"
@@ -98,8 +95,8 @@ end
 # recursively search directory for input files
 function recursively_search_for_input_files(dir::AbstractString, 
                                             ext::AbstractString)
-  files = Array(ASCIIString, 0);
-  function recursively_add_input_files!(files::Array{ASCIIAbstractString}, 
+  files = Array(String, 0);
+  function recursively_add_input_files!(files::Array{String}, 
                                         dir::AbstractString, 
                                         ext::AbstractString)
     for f in readdir(dir)

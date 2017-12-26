@@ -18,12 +18,12 @@ function call(mc::M2PhaseConstit, sim::M2PhaseSim, args...)
 end=#
 
 # call definition for constant constitutive relationship
-function call(cc::_ConstConstit, sim::AbstractSim, 
+function (cc::_ConstConstit)(sim::AbstractSim, 
               fneq::AbstractArray{Float64, 1}, i::Int, j::Int)
   return cc.μ;
 end
 
-function call(cc::_ConstConstit, sim::AbstractSim, 
+function (cc::_ConstConstit)(sim::AbstractSim, 
               fneq::AbstractArray{Float64, 1}, S::Function, 
               M::AbstractArray{Float64, 2}, iM::AbstractArray{Float64, 2}, 
               i::Int, j::Int)

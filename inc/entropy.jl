@@ -45,7 +45,7 @@ end
 #! \param lat Lattice
 #! \param f   Particle distribution vector
 #! \return    Entropy
-function entropy_lat_boltzmann(lat::Lattice, f::Vector{Float64})
+function entropy_lat_boltzmann(lat::Lattice, f::AbstractVector{Float64})
   ent = 0.0;
   for k = 1:lat.n
     if f[k] > 0.0
@@ -63,8 +63,9 @@ end
 #! \param   f_eq    Equilibrium distributions
 #! \param   f_neq   Non-equilibrium distributions
 #! \return          Relative non-equilibrium entropy density
-function entropy_noneq_density(f::Vector{Float64}, f_eq::Vector{Float64},
-                               f_neq::Vector{Float64})
+function entropy_noneq_density(f::AbstractVector{Float64}, 
+                               f_eq::AbstractVector{Float64},
+                               f_neq::AbstractVector{Float64})
   const nk = length(f);
   ds = 0.0;
   for k = 1:nk
@@ -79,7 +80,8 @@ end
 #! \param   f     Particle distributions
 #! \param   f_eq  Equilibrium distributions
 #! \return        Relative non-equilibrium entropy density
-function entropy_noneq_density(f::Vector{Float64}, f_eq::Vector{Float64})
+function entropy_noneq_density(f::AbstractVector{Float64}, 
+                               f_eq::AbstractVector{Float64})
   return entropy_noneq_density(f, f_eq, f - f_eq);
 end
 
@@ -89,8 +91,9 @@ end
 #! \param   f_eq    Equilibrium distributions
 #! \param   f_neq   Non-equilibrium distributions
 #! \return          Quadratic entropy
-function entropy_quadratic(f::Vector{Float64}, f_eq::Vector{Float64},
-                           f_neq::Vector{Float64})
+function entropy_quadratic(f::AbstractVector{Float64}, 
+                           f_eq::AbstractVector{Float64},
+                           f_neq::AbstractVector{Float64})
   const nk = length(f);
   ds = 0.0;
   for k = 1:nk
@@ -106,6 +109,7 @@ end
 #! \param   f_eq    Equilibrium distributions
 #! \param   f_neq   Non-equilibrium distributions
 #! \return          Quadratic entropy
-function entropy_quadratic(f::Vector{Float64}, f_eq::Vector{Float64})
+function entropy_quadratic(f::AbstractVector{Float64}, 
+                           f_eq::AbstractVector{Float64})
   return entropy_quadratic(f, f_eq, f - f_eq);
 end

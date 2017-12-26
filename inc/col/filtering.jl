@@ -67,11 +67,12 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
       feq                       = Array{Float64}(sim.lat.n);
 
       for p=1:sim.lat.n
-        feq[p]                    = feq_f(sim.lat, sim.msm.rho[i_nbr, j_nbr],
-                                          sim.msm.u[:, i_nbr, j_nbr], p);
+        feq[p]                    = feq_f(sim.lat, sim.msm, 
+                                          view(sim.msm.u, :, i_nbr, j_nbr), 
+                                          i_nbr, j_nbr, p);
       end
 
-      const f                   = sim.lat.f[:, i_nbr, j_nbr];
+      const f                   = view(sim.lat.f, :, i_nbr, j_nbr);
       const nbr_density_k       = metric(f, feq, f - feq);
 
       nvalid                   += 1;
@@ -84,11 +85,11 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
     feq                       = Array{Float64}(sim.lat.n);
 
     for p=1:sim.lat.n
-      feq[p]                    = feq_f(sim.lat, sim.msm.rho[i, j],
-                                        sim.msm.u[:, i, j], p);
+      feq[p]                    = feq_f(sim.lat, sim.msm,
+                                        view(sim.msm.u, :, i, j), i, j, p);
     end
 
-    const f                   = sim.lat.f[:, i, j];
+    const f                   = view(sim.lat.f, :, i, j);
     entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
@@ -134,11 +135,12 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
         feq                       = Array{Float64}(sim.lat.n);
 
         for p=1:sim.lat.n
-          feq[p]                    = feq_f(sim.lat, sim.msm.rho[i_nbr, j_nbr],
-                                            sim.msm.u[:, i_nbr, j_nbr], p);
+          feq[p]                    = feq_f(sim.lat, sim.msm,
+                                            view(sim.msm.u, :, i_nbr, j_nbr), 
+                                            i_nbr, j_nbr, p);
         end
 
-        const f                   = sim.lat.f[:, i_nbr, j_nbr];
+        const f                   = view(sim.lat.f, :, i_nbr, j_nbr);
         const nbr_density_k       = metric(f, feq, f - feq);
 
         nvalid                   += 1;
@@ -152,11 +154,12 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
     feq                       = Array{Float64}(sim.lat.n);
 
     for p=1:sim.lat.n
-      feq[p]                    = feq_f(sim.lat, sim.msm.rho[i, j],
-                                        sim.msm.u[:, i, j], p);
+      feq[p]                    = feq_f(sim.lat, sim.msm,
+                                        view(sim.msm.u, :, i, j), 
+                                        i, j, p);
     end
 
-    const f                   = sim.lat.f[:, i, j];
+    const f                   = view(sim.lat.f, :, i, j);
     entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
@@ -225,14 +228,14 @@ const __FLTR_THRSH_WARN   =   0.01;
 function __uij_rhoij_f_feq_fneq_kernal(lat::Lattice, msm::MultiscaleMap,
                                        feq_f::LBXFunction, i::Int, j::Int)
 
-  rhoij       =   msm.rho[i,j];
-  uij         =   msm.u[:,i,j];
-  const f     =   lat.f[:,i,j];
+  @inbounds rhoij       =   msm.rho[i, j];
+  @inbounds uij         =   view(msm.u, : ,i ,j);
+  @inbounds const f     =   view(lat.f, :, i, j);
   feq         =   Array(Float64, lat.n); 
   fneq        =   Array(Float64, lat.n);
 
   for k = 1:lat.n 
-    @inbounds feq[k]      =   feq_f(lat, rhoij, uij, k);
+    @inbounds feq[k]      =   feq_f(lat, msm, uij, i, j, k);
     @inbounds fneq[k]     =   lat.f[k,i,j] - feq[k];
   end
 
@@ -257,13 +260,22 @@ type FltrFixedDSCol <: FltrColFunction
     new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, ds_threshold, 
         fltr_thrsh_warn);
   end
+
+  function FltrFixedDSCol(inner_col_f!::ColFunction, feq_f::LBXFunction; 
+                          metric::LBXFunction=__METRIC,
+                          scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
+                          ds_threshold::Real=__DS, 
+                          fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+    new(feq_f, inner_col_f!, metric, scale, diss, ds_threshold, 
+        fltr_thrsh_warn);
+  end
 end
 
 #! Calling filtered collision function
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrFixedDSCol, sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
   const nbounds   =   size(bounds, 2);
   const feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
@@ -323,7 +335,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrFixedDSCol, sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
   const nbounds   =   size(bounds, 2);
   const feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
@@ -384,7 +396,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::FltrFixedDSCol, sim::AbstractSim, 
+function (col_f::FltrFixedDSCol)(sim::AbstractSim, 
               active_cells::Matrix{Bool})
   const ni, nj    =   size(sim.msm.rho);
   const feq_f     =   col_f.feq_f; # alias
@@ -445,7 +457,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::FltrFixedDSCol, sim::FreeSurfSim,
+function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
               active_cells::Matrix{Bool})
   const ni, nj    =   size(sim.msm.rho);
   const feq_f     =   col_f.feq_f; # alias
@@ -519,13 +531,23 @@ type FltrStdCol <: FltrColFunction
     new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, stds, ds_threshold,
         fltr_thrsh_warn);
   end
+
+  function FltrStdCol(inner_col_f!::ColFunction, feq_f::LBXFunction; 
+                      metric::LBXFunction=__METRIC,
+                      scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
+                      stds::Real=__STDS, 
+                      ds_threshold::Real=0.0, 
+                      fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+    new(feq_f, inner_col_f!, metric, scale, diss, stds, ds_threshold,
+        fltr_thrsh_warn);
+  end
 end
 
 #! Calling filtered collision function
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
   const ni, nj    = size(sim.msm.rho);
   const nbounds   = size(bounds, 2);
   const feq_f     = col_f.inner_col_f!.feq_f;
@@ -561,9 +583,11 @@ function call(col_f::FltrStdCol, sim::AbstractSim, bounds::Matrix{Int64})
                                                 noneq_densities);
         nfiltered               +=  1;
 
-        rhoij                    =   sim.msm.rho[i,j];
-        uij                      =   sub(sim.msm.u, :, i, j);
-        feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+        @inbounds rhoij          =   sim.msm.rho[i, j];
+        @inbounds uij            =   view(sim.msm.u, :, i, j);
+        feq                      =   map(k -> feq_f(sim.lat, sim.msm, 
+                                                    uij, i, j, k), 
+                                         1:sim.lat.n);
         
         col_f.diss!(sim.lat, i, j, delta, feq); 
       end
@@ -585,7 +609,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
   const ni, nj    = size(sim.msm.rho);
   const nbounds   = size(bounds, 2);
   const feq_f     = col_f.inner_col_f!.feq_f;
@@ -623,9 +647,10 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, bounds::Matrix{Int64})
                                                 noneq_densities);
         nfiltered               +=  1;
 
-        rhoij                    =   sim.msm.rho[i,j];
-        uij                      =   sub(sim.msm.u, :, i, j);
-        feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+        @inbounds rhoij          =   sim.msm.rho[i, j];
+        @inbounds uij            =   view(sim.msm.u, :, i, j);
+        feq                      =   map(k -> feq_f(sim.lat, msm, uij, i, j, k), 
+                                         1:sim.lat.n);
         
         col_f.diss!(sim.lat, i, j, delta, feq); 
 
@@ -647,7 +672,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
+function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::Matrix{Bool})
   const ni, nj    = size(sim.msm.rho);
   const feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
@@ -679,9 +704,10 @@ function call(col_f::FltrStdCol, sim::AbstractSim, active_cells::Matrix{Bool})
                                               noneq_densities);
       nfiltered               +=  1;
 
-      rhoij                    =   sim.msm.rho[i,j];
-      uij                      =   sub(sim.msm.u, :, i, j);
-      feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+      @inbounds rhoij          =   sim.msm.rho[i, j];
+      @inbounds uij            =   view(sim.msm.u, :, i, j);
+      feq                      =   map(k -> feq_f(sim.lat, msm, uij, i, j, k), 
+                                       1:sim.lat.n);
       
       col_f.diss!(sim.lat, i, j, delta, feq); 
 
@@ -702,7 +728,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
-function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
+function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
   const ni, nj    = size(sim.msm.rho);
   const feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
@@ -734,9 +760,10 @@ function call(col_f::FltrStdCol, sim::FreeSurfSim, active_cells::Matrix{Bool})
                                               noneq_densities);
       nfiltered               +=  1;
 
-      rhoij                    =   sim.msm.rho[i,j];
-      uij                      =   sub(sim.msm.u, :, i, j);
-      feq                      =   map(k -> feq_f(sim.lat, rhoij, uij, k), 1:sim.lat.n);
+      @inbounds rhoij          =   sim.msm.rho[i, j];
+      @inbounds uij            =   view(sim.msm.u, :, i, j);
+      feq                      =   map(k -> feq_f(sim.lat, msm, uij, i, j, k), 
+                                       1:sim.lat.n);
       
       col_f.diss!(sim.lat, i, j, delta, feq); 
 
@@ -762,27 +789,28 @@ type FltrPosCol <: FltrColFunction
 end
 
 #! Filtered collision function with positivity rule (call)
-function call(fpc::FltrPosCol, sim::AbstractSim, args...)
+function (fpc::FltrPosCol)(sim::AbstractSim, args...)
   const ni, nj = size(sim.msm.rho);
   fpc.inner_col_f!(sim, args...);
   for j=1:nj, i=1:ni
     # find minimum value of f
-    min_f, min_k = sim.lat.f[1, i, j], 1;
+    @inbounds min_f, min_k = sim.lat.f[1, i, j], 1;
     for k=2:sim.lat.n
       if sim.lat.f[k, i, j] < min_f
-        min_f = sim.lat.f[k, i, j];
+        @inbounds min_f = sim.lat.f[k, i, j];
         min_k = k;
       end
     end
     
     # If any collisions results in a negative f, back up until zero
     if min_f < 0
-      const feq   = map(k -> fpc.feq_f(sim.lat, sim.msm.rho[i, j], 
-                                       sub(sim.msm.u, :, i, j), k), 1:sim.lat.n);
+      const feq   = map(k -> fpc.feq_f(sim.lat, sim.msm, 
+                                       view(sim.msm.u, :, i, j), i, j, k), 
+                                       1:sim.lat.n);
 
-      const δ     = min_f / (feq[min_k] - min_f);
+      @inbounds const δ     = min_f / (feq[min_k] - min_f);
       for k=1:sim.lat.n
-        sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
+        @inbounds sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
       end
     end
   end

@@ -14,7 +14,7 @@ type M2PhaseColFunction <: ColFunction
 end
 
 #! Foward calls for collision functions
-function call(col_f::M2PhaseColFunction, sim::M2PhaseSim, args...)
+function (col_f::M2PhaseColFunction)(sim::M2PhaseSim, args...)
   println("Red collision function");
   col_f.col_fr!(sim.simr, args...);
   println("Is there an NaN?", true in isnan(sim.simr.lat.f));
