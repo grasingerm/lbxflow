@@ -93,7 +93,7 @@ end
 function recursively_search_for_input_files(dir::AbstractString, 
                                             ext::AbstractString)
   files = Array(ASCIIString, 0);
-  function recursively_add_input_files!(files::Array{ASCIIAbstractString}, 
+  function recursively_add_input_files!(files::Array{AbstractString}, 
                                         dir::AbstractString, 
                                         ext::AbstractString)
     for f in readdir(dir)

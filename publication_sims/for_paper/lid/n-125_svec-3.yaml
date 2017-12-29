@@ -1,0 +1,65 @@
+version: 1.0.0
+preamble: >
+          const datadir       =   joinpath("data", "for_paper", "n-125", "svec-3");
+          const nj            =   100;
+          const ni            =   100;
+          const nsteps        =   50000;
+          const pgrad         =   -5e-5;   
+          const F             =   [-pgrad, 0.0]; 
+          const mu            =   0.2;
+          const n             =   1.25;
+          const forcing_kf    =   init_korner_Fk(F);
+col_f: BGK_F(init_constit_srt_bingham_implicit(mu, tauy, 1e8, 0.600, 4.0, 1e-12, 15, 1e-6), forcing_kf)
+datadir: {   value: datadir,       expr: true    }
+
+rho_0:   {   value: 1.0,           expr: false   }
+nu:      {   value: mu,            expr: true    }
+
+dx:      {   value: 1.0,           expr: false   }
+dt:      {   value: 1.0,           expr: false   }
+ni:      {   value:  ni,           expr: true    }
+nj:      {   value:  nj,           expr: true    }
+
+simtype:  default
+nsteps:   {   value: nsteps,        expr: true   }
+
+# boundary conditions
+bcs:
+  - >
+    begin;
+      curry_lid_driven!(lat) = lid_driven!(lat, U);
+      return curry_lid_driven!;
+    end
+  - south_bounce_back!
+  - east_bounce_back!
+  - west_bounce_back!
+
+# callback functions
+callbacks:
+  - print_step_callback(100, id)
+  - write_jld_file_callback(datadir, convert(Int, nsteps/100))
+
+# test for steady state
+test_for_term:          init_is_steadystate(1e-7)
+test_for_term_steps:    100
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::Sim, k::Int) -> begin
+      info("vortex(x, y) -> $(vortex_center(sim.msm))")
+      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      const xs = linspace(0, 1.0, ni);
+      const ys = linspace(0, 1.0, nj);
+      writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
+      writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");
+      writedlm(joinpath(datadir, "v_midcav.dsv"), [xs vec(sim.msm.u[2,:,convert(Int, round(nj/2))])], ",");
+      PyPlot.clf();
+      cs = PyPlot.contour(transpose(flow_ψ(sim.msm)));
+      PyPlot.colorbar(cs);
+      PyPlot.savefig(joinpath(datadir, "stream_function.png"));
+      writedlm(joinpath(datadir, "streamfunction.dsv"), transpose(flow_ψ(sim.msm)));
+    end
+  - write_jld_file_callback(datadir)
+  - plot_streamlines_callback(1, joinpath(datadir, "sl.png"), 0.0)
