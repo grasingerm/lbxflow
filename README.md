@@ -8,7 +8,7 @@ to approximate hydrodynamics.
 
 ## Dependencies
 
-* Julia language
+* Julia language (last tested using v0.6; may not work with newer versions)
 * Python language
 
 ### Julia language
