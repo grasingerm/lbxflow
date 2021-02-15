@@ -44,6 +44,21 @@ is available in the `doc` directory. Currently documentation is sparse, but the
 source files are all well documented and I am responsive to questions and feedback.
 Example input files are available in the `example_sims` directory.
 
+## Citations
+
+There is a paper associated with lbxflow. If you found this code useful for your research, please be kind enough to cite it, using the DOI https://doi.org/10.1016/j.compfluid.2018.02.008, or the following BiBTeX entry:
+
+    @article{grasinger2018numerical,
+        title = {Numerical investigation of the accuracy, stability, and efficiency of lattice Boltzmann methods in simulating non-Newtonian flow},
+        author = {Matthew Grasinger and Scott Overacker and John Brigham},
+        journal = {Computers & Fluids},
+        volume = {166},
+        pages = {253-274},
+        year = {2018},
+        issn = {0045-7930},
+        doi = {https://doi.org/10.1016/j.compfluid.2018.02.008}
+    }
+
 ## Bugs
 
 Please report all bugs and issues using the 
