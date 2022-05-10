@@ -10,7 +10,7 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
   t   = sim.tracker;
   lat = sim.lat;
   msm = sim.msm;
-  const nbounds = size(sbounds, 2);
+  nbounds = size(sbounds, 2);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = sbounds[:,r];
@@ -18,19 +18,19 @@ function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
       # TODO inbounds check is kind of redundant
       if t.state[i, j] != GAS && inbounds(i, j, sbounds)
         for k=1:lat.n-1
-          const i_nbr = i + lat.c[1, k];
-          const j_nbr = j + lat.c[2, k];
+          i_nbr = i + lat.c[1, k];
+          j_nbr = j + lat.c[2, k];
           if !inbounds(i_nbr, j_nbr, sbounds) || t.state[i_nbr, j_nbr] == GAS
             continue;
           elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
 
-            const opk   = opp_lat_vec(lat, k);
+            opk   = opp_lat_vec(lat, k);
             t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j] # m in - m out
 
           elseif  (t.state[i, j] == INTERFACE &&
                    t.state[i_nbr, j_nbr] == INTERFACE)
 
-            const opk   = opp_lat_vec(lat, k);
+            opk   = opp_lat_vec(lat, k);
             t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
                            (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
 
@@ -52,25 +52,25 @@ function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
   t             =   sim.tracker;
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
+  ni, nj  =   size(msm.rho);
 
   for j=1:nj, i=1:ni
     if t.state[i, j] != GAS && active_cells[i, j]
       for k=1:lat.n-1
-        const i_nbr = i + lat.c[1, k];
-        const j_nbr = j + lat.c[2, k];
+        i_nbr = i + lat.c[1, k];
+        j_nbr = j + lat.c[2, k];
         if (!inbounds(i_nbr, j_nbr, [1; ni; 1; nj]) ||
             !active_cells[i_nbr, j_nbr] || t.state[i_nbr, j_nbr] == GAS)
           continue;
         elseif  t.state[i, j] == FLUID || t.state[i_nbr, j_nbr] == FLUID
 
-          const opk   = opp_lat_vec(lat, k);
+          opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j];
 
         elseif  (t.state[i, j] == INTERFACE &&
                  t.state[i_nbr, j_nbr] == INTERFACE)
 
-          const opk   = opp_lat_vec(lat, k);
+          opk   = opp_lat_vec(lat, k);
           t.M[i, j]  += ((t.eps[i, j] + t.eps[i_nbr, j_nbr]) / 2 *
                          (lat.f[opk, i_nbr, j_nbr] - lat.f[k, i, j]));
 
@@ -86,7 +86,7 @@ end
 # Update fluid fraction of each interface cell
 function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   t                 = sim.tracker;
-  const ni, nj      = size(t.state);
+  ni, nj      = size(t.state);
   new_empty_cells   = Set{Tuple{Int, Int}}();
   new_fluid_cells   = Set{Tuple{Int, Int}}();
 
@@ -136,8 +136,8 @@ function _update_cell_states!(sim::FreeSurfSim,
   msm           = sim.msm;
   t             = sim.tracker;
 
-  const ni, nj  = size(t.state);
-  const nk      = length(lat.w);
+  ni, nj  = size(t.state);
+  nk      = length(lat.w);
 
   excess_mass_after_redist = 0;
 
@@ -149,8 +149,8 @@ function _update_cell_states!(sim::FreeSurfSim,
     u_sum           =     Float64[0.0; 0.0];
     counter::UInt   =     0;
     for k=1:nk-1
-      const i_nbr     =     i + lat.c[1, k];
-      const j_nbr     =     j + lat.c[2, k];
+      i_nbr     =     i + lat.c[1, k];
+      j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr < 1 || i_nbr > ni || j_nbr < 1 || j_nbr > nj ||
           t.state[i_nbr, j_nbr] == GAS)
@@ -173,8 +173,8 @@ function _update_cell_states!(sim::FreeSurfSim,
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
-      const i_nbr     =     i + lat.c[1, k];
-      const j_nbr     =     j + lat.c[2, k];
+      i_nbr     =     i + lat.c[1, k];
+      j_nbr     =     j + lat.c[2, k];
 
       if i_nbr < 1 || i_nbr > ni || j_nbr < 1 || j_nbr > nj
         continue;
@@ -196,8 +196,8 @@ function _update_cell_states!(sim::FreeSurfSim,
     _change_state!(t, i, j, GAS);
 
     for k=1:nk-1
-      const i_nbr     =     i + lat.c[1, k];
-      const j_nbr     =     j + lat.c[2, k];
+      i_nbr     =     i + lat.c[1, k];
+      j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == FLUID)
@@ -207,23 +207,22 @@ function _update_cell_states!(sim::FreeSurfSim,
   end
 
   # Redistribute excess mass from new fluid cells
-  @_checkdebug_mass_cons("redist mass from cells", t.M, begin
   for (i, j) in new_fluid_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
     #const unit_norm     =     _unit_normal(t, (i, j));
-    const unit_norm     =     unorms[(i, j)];
+    unit_norm     =     unorms[(i, j)];
     v_sum               =     0.0;
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
-      const i_nbr     =     i + lat.c[1, k];
-      const j_nbr     =     j + lat.c[2, k];
+      i_nbr     =     i + lat.c[1, k];
+      j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
         push!(all_int_nbrs, (i_nbr, j_nbr));
-        const v_i        =     max(dot(unit_norm, lat.c[:, k]), 0.0);
+        v_i        =     max(dot(unit_norm, lat.c[:, k]), 0.0);
         if v_i != 0.0
           push!(cells_to_redist_to, (i_nbr, j_nbr, v_i));
           v_sum           +=     v_i;
@@ -232,7 +231,7 @@ function _update_cell_states!(sim::FreeSurfSim,
     end # find inteface loop
 
     # redistribute mass amoung valid neighbors
-    const mex = t.M[i, j] - msm.rho[i, j];
+    mex = t.M[i, j] - msm.rho[i, j];
     if length(cells_to_redist_to) != 0 && v_sum != 0.0
 
       for (ii, jj, v_i) in cells_to_redist_to
@@ -262,18 +261,18 @@ function _update_cell_states!(sim::FreeSurfSim,
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
     #const unit_norm     =     _unit_normal(t, (i, j));
-    const unit_norm     =     unorms[(i, j)];
+    unit_norm     =     unorms[(i, j)];
     v_sum               =     0.0;
 
     # Construct interface cells from neighborhood average at equilibrium
     for k=1:nk-1
-      const i_nbr     =     i + lat.c[1, k];
-      const j_nbr     =     j + lat.c[2, k];
+      i_nbr     =     i + lat.c[1, k];
+      j_nbr     =     j + lat.c[2, k];
 
       if (i_nbr >= 1 && i_nbr <= ni && j_nbr >= 1 && j_nbr <= nj &&
           t.state[i_nbr, j_nbr] == INTERFACE)
         push!(all_int_nbrs, (i_nbr, j_nbr));
-        const v_i        =     -min(dot(unit_norm, lat.c[:, k]), 0.0);
+        v_i        =     -min(dot(unit_norm, lat.c[:, k]), 0.0);
         if v_i != 0.0
           push!(cells_to_redist_to, (i_nbr, j_nbr, v_i));
           v_sum           +=     v_i;
@@ -282,7 +281,7 @@ function _update_cell_states!(sim::FreeSurfSim,
     end # find inteface loop
     
     # redistribute mass amoung valid neighbors
-    const mex = t.M[i, j];
+    mex = t.M[i, j];
     if length(cells_to_redist_to) != 0 && v_sum != 0.0
 
       for (ii, jj, v_i) in cells_to_redist_to
@@ -298,7 +297,7 @@ function _update_cell_states!(sim::FreeSurfSim,
       end
 
     else
-      excess_mass_after_redist += mex
+      excess_mass_after_redist += mex;
     end
 
     t.M[i, j]   = 0.0;
@@ -307,15 +306,13 @@ function _update_cell_states!(sim::FreeSurfSim,
   end
 
   # redistribute remaining mass
-  const dm  =   excess_mass_after_redist / length(t.interfacels);
+  dm  =   excess_mass_after_redist / length(t.interfacels);
   if !isnan(dm)
     for (i, j) in t.interfacels
       t.M[i, j]   +=  dm;
       t.eps[i, j]  =  @_safe_calc_eps(t.M[i, j], msm.rho[i, j]); 
     end
   end
-
-  end, 1e-9); # check mass debug macro close
 end
 
 #! Update cell states of tracker
@@ -340,8 +337,8 @@ end
 #! \param   j       Index of node in jth direction
 function _f_reconst_ij!(lat::Lattice, msm::MultiscaleMap, feq_f::LBXFunction,
                         rho_g::Real, k::Int, i::Int, j::Int)
-  const opp_k         =   opp_lat_vec(lat, k);
-  const u_ij          =   msm.u[:, i, j];
+  opp_k         =   opp_lat_vec(lat, k);
+  u_ij          =   msm.u[:, i, j];
   lat.f[opp_k, i, j]  =   (feq_f(lat, rho_g, u_ij, k) +
                            feq_f(lat, rho_g, u_ij, opp_k) -
                            lat.f[k, i, j]);
@@ -356,15 +353,15 @@ end
 #! \param rho_g     Atmospheric pressure
 function f_reconst!(sim::FreeSurfSim, t::Tracker, ij::Tuple{Int64, Int64},
                     feq_f::LBXFunction, rho_g::Real)
-  const n     = _unit_normal(t, ij);
-  const i, j  = ij;
+  n     = _unit_normal(t, ij);
+  i, j  = ij;
   lat         = sim.lat;
   msm         = sim.msm;
 
   # reconstruct f from gas cells
   for k = 1:lat.n-1
-    const i_nbr   =   i + lat.c[1,k];
-    const j_nbr   =   j + lat.c[2,k];
+    i_nbr   =   i + lat.c[1,k];
+    j_nbr   =   j + lat.c[2,k];
 
     if (i_nbr < 1 || i_nbr > ni || j_nbr < 1 || j_nbr > nj ||
         t.state[i_nbr, j_nbr] == GAS)
@@ -389,14 +386,14 @@ end
 #! \param t Mass tracker
 #! \param ij i and j indices of grid cell
 function _unit_normal_fd(t::Tracker, ij::Tuple{Int64, Int64})
-  const ni, nj      =   size(t.state);
-  const i, j        =   ij;
+  ni, nj      =   size(t.state);
+  i, j        =   ij;
 
   # TODO consider using heuristic to tell if we should attach to wall
-  const eps_il      =   (i <= 1)  ? 0.0 : t.eps[i-1, j];
-  const eps_ir      =   (i >= ni) ? 0.0 : t.eps[i+1, j];
-  const eps_jd      =   (j <= 1)  ? 0.0 : t.eps[i, j-1];
-  const eps_ju      =   (j >= nj) ? 0.0 : t.eps[i, j+1];
+  eps_il      =   (i <= 1)  ? 0.0 : t.eps[i-1, j];
+  eps_ir      =   (i >= ni) ? 0.0 : t.eps[i+1, j];
+  eps_jd      =   (j <= 1)  ? 0.0 : t.eps[i, j-1];
+  eps_ju      =   (j >= nj) ? 0.0 : t.eps[i, j+1];
 
   return 1/2 * Float64[eps_il - eps_ir; eps_jd - eps_ju];
 end
@@ -406,13 +403,13 @@ end
 #! \param t Mass tracker
 #! \param ij i and j indices of grid cell
 function _unit_normal_ms(t::Tracker, ij::Tuple{Int64, Int64})
-  const ni, nj = size(t.state);
-  const i, j = ij;
+  ni, nj = size(t.state);
+  i, j = ij;
 
-  const CORNERS = ( ((-1,0),(-1,-1),(0,-1)),  ((0,-1),(1,-1),(1,0)),
+  CORNERS = ( ((-1,0),(-1,-1),(0,-1)),  ((0,-1),(1,-1),(1,0)),
                   ((1,0),(1,1),(0,1)      ),  ((0,1),(-1,1),(-1,0))   );
-  const BITS    = (1, 2, 4, 8);
-  const NORMALS = (
+  BITS    = (1, 2, 4, 8);
+  NORMALS = (
                     Float64[0; 0],                   Float64[-sqrt(2)/2; -sqrt(2)/2],
                     Float64[sqrt(2)/2; -sqrt(2)/2],  Float64[0;-1],
                     Float64[sqrt(2)/2; sqrt(2)/2],   Float64[0; 0],
@@ -445,7 +442,7 @@ end
 _unit_normal = _unit_normal_fd;
 
 function _get_nbrhd(u, i::Int, j::Int)
-  const ni, nj = size(u);
+  ni, nj = size(u);
 
   return ([ (i-1 > 0 && j+1 <= nj) ? u[i-1,j+1] : "N/A"
             (j+1 <= nj) ? u[i,j+1] : "N/A"

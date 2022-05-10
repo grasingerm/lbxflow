@@ -19,8 +19,7 @@ function entropy_lat_boltzmann(lat::Lattice, i::Int, j::Int)
     if lat.f[k, i, j] > 0.0
       ent -= lat.f[k, i, j] * log(lat.f[k, i, j] / lat.w[k]);
     elseif lat.f[k, i, j] < _EPS_POS_F
-      error("f[$k, $i, $j] = $(f[$k, $i, $j]), f[$k, $i, $j] < 0.0 in " * "
-            $(@__FILE__)");
+      error("f[$k, $i, $j] = $(f[k, i, j]), f[$k, $i, $j] < 0.0 in $(@__FILE__)");
     end
   end
   return ent

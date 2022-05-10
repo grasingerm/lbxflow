@@ -13,9 +13,9 @@
 #! \return Equilibrium frequency
 function feq_incomp(lat::LatticeD2Q9, msm::MultiscaleMap, 
                     u::AbstractVector{Float64}, i::Int, j::Int, k::Int)
-  @inbounds const rho = msm.rho[i, j];
-  const cssq = 1/3;
-  @inbounds const ckdotu = dot(view(lat.c, :, k), u);
+  @inbounds rho = msm.rho[i, j];
+  cssq = 1/3;
+  @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
   return rho * lat.w[k] * (1.0 + ckdotu/(cssq) + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
                            - 0.5 * dot(u, u) / (cssq));
@@ -34,9 +34,9 @@ end
 function feq_incomp_HL(lat::LatticeD2Q9, msm::MultiscaleMap, 
                        u::AbstractVector{Float64}, rho_0::Real,
                        i::Int, j::Int, k::Int)
-  @inbounds const rho = msm.rho[i, j];
-  const cssq = 1/3;
-  @inbounds const ckdotu = dot(view(lat.c, :, k), u);
+  @inbounds rho = msm.rho[i, j];
+  cssq = 1/3;
+  @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
   return (lat.w[k] * (rho + rho_0 * (ckdotu/(cssq)
               + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
@@ -59,9 +59,9 @@ end
 #! \return Equilibrium frequency
 function feq_incomp(lat::LatticeD2Q4, msm::MultiscaleMap, 
                     u::AbstractVector{Float64}, i::Int, j::Int, k::Int)
-  @inbounds const rho = msm.rho[i, j];
-  const cssq = 1/2;
-  @inbounds const ckdotu = dot(view(lat.c, :, k), u);
+  @inbounds rho = msm.rho[i, j];
+  cssq = 1/2;
+  @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
   return rho * lat.w[k] * (1 + 3 * ckdotu);
 end
@@ -79,9 +79,9 @@ end
 function feq_incomp_HL(lat::LatticeD2Q4, msm::MultiscaleMap,
                        u::AbstractVector{Float64}, rho_0::AbstractFloat, i::Int, 
                        j::Int, k::Int)
-  @inbounds const rho = msm.rho[i, j];
-  const cssq = 1/2;
-  @inbounds const ckdotu = dot(view(lat.c, :, k), u);
+  @inbounds rho = msm.rho[i, j];
+  cssq = 1/2;
+  @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
   return lat.w[k] * (rho + rho_0 * 3 * ckdotu);
 end
@@ -99,8 +99,8 @@ end
 function feq_incomp_max_entropy(lat::LatticeD2Q9, msm::MultiscaleMap,
                                 u::AbstractVector{Float64}, i::Int, j::Int, 
                                 k::Int)
-  @inbounds const rho = msm.rho[i, j];
-  const nj  =   length(u);
+  @inbounds rho = msm.rho[i, j];
+  nj  =   length(u);
   prod      =   1.0;
 
   for j=1:nj
@@ -128,8 +128,8 @@ end
 function feq_incomp_mphase_immis(lat::LatticeD2Q9, msm::MultiscaleMap,
                                  u::AbstractVector{Float64}, i::Int, j::Int, 
                                  k::Int, α::Real)
-  @inbounds const rho = msm.rho[i, j];
-  @inbounds const ckdotu = dot(view(lat.c, :, k), u);
+  @inbounds rho = msm.rho[i, j];
+  @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
   if k == 9
     return rho * (α - 2/3 * dot(u, u));
@@ -163,10 +163,10 @@ end
 function feq_incomp_smoothing(lat::LatticeD2Q9, msm::MultiscaleMap, 
                               u::AbstractVector{Float64}, i::Int, j::Int, k::Int;
                               alpha::Real = 1.0)
-  @inbounds const rho = msm.rho[i, j];
-  const cssq = 1/3;
+  @inbounds rho = msm.rho[i, j];
+  cssq = 1/3;
 
-  const ni, nj = size(msm.rho);
+  ni, nj = size(msm.rho);
   nbr_idxs = Tuple{Int, Int}[];
   if i > 1
     push!(nbr_idxs, (i-1, j));
@@ -185,14 +185,14 @@ function feq_incomp_smoothing(lat::LatticeD2Q9, msm::MultiscaleMap,
     push!(nbr_idxs, (i, j+1));
   end
 
-  const nα = (1.0 - alpha) / length(nbr_idxs);
+  nα = (1.0 - alpha) / length(nbr_idxs);
   u_avg = alpha * u;
   rho_avg = alpha * rho;
   for nbr_idx in nbr_idxs
     @inbounds u_avg += nα * view(msm.u, :, nbr_idx[1], nbr_idx[2]);
     @inbounds rho_avg += nα * msm.rho[nbr_idx[1], nbr_idx[2]];
   end
-  @inbounds const ckdotu = dot(view(lat.c, :, k), u_avg);
+  @inbounds ckdotu = dot(view(lat.c, :, k), u_avg);
 
   return rho_avg * lat.w[k] * (1.0 + ckdotu/(cssq) + 0.5*(ckdotu*ckdotu)/(cssq*cssq)
                                - 0.5 * dot(u, u) / (cssq));

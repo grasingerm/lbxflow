@@ -4,7 +4,7 @@
 
 #! Check to see if a pair of indices fall inside a bounds
 function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
-  const nbounds = size(sbounds, 2);
+  nbounds = size(sbounds, 2);
   for n=1:nbounds
     if !inbounds(i, j, sbounds[:, n]); return false; end
   end
@@ -26,21 +26,21 @@ macro anon(expr)
   return expr;
 end # empty macro
 
-abstract ColFunction;
-abstract FltrColFunction <: ColFunction;
-type _ConstConstit
+abstract type ColFunction end;
+abstract type FltrColFunction <: ColFunction end;
+struct _ConstConstit
   μ::Real
   _ConstConstit(μ::Real) = new(μ);
 end
 #typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction, _ConstConstit};
-typealias LBXFunction Union{Function, ColFunction, _ConstConstit};
+const LBXFunction = Union{Function, ColFunction, _ConstConstit};
 
-abstract AbstractSim;
+abstract type AbstractSim end;
 
 #! Simulation object
 #! lat Lattice
 #! msm Multiscale map
-immutable Sim <: AbstractSim
+struct Sim <: AbstractSim
   lat::Lattice;
   msm::MultiscaleMap;
   Δt::Real;
@@ -49,15 +49,15 @@ immutable Sim <: AbstractSim
 end
 
 #! Type system for cell states
-immutable Gas; end;         const GAS = Gas();
-immutable Interface; end;   const INTERFACE = Interface();
-immutable Fluid; end;       const FLUID = Fluid();
+struct Gas; end;         const GAS = Gas();
+struct Interface; end;   const INTERFACE = Interface();
+struct Fluid; end;       const FLUID = Fluid();
 
 #! Type alias for cell states
-typealias State Union{Gas, Interface, Fluid};
+const State = Union{Gas, Interface, Fluid};
 
 #! Mass and state tracker
-immutable Tracker
+struct Tracker
   state::Matrix{State};
   M::Matrix{Float64};
   eps::Matrix{Float64};
@@ -74,7 +74,7 @@ immutable Tracker
   function Tracker(msm::MultiscaleMap,
                    state::Matrix{State})
 
-    const ni, nj  = size(state);
+    ni, nj        = size(state);
     lst           = Set{Tuple{Int64, Int64}}();
     M             = Array{Float64}(ni, nj);
     eps           = Array{Float64}(ni, nj);
@@ -113,7 +113,7 @@ end
 #! lat Lattice
 #! msm Multiscal map
 #! tracker Mass tracker
-immutable FreeSurfSim <: AbstractSim
+struct FreeSurfSim <: AbstractSim
   lat::Lattice
   msm::MultiscaleMap
   tracker::Tracker
@@ -129,10 +129,10 @@ immutable FreeSurfSim <: AbstractSim
 
   function FreeSurfSim(lat::Lattice, msm::MultiscaleMap, rho_0::Real, 
                        rho_g::Real, fill_x::Real, fill_y::Real)
-    const ni, nj    =     size(msm.rho);
-    const fill_ni   =     convert(Int, round(fill_x * ni));
-    const fill_nj   =     convert(Int, round(fill_y * nj));
-    const nk        =     length(lat.w);
+    ni, nj    =     size(msm.rho);
+    fill_ni   =     convert(Int, round(fill_x * ni));
+    fill_nj   =     convert(Int, round(fill_y * nj));
+    nk        =     length(lat.w);
 
     t               =     Tracker(ni, nj, GAS);
 
@@ -152,7 +152,7 @@ immutable FreeSurfSim <: AbstractSim
 
     if fill_ni < ni
       for j=1:fill_nj
-        const i       =   fill_ni + 1;
+        i             =   fill_ni + 1;
         t.M[i, j]     =   msm.rho[i, j] / 2.0;
         t.eps[i, j]   =   0.5;
         t.state[i, j] =   INTERFACE;
@@ -162,7 +162,7 @@ immutable FreeSurfSim <: AbstractSim
 
     if fill_nj < nj
       for i=1:fill_ni
-        const j       =   fill_nj + 1;
+        j             =   fill_nj + 1;
         t.M[i, j]     =   msm.rho[i, j] / 2.0;
         t.eps[i, j]   =   0.5;
         t.state[i, j] =   INTERFACE;
@@ -171,7 +171,7 @@ immutable FreeSurfSim <: AbstractSim
     end
 
     if fill_ni < ni && fill_nj < nj
-      const i, j    =   fill_ni + 1, fill_nj + 1;
+      i, j          =   fill_ni + 1, fill_nj + 1;
       t.M[i, j]     =   msm.rho[i, j] / 2.0;
       t.eps[i, j]   =   0.5;
       t.state[i, j] =   INTERFACE;
@@ -184,7 +184,7 @@ immutable FreeSurfSim <: AbstractSim
 end
 
 #! Type for simulations with adaptive time stepping
-type AdaptiveTimeStepSim <: AbstractSim
+struct AdaptiveTimeStepSim <: AbstractSim
   lat::Lattice
   msm::MultiscaleMap
   isim::AbstractSim;
@@ -200,7 +200,7 @@ type AdaptiveTimeStepSim <: AbstractSim
   end
 end
 
-type M2PhaseSim <: AbstractSim
+struct M2PhaseSim <: AbstractSim
   simr::Sim;
   simb::Sim;
   Ar::Real;

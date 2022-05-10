@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using SparseArrays;
+
 #! Calculate strain rate from strain rate tensor
 macro strain_rate(D)
   return :(sqrt(2.0 * ddot($D, $D)));
@@ -38,10 +40,10 @@ macro rho(p, cssq)
   return :($p / $cssq);
 end
 
-abstract AbstractMultiscaleMap;
+abstract type AbstractMultiscaleMap end;
 
 #! Multiscale map for resolving macroscopic parameters
-immutable MultiscaleMap <: AbstractMultiscaleMap
+struct MultiscaleMap <: AbstractMultiscaleMap
   rho_0::AbstractFloat;
   omega::Matrix{Float64};
   u::Array{Float64,3};

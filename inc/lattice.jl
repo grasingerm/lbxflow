@@ -4,6 +4,12 @@
 
 abstract type Lattice end
 
+# Default lattice speed vectors and associated weights
+const _cdef29 = permutedims([1 0; 0 1; -1 0; 0 -1; 1 1; -1 1; -1 -1; 1 -1; 0 0]);
+const _wdef29 = [1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/36.0; 1.0/36.0;
+                 1.0/36.0; 1.0/36.0; 4.0/9.0];
+
+
 #! D2Q9 lattice
 struct LatticeD2Q9 <: Lattice
   dx::AbstractFloat
@@ -16,12 +22,6 @@ struct LatticeD2Q9 <: Lattice
   w::Vector{Float64}
   n::Int
 
-  # Default lattice speed vectors and associated weights
-  cdef = permutedims([1 0; 0 1; -1 0; 0 -1; 1 1; -1 1; -1 -1; 1 -1; 0 0]);
-  wdef = [1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/36.0; 1.0/36.0;
-                1.0/36.0; 1.0/36.0; 4.0/9.0];
-  n = length(wdef);
-
   # Lattice functions for computing `c`, `cs`, and `cssq`
   cf(dx, dt)    = dx/dt;
   csf(dx, dt)   = cf(dx, dt) / sqrt(3);
@@ -29,10 +29,10 @@ struct LatticeD2Q9 <: Lattice
 
   LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
-        zeros(Float64, (n, ni, nj)), cdef, wdef, n);
+        zeros(Float64, (n, ni, nj)), _cdef29, _wdef29, length(_wdef29));
 
   LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, f::Array{Float64, 3}) =
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef29, _wdef29, length(_wdef29));
 
   function LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int,
                        rho::AbstractFloat)
@@ -40,9 +40,13 @@ struct LatticeD2Q9 <: Lattice
     for k=1:n
       f[k,:,:] = fill(rho * wdef[k], (ni, nj));
     end
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef29, _wdef29, length(_wdef29));
   end
 end
+
+# Default lattice speed vectors and associated weights
+const _cdef24 = permutedims([1 0; -1 0; 0 1; 0 -1]);
+const _wdef24 = fill(1.0/4.0, size(_cdef24, 2));
 
 #! D2Q4 lattice
 struct LatticeD2Q4 <: Lattice
@@ -56,11 +60,6 @@ struct LatticeD2Q4 <: Lattice
   w::Vector{Float64} 
   n::Int
 
-  # Default lattice speed vectors and associated weights
-  cdef = [1 0; -1 0; 0 1; 0 -1]';
-  n = size(cdef, 2);
-  wdef = fill(1.0/4.0, n);
-
   # Lattice functions for computing `c`, `cs`, and `cssq`
   cf(dx, dt)    = dx/dt;
   csf(dx, dt)   = cf(dx, dt) / sqrt(2);
@@ -68,10 +67,10 @@ struct LatticeD2Q4 <: Lattice
 
   LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int) =
     new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt),
-        zeros(Float64, (n, ni, nj)), cdef, wdef, n);
+        zeros(Float64, (n, ni, nj)), _cdef24, _wdef24, length(_wdef24));
 
   LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, f::Array{Float64, 3}) =
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef24, _wdef24, length(_wdef24));
 
   function LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int,
                    rho::Float64)
@@ -79,7 +78,7 @@ struct LatticeD2Q4 <: Lattice
     for k=1:n
       f[k,:,:] = fill(rho * wdef[k], (ni, nj));
     end
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, cdef, wdef, n);
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef24, _wdef24, length(_wdef24));
   end
 end
 

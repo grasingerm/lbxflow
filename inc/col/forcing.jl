@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-abstract Force;
+abstract type Force end;
 
-type ConstForce <: Force
+struct ConstForce <: Force
   fs::Tuple{LBXFunction, LBXFunction};
 
   ConstForce(f1::LBXFunction, f2::LBXFunction) = new((f1, f2));
@@ -67,8 +67,8 @@ end
 #! Velocity coupled gravitational acceleration
 function _vel_coup_gravity(sim::AbstractSim, k::Int, i::Int, j::Int, 
                            g::Vector{Float64})
-  const ck = sub(sim.lat.c ,:, k);
-  const u  = sub(sim.msm.u, :, i, j);
+  ck = sub(sim.lat.c ,:, k);
+  u  = sub(sim.msm.u, :, i, j);
   return (sim.lat.w[k] * sim.lat.dt / sim.lat.cssq * sim.msm.rho[i, j] * 
           dot(g, (ck - u) + dot(ck, u)*ck/sim.lat.cssq));
 end
@@ -76,8 +76,8 @@ end
 #! Velocity coupled gravitational acceleration
 function _vel_coup_gravity(sim::FreeSurfSim, k::Int, i::Int, j::Int, 
                            g::Vector{Float64})
-  const ck = sub(sim.lat.c ,:, k);
-  const u  = sub(sim.msm.u, :, i, j);
+  ck = sub(sim.lat.c ,:, k);
+  u  = sub(sim.msm.u, :, i, j);
   return (sim.tracker.eps[i, j] * sim.lat.w[k] * sim.lat.dt / sim.lat.cssq 
           * sim.msm.rho[i, j] * 
           dot(g, (ck - u) + dot(ck, u)*ck/sim.lat.cssq));
@@ -113,7 +113,7 @@ function init_gs_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
     )));
 end
 
-type ScalableForce <: Force
+struct ScalableForce <: Force
   fs::Tuple{LBXFunction, LBXFunction};
   c::Real;
 
