@@ -4,7 +4,7 @@
 
 import Roots;
 
-const __KAPPA_ERROR_MSG__ = ("Entropic relaxation factor, kappa, must be "  *
+__KAPPA_ERROR_MSG__ = ("Entropic relaxation factor, kappa, must be "  *
                              "greater than or equal to zero and less than " *
                              "or equal to one for the collision operator "  *
                              "to Lyapunov stable."); 
@@ -26,8 +26,8 @@ function init_col_entropic_srt(constit_relation_f::Function;
   return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     root_not_found = false;
 
@@ -39,15 +39,15 @@ function init_col_entropic_srt(constit_relation_f::Function;
         uij         =   msm.u[:,i,j];
         feq         =   Array(Float64, lat.n); 
         fneq        =   Array(Float64, lat.n); 
-        const f     =   lat.f[:,i,j];
+        f     =   lat.f[:,i,j];
 
         for k = 1:lat.n 
           feq[k]    = feq_f(lat, rhoij, uij, k);
           fneq[k]   = lat.f[k,i,j] - feq[k];
         end
 
-        const mu      =   constit_relation_f(sim, fneq, i, j);
-        const omega   =   @omega(mu, lat.cssq, lat.dt);
+        mu      =   constit_relation_f(sim, fneq, i, j);
+        omega   =   @omega(mu, lat.cssq, lat.dt);
 
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
@@ -55,7 +55,7 @@ function init_col_entropic_srt(constit_relation_f::Function;
             lat.f[k,i,j] += omega * (feq[k] - lat.f[k,i,j]);
           end
         else
-          const alpha    = search_entropic_stability(lat, f, feq);
+          alpha    = search_entropic_stability(lat, f, feq);
           if alpha < __ALPHA_EPS
             root_not_found = true;
             for k = 1:lat.n
@@ -73,8 +73,8 @@ function init_col_entropic_srt(constit_relation_f::Function;
     end
 
     if root_not_found
-      warn("Root for entropic stabilization not found.");
-      warn("Solution may become unstable due to decrease in entropy.");
+      @warn("Root for entropic stabilization not found.");
+      @warn("Solution may become unstable due to decrease in entropy.");
     end
 
   end
@@ -96,12 +96,12 @@ function init_col_entropic_srt(constit_relation_f::Function,
                                search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
 
-  const uf, colf = forcing_kf;
+  uf, colf = forcing_kf;
   return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     root_not_found = false;
 
@@ -113,15 +113,15 @@ function init_col_entropic_srt(constit_relation_f::Function,
         uij         =   uf(lat, msm.u[:,i,j]);
         feq         =   Array(Float64, lat.n); 
         fneq        =   Array(Float64, lat.n); 
-        const f     =   lat.f[:,i,j];
+        f     =   lat.f[:,i,j];
 
         for k = 1:lat.n 
           feq[k]  = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
 
-        const mu      =   constit_relation_f(sim, fneq, i, j);
-        const omega   =   @omega(mu, lat.cssq, lat.dt);
+        mu      =   constit_relation_f(sim, fneq, i, j);
+        omega   =   @omega(mu, lat.cssq, lat.dt);
 
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
@@ -130,7 +130,7 @@ function init_col_entropic_srt(constit_relation_f::Function,
                              + colf(lat, omega, uij, k));
           end
         else
-          const alpha    = search_entropic_stability(lat, f, feq);
+          alpha    = search_entropic_stability(lat, f, feq);
           if alpha < __ALPHA_EPS
             root_not_found = true;
             for k = 1:lat.n
@@ -149,8 +149,8 @@ function init_col_entropic_srt(constit_relation_f::Function,
     end
 
     if root_not_found
-      warn("Root for entropic stabilization not found.");
-      warn("Solution may become unstable due to decrease in entropy.");
+      @warn("Root for entropic stabilization not found.");
+      @warn("Solution may become unstable due to decrease in entropy.");
     end
 
   end
@@ -175,10 +175,10 @@ function init_col_entropic_mrt(constit_relation_f::Function;
   return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const M = @DEFAULT_MRT_M();
-    const iM = @DEFAULT_MRT_IM();
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    M = @DEFAULT_MRT_M();
+    iM = @DEFAULT_MRT_IM();
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     root_not_found = false;
 
@@ -190,19 +190,19 @@ function init_col_entropic_mrt(constit_relation_f::Function;
         uij       = msm.u[:,i,j];
         feq       = Array(Float64, lat.n); 
         fneq      = Array(Float64, lat.n); 
-        const f   = lat.f[:,i,j];
+        f   = lat.f[:,i,j];
 
         for k = 1:lat.n 
           feq[k]  = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
-        const muij = constit_relation_f(sim, fneq, S, M, iM, i, j);
-        const Sij  = S(muij, rhoij, lat.cssq, lat.dt);
+        muij = constit_relation_f(sim, fneq, S, M, iM, i, j);
+        Sij  = S(muij, rhoij, lat.cssq, lat.dt);
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
           lat.f[:,i,j] = f - iM * Sij * M * fneq; # perform collision
         else
-          const alpha    = search_entropic_stability(lat, f, feq);
+          alpha    = search_entropic_stability(lat, f, feq);
           if alpha < __ALPHA_EPS
             root_not_found = true;
             lat.f[:,i,j] = f - iM * Sij * M * fneq;
@@ -217,8 +217,8 @@ function init_col_entropic_mrt(constit_relation_f::Function;
     end
 
     if root_not_found
-      warn("Root for entropic stabilization not found.");
-      warn("Solution may become unstable due to decrease in entropy.");
+      @warn("Root for entropic stabilization not found.");
+      @warn("Solution may become unstable due to decrease in entropy.");
     end
 
   end
@@ -242,14 +242,14 @@ function init_col_entropic_mrt(constit_relation_f::Function,
                                search_entropic_stability=__SES)
   @assert(0.0 <= kappa && kappa <= 1.0, __KAPPA_ERROR_MSG__);
   
-  const uf, colf = forcing_kf;
+  uf, colf = forcing_kf;
   return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const M = @DEFAULT_MRT_M();
-    const iM = @DEFAULT_MRT_IM();
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    M = @DEFAULT_MRT_M();
+    iM = @DEFAULT_MRT_IM();
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     root_not_found = false;
 
@@ -261,16 +261,16 @@ function init_col_entropic_mrt(constit_relation_f::Function,
         uij       = uf(lat, msm.u[:,i,j]);
         feq       = Array(Float64, lat.n); 
         fneq      = Array(Float64, lat.n); 
-        const f   = lat.f[:,i,j];
+        f   = lat.f[:,i,j];
 
         for k = 1:lat.n 
           feq[k]  = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
 
-        const muij    = constit_relation_f(sim, fneq, S, M, iM, i, j);
-        const Sij     = S(muij, rhoij, lat.cssq, lat.dt);
-        const omegaij = @omega(mu, lat.cssq, lat.dt);;
+        muij    = constit_relation_f(sim, fneq, S, M, iM, i, j);
+        Sij     = S(muij, rhoij, lat.cssq, lat.dt);
+        omegaij = @omega(mu, lat.cssq, lat.dt);;
         fdl           = Array(Float64, lat.n);
 
         for k = 1:lat.n
@@ -281,7 +281,7 @@ function init_col_entropic_mrt(constit_relation_f::Function,
             < eps_ds) # do not to enforce entropic stability, use standard BGK
           lat.f[:,i,j]   = f - iM * Sij * M * fneq + fdl;
         else
-          const alpha    = search_entropic_stability(lat, f, feq);
+          alpha    = search_entropic_stability(lat, f, feq);
           if alpha < __ALPHA_EPS
             root_not_found = true;
             lat.f[:,i,j] = f - iM * Sij * M * fneq + fdl;
@@ -296,8 +296,8 @@ function init_col_entropic_mrt(constit_relation_f::Function,
     end
 
     if root_not_found
-      warn("Root for entropic stabilization not found.");
-      warn("Solution may become unstable due to decrease in entropy.");
+      @warn("Root for entropic stabilization not found.");
+      @warn("Solution may become unstable due to decrease in entropy.");
     end
 
   end
@@ -314,9 +314,9 @@ end
 function search_alpha_entropic_involution(lat::Lattice, f::Vector{Float64}, 
                                           feq::Vector{Float64};
                                           sbounds::Tuple{Real,Real}=__SBOUNDS)
-  const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
+  F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
-  const rs = Roots.fzeros(F, sbounds[1], sbounds[2]);
+  rs = Roots.fzeros(F, sbounds[1], sbounds[2]);
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
@@ -339,7 +339,7 @@ function search_alpha_stef_entropic_involution(lat::Lattice, f::Vector{Float64},
                                                feq::Vector{Float64};
                                                x_0::Real=__X_0, 
                                                order::Int=__ORD)
-  const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
+  F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
   return Roots.fzero(F, x_0, order=order);
 end
@@ -359,7 +359,7 @@ end
 #! \return            Limit of over-relaxation for entropic involution
 function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64}, 
                                              feq::Vector{Float64})
-  const F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
+  F  = (alpha) -> (entropy_lat_boltzmann(lat, f + alpha * (feq - f) ) 
                         - entropy_lat_boltzmann(lat, f));
 
   # Determine appropriate search upperbound
@@ -368,7 +368,7 @@ function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64},
     bs[i] = abs(f[i] / (f[i] - feq[i]));
   end
   
-  const rs = Roots.fzeros(F, 0.0, minimum(bs));
+  rs = Roots.fzeros(F, 0.0, minimum(bs));
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
@@ -388,14 +388,14 @@ function search_alpha_entropic_contraction(lat::Lattice, f::Vector{Float64},
                                         "greater than or equal to 1.0 and "    *
                                         "less than two"));
 
-  const F = (alpha) -> begin;
-    const sf      = entropy_lat_boltzmann(lat, f);
-    const sfeq    = entropy_lat_boltzmann(lat, feq);
-    const sfp     = entropy_lat_boltzmann(lat, f + alpha * (feq - f));
+  F = (alpha) -> begin;
+    sf      = entropy_lat_boltzmann(lat, f);
+    sfeq    = entropy_lat_boltzmann(lat, feq);
+    sfp     = entropy_lat_boltzmann(lat, f + alpha * (feq - f));
     return sqrt(omega - 1) * (sf - sfeq) - (sfp - sfeq);
   end
 
-  const rs        = Roots.fzeros(F, sbounds[1], sbounds[2]);
+  rs        = Roots.fzeros(F, sbounds[1], sbounds[2]);
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
@@ -425,10 +425,10 @@ function search_alpha_entropic_contraction_db(lat::Lattice, f::Vector{Float64},
                                         "greater than or equal to 1.0 and "    *
                                         "less than two"));
 
-  const F = (alpha) -> begin;
-    const sf      = entropy_lat_boltzmann(lat, f);
-    const sfeq    = entropy_lat_boltzmann(lat, feq);
-    const sfp     = entropy_lat_boltzmann(lat, f + alpha * (feq - f));
+  F = (alpha) -> begin;
+    sf      = entropy_lat_boltzmann(lat, f);
+    sfeq    = entropy_lat_boltzmann(lat, feq);
+    sfp     = entropy_lat_boltzmann(lat, f + alpha * (feq - f));
     return sqrt(omega - 1) * (sf - sfeq) - (sfp - sfeq);
   end
 
@@ -438,12 +438,12 @@ function search_alpha_entropic_contraction_db(lat::Lattice, f::Vector{Float64},
     bs[i] = abs(f[i] / (f[i] - feq[i]));
   end
 
-  const rs        = Roots.fzeros(F, 0.0, minimum(bs));
+  rs        = Roots.fzeros(F, 0.0, minimum(bs));
   return (length(rs) > 0) ? rs[end] : 0.0;
 end
 
 #! Helper functions to be used in Newton and other gradient based methods
-const __F_ENTROPY = (lat, x_n, f, feq) -> begin;
+__F_ENTROPY = (lat, x_n, f, feq) -> begin;
   return (entropy_lat_boltzmann(lat, f + x_n * (feq - f) ) 
          - entropy_lat_boltzmann(lat, f));
 end;
@@ -457,7 +457,7 @@ function __F_PRIME_ENTROPY(lat, x_n, f, feq)
   return sum;
 end
 
-const __MAX_ITERS_NEWTON = convert(Int, 1e6);
+__MAX_ITERS_NEWTON = convert(Int, 1e6);
 
 #! Search for alpha using Newton's method
 #! Details for this algorithm were mostly borrowed from Gorban and Packwood 2014
@@ -475,7 +475,7 @@ function search_alpha_newton_entropic_involution(lat::Lattice,
                                                  eps_search::Real=__EPS_SEARCH)
   @assert(eps_search >= 0.0, "Search tolerance must be nonnegative");
 
-  const fneq_norm = norm(feq - f, 2);
+  fneq_norm = norm(feq - f, 2);
   k = 0;
   x_n = x_0;
 
@@ -525,7 +525,7 @@ end
 
 #! Helper functions to be used in Newton and other gradient based methods
 function __FC_ENTROPY(lat, x_n, f, feq, omega)
-  const sfeq = entropy_lat_boltzmann(lat, feq);
+  sfeq = entropy_lat_boltzmann(lat, feq);
   return (entropy_lat_boltzmann(lat, f + x_n * (feq - f) ) 
          - sfeq 
          - sqrt(omega-1) * (entropy_lat_boltzmann(lat, f) - sfeq));
@@ -551,7 +551,7 @@ function search_alpha_newton_entropic_contraction(lat::Lattice,
                                         "less than two"));
   @assert(eps_search >= 0.0, "Search tolerance must be nonnegative");
 
-  const fneq_norm = norm(feq - f, 2);
+  fneq_norm = norm(feq - f, 2);
   k = 0;
   x_n = x_0;
 
@@ -603,30 +603,30 @@ function init_search_alpha_newton_entropic_contraction(x_0::Real,
                                                           omega=omega);
 end
 
-#! Test functions
+#= Test functions
 using Base.Test;
 import PyPlot;
 function __test_search_alpha_newton_entropic_involution(x_0::Real=__X_0, 
                                                         eps_search::Real=__EPS_SEARCH)
   global time_spent_newton  = 0;
   global time_spent_root    = 0;
-  const _sanei = init_search_alpha_newton_entropic_involution(x_0, eps_search);
+  _sanei = init_search_alpha_newton_entropic_involution(x_0, eps_search);
   return (lat, f, feq) -> begin;
-    const norm_fneq     = norm(f-feq, 2);
+    norm_fneq     = norm(f-feq, 2);
 
     t                   = time();
-    const alpha_newton  = _sanei(lat, f, feq);
+    alpha_newton  = _sanei(lat, f, feq);
     time_spent_newton  += time() - t;
     
     t                   = time();
-    const alpha_roots   = search_alpha_stef_entropic_involution(lat, f, feq);
+    alpha_roots   = search_alpha_stef_entropic_involution(lat, f, feq);
     time_spent_root    += time() - t;
    
-    const fe_an         = __F_ENTROPY(lat, alpha_newton, f, feq); 
-    const fe_ar         = __F_ENTROPY(lat, alpha_roots, f, feq); 
+    fe_an         = __F_ENTROPY(lat, alpha_newton, f, feq); 
+    fe_ar         = __F_ENTROPY(lat, alpha_roots, f, feq); 
     @show alpha_newton, alpha_roots;
     if abs(alpha_newton - alpha_roots) > 0.05 && false
-      const xs = linspace(-0.2, max(alpha_newton, alpha_roots)+0.2, 1000);
+      xs = linspace(-0.2, max(alpha_newton, alpha_roots)+0.2, 1000);
       ys = Array{Float64}(1000);
       for i=1:1000; ys[i] = __F_ENTROPY(lat, xs[i], f, feq); end
       #PyPlot.scatter([alpha_newton; alpha_roots], [fe_an; fe_ar]);
@@ -644,12 +644,12 @@ end
 function __test_search_alpha_newton_entropic_contraction(x_0::Real=__X_0, 
                                                          eps_search::Real=__EPS_SEARCH,
                                                          omega::Real=__OMEGA)
-  const _sanec = init_search_alpha_newton_entropic_contraction(x_0, eps_search,
+  _sanec = init_search_alpha_newton_entropic_contraction(x_0, eps_search,
                                                                omega);
   return (lat, f, feq) -> begin;
-    const norm_fneq     = norm(f-feq, 2);
-    const alpha_newton  = _sanec(lat, f, feq);
-    const alpha_roots   = search_alpha_entropic_contraction_db(lat, f, feq,
+    norm_fneq     = norm(f-feq, 2);
+    alpha_newton  = _sanec(lat, f, feq);
+    alpha_roots   = search_alpha_entropic_contraction_db(lat, f, feq,
                                                                omega=omega);
     @show alpha_newton, alpha_roots;
     if alpha_roots != 0.0
@@ -658,17 +658,18 @@ function __test_search_alpha_newton_entropic_contraction(x_0::Real=__X_0,
     return alpha_newton;
   end;
 end
+=#
 
 # Default arguments
-const __ALPHA_EPS         = 1e-5;   #TODO do something with this heuristic
-const __KAPPA             = 0.5;    #TODO do something with this heuristic
-const __EPS_DS            = 1e-15;  #TODO do something with this heuristic
-const __SES               = search_alpha_newton_entropic_involution;
-const __S                 = S_fallah;
+__ALPHA_EPS         = 1e-5;   #TODO do something with this heuristic
+__KAPPA             = 0.5;    #TODO do something with this heuristic
+__EPS_DS            = 1e-15;  #TODO do something with this heuristic
+__SES               = search_alpha_newton_entropic_involution;
+__S                 = S_fallah;
 
 #   Search constants
-const __X_0               =     1.6;
-const __SBOUNDS           =     (0.0, 2.5);
-const __EPS_SEARCH        =     1e-10;
-const __ORD               =     1;
-const __OMEGA             =     1.5;
+__X_0               =     1.6;
+__SBOUNDS           =     (0.0, 2.5);
+__EPS_SEARCH        =     1e-10;
+__ORD               =     1;
+__OMEGA             =     1.5;

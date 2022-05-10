@@ -28,7 +28,7 @@ end
 function init_sukop_Fk(F::Vector{Float64}, ftype::Symbol=:ConstForce)
   return eval(:($ftype(
     _sukop_f1,
-    @anon (sim, omega, k, i, j) -> _sukop_f2(sim, omega, k, i, j, $F)
+    (sim, omega, k, i, j) -> _sukop_f2(sim, omega, k, i, j, $F)
     )));
 end
 
@@ -58,7 +58,7 @@ end
 function init_sukop_gravity_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
   return eval(:($ftype(
     _sukop_f1, 
-    @anon (sim, omega, k, i, j) -> _sukop_gravity(sim, k, i, j, $g)
+    (sim, omega, k, i, j) -> _sukop_gravity(sim, k, i, j, $g)
     )));
 end
 
@@ -90,7 +90,7 @@ end
 function init_vel_coup_gravity_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
   return eval(:($ftype(
     _sukop_f1,
-    @anon (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, $g)
+    (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, $g)
     )));
 end
 

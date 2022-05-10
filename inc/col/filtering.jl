@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-typealias EntropyCache Dict{Tuple{Int, Int}, Real};
+const EntropyCache = Dict{Tuple{Int, Int}, Real};
 
-const __DEFAULT_DELTA     =   0.0;
-const __SENTINAL          =   -maxintfloat(Float64);
+__DEFAULT_DELTA     =   0.0;
+__SENTINAL          =   -maxintfloat(Float64);
 __NSFLTR(x)               =   x != __SENTINAL; 
 
 #! Contract toward equilibrium
@@ -49,14 +49,14 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
                            feq_f::LBXFunction, noneq_entropy::Real, 
                            entropy_cache::EntropyCache)
 
-  const ni, nj      = size(sim.msm.rho);
+  ni, nj      = size(sim.msm.rho);
   nbr_densities     = Array{Float64}(sim.lat.n-1);
   nvalid            = 0; 
 
   for k=1:sim.lat.n-1
-    const i_nbr     = i + sim.lat.c[1,k];
-    const j_nbr     = j + sim.lat.c[2,k];
-    const key       = (i_nbr, j_nbr);
+    i_nbr     = i + sim.lat.c[1,k];
+    j_nbr     = j + sim.lat.c[2,k];
+    key       = (i_nbr, j_nbr);
 
     if haskey(entropy_cache, key)
       nvalid                 += 1;
@@ -72,8 +72,8 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
                                           i_nbr, j_nbr, p);
       end
 
-      const f                   = view(sim.lat.f, :, i_nbr, j_nbr);
-      const nbr_density_k       = metric(f, feq, f - feq);
+      f                   = view(sim.lat.f, :, i_nbr, j_nbr);
+      nbr_density_k       = metric(f, feq, f - feq);
 
       nvalid                   += 1;
       nbr_densities[nvalid]     = nbr_density_k;
@@ -89,12 +89,12 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
                                         view(sim.msm.u, :, i, j), i, j, p);
     end
 
-    const f                   = view(sim.lat.f, :, i, j);
+    f                   = view(sim.lat.f, :, i, j);
     entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
   return if nvalid > 0 && entropy_cache[(i, j)] != 0.0
-            const   med_nbr_density   =   median(nbr_densities[1:nvalid]);
+              med_nbr_density   =   median(nbr_densities[1:nvalid]);
             (sign(med_nbr_density) * 
              sqrt( abs(med_nbr_density) / entropy_cache[(i, j)] ));
          else
@@ -116,14 +116,14 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
                            feq_f::LBXFunction, noneq_entropy::Real, 
                            entropy_cache::EntropyCache)
 
-  const ni, nj      = size(sim.msm.rho);
+  ni, nj      = size(sim.msm.rho);
   nbr_densities     = Array{Float64}(sim.lat.n-1);
   nvalid            = 0; 
 
   for k=1:sim.lat.n-1
-    const i_nbr     = i + sim.lat.c[1,k];
-    const j_nbr     = j + sim.lat.c[2,k];
-    const key       = (i_nbr, j_nbr);
+    i_nbr     = i + sim.lat.c[1,k];
+    j_nbr     = j + sim.lat.c[2,k];
+    key       = (i_nbr, j_nbr);
 
     if haskey(entropy_cache, key)
       nvalid                 += 1;
@@ -140,8 +140,8 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
                                             i_nbr, j_nbr, p);
         end
 
-        const f                   = view(sim.lat.f, :, i_nbr, j_nbr);
-        const nbr_density_k       = metric(f, feq, f - feq);
+        f                   = view(sim.lat.f, :, i_nbr, j_nbr);
+        nbr_density_k       = metric(f, feq, f - feq);
 
         nvalid                   += 1;
         nbr_densities[nvalid]     = nbr_density_k;
@@ -159,12 +159,12 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
                                         i, j, p);
     end
 
-    const f                   = view(sim.lat.f, :, i, j);
+    f                   = view(sim.lat.f, :, i, j);
     entropy_cache[(i, j)]     = metric(f, feq, f - feq);
   end
 
   return if nvalid > 0 && entropy_cache[(i, j)] != 0.0
-            const   med_nbr_density   =   median(nbr_densities[1:nvalid]);
+              med_nbr_density   =   median(nbr_densities[1:nvalid]);
             (sign(med_nbr_density) * 
              sqrt( abs(med_nbr_density) / entropy_cache[(i, j)] ));
          else
@@ -184,13 +184,13 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int,
                            metric::LBXFunction,
                            noneq_densities::Matrix{Float64})
 
-  const ni, nj      = size(sim.msm.rho);
+  ni, nj      = size(sim.msm.rho);
   nbr_densities     = Array{Float64}(sim.lat.n-1);
   nvalid            = 0; 
 
   for k=1:sim.lat.n-1 # last vector is a "rest" particle
-    const i_nbr     = i + sim.lat.c[1,k];
-    const j_nbr     = j + sim.lat.c[2,k];
+    i_nbr     = i + sim.lat.c[1,k];
+    j_nbr     = j + sim.lat.c[2,k];
 
     if (i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr ||
         noneq_densities[i_nbr, j_nbr] == __SENTINAL)
@@ -203,7 +203,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int,
 
   @assert(noneq_densities[i, j] != __SENTINAL);
   return if nvalid > 0 && noneq_densities[i, j] != 0.0
-            const   med_nbr_density   =   median(nbr_densities[1:nvalid]);
+              med_nbr_density   =   median(nbr_densities[1:nvalid]);
             (sign(med_nbr_density) * 
              sqrt( abs(med_nbr_density) / noneq_densities[i, j] ));
          else
@@ -216,12 +216,12 @@ end
 scale_ehrenfests_step(args...) = 0.0;
 
 # Filtering constants
-const __METRIC            =   entropy_quadratic;
-const __SCALE             =   scale_root_median;
-const __DISS              =   contract_eq!;
-const __DS                =   1e-4;
-const __STDS              =   2.7;
-const __FLTR_THRSH_WARN   =   0.01;
+__METRIC            =   entropy_quadratic;
+__SCALE             =   scale_root_median;
+__DISS              =   contract_eq!;
+__DS                =   1e-4;
+__STDS              =   2.7;
+__FLTR_THRSH_warn   =   0.01;
 
 #TODO consider moving this kernal function to another file and including it
 #! Kernal function for calculating uij, rhoij, f, feq, fneq
@@ -230,7 +230,7 @@ function __uij_rhoij_f_feq_fneq_kernal(lat::Lattice, msm::MultiscaleMap,
 
   @inbounds rhoij       =   msm.rho[i, j];
   @inbounds uij         =   view(msm.u, : ,i ,j);
-  @inbounds const f     =   view(lat.f, :, i, j);
+  @inbounds f     =   view(lat.f, :, i, j);
   feq         =   Array(Float64, lat.n); 
   fneq        =   Array(Float64, lat.n);
 
@@ -244,7 +244,7 @@ function __uij_rhoij_f_feq_fneq_kernal(lat::Lattice, msm::MultiscaleMap,
 end
 
 #! Filtered collision function with fixed DS threshold
-type FltrFixedDSCol <: FltrColFunction
+struct FltrFixedDSCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
   metric::LBXFunction;
@@ -256,7 +256,7 @@ type FltrFixedDSCol <: FltrColFunction
   function FltrFixedDSCol(inner_col_f!::ColFunction; metric::LBXFunction=__METRIC,
                           scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
                           ds_threshold::Real=__DS, 
-                          fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+                          fltr_thrsh_warn::Real=__FLTR_THRSH_warn)
     new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, ds_threshold, 
         fltr_thrsh_warn);
   end
@@ -265,7 +265,7 @@ type FltrFixedDSCol <: FltrColFunction
                           metric::LBXFunction=__METRIC,
                           scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
                           ds_threshold::Real=__DS, 
-                          fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+                          fltr_thrsh_warn::Real=__FLTR_THRSH_warn)
     new(feq_f, inner_col_f!, metric, scale, diss, ds_threshold, 
         fltr_thrsh_warn);
   end
@@ -276,8 +276,8 @@ end
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
 function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
-  const nbounds   =   size(bounds, 2);
-  const feq_f     =   col_f.feq_f; # alias
+  nbounds   =   size(bounds, 2);
+  feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
@@ -289,7 +289,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
     ncollided += (i_max - i_min + 1) * (j_max - j_min + 1);
     for j = j_min:j_max, i = i_min:i_max
 
-      const key = (i, j);
+      key = (i, j);
       is_cached = false;
 
       if haskey(cache, key)
@@ -305,7 +305,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
       end
 
       if ds > col_f.ds_threshold
-        const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+        delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
                                       cache);
         nfiltered    +=   1;
 
@@ -322,9 +322,9 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -336,8 +336,8 @@ end
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
 function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
-  const nbounds   =   size(bounds, 2);
-  const feq_f     =   col_f.feq_f; # alias
+  nbounds   =   size(bounds, 2);
+  feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
@@ -349,7 +349,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
     for j = j_min:j_max, i = i_min:i_max
       @inbounds if sim.tracker.state[i, j] != GAS
         ncollided += 1;
-        const key = (i, j);
+        key = (i, j);
         is_cached = false;
 
         if haskey(cache, key)
@@ -365,7 +365,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
         end
 
         if ds > col_f.ds_threshold
-          const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+          delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
                                         cache);
           nfiltered    +=   1;
 
@@ -383,9 +383,9 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -398,8 +398,8 @@ end
 #! \param   active_cells  Active flags for domain
 function (col_f::FltrFixedDSCol)(sim::AbstractSim, 
               active_cells::Matrix{Bool})
-  const ni, nj    =   size(sim.msm.rho);
-  const feq_f     =   col_f.feq_f; # alias
+  ni, nj    =   size(sim.msm.rho);
+  feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
@@ -411,7 +411,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim,
     @inbounds if active_cells[i, j]
       ncollided += 1;
 
-      const key = (i, j);
+      key = (i, j);
       is_cached = false;
 
       if haskey(cache, key)
@@ -427,7 +427,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim,
       end
 
       if ds > col_f.ds_threshold
-        const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+        delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
                                       cache);
         nfiltered    +=   1;
 
@@ -444,9 +444,9 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim,
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -459,8 +459,8 @@ end
 #! \param   active_cells  Active flags for domain
 function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
               active_cells::Matrix{Bool})
-  const ni, nj    =   size(sim.msm.rho);
-  const feq_f     =   col_f.feq_f; # alias
+  ni, nj    =   size(sim.msm.rho);
+  feq_f     =   col_f.feq_f; # alias
   noneq_densities =   Array{Float64}(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
@@ -470,7 +470,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
   for j = 1:nj, i = 1:ni
     @inbounds if active_cells[i, j] && sim.tracker.state[i, j] != GAS
       ncollided += 1;
-      const key = (i, j);
+      key = (i, j);
       is_cached = false;
 
       if haskey(cache, key)
@@ -486,7 +486,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
       end
 
       if ds > col_f.ds_threshold
-        const delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
+        delta   =   col_f.scale(sim, i, j, col_f.metric, feq_f, ds, 
                                       cache);
         nfiltered    +=   1;
 
@@ -503,9 +503,9 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
 
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -513,7 +513,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
 end
 
 #! Filtered collision function by standard deviation of noneq entropy
-type FltrStdCol <: FltrColFunction
+struct FltrStdCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
   metric::LBXFunction;
@@ -527,7 +527,7 @@ type FltrStdCol <: FltrColFunction
                       scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
                       stds::Real=__STDS, 
                       ds_threshold::Real=0.0, 
-                      fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+                      fltr_thrsh_warn::Real=__FLTR_THRSH_warn)
     new(inner_col_f!.feq_f, inner_col_f!, metric, scale, diss, stds, ds_threshold,
         fltr_thrsh_warn);
   end
@@ -537,7 +537,7 @@ type FltrStdCol <: FltrColFunction
                       scale::LBXFunction=__SCALE, diss::LBXFunction=__DISS,
                       stds::Real=__STDS, 
                       ds_threshold::Real=0.0, 
-                      fltr_thrsh_warn::Real=__FLTR_THRSH_WARN)
+                      fltr_thrsh_warn::Real=__FLTR_THRSH_warn)
     new(feq_f, inner_col_f!, metric, scale, diss, stds, ds_threshold,
         fltr_thrsh_warn);
   end
@@ -548,9 +548,9 @@ end
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
 function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
-  const ni, nj    = size(sim.msm.rho);
-  const nbounds   = size(bounds, 2);
-  const feq_f     = col_f.inner_col_f!.feq_f;
+  ni, nj    = size(sim.msm.rho);
+  nbounds   = size(bounds, 2);
+  feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
@@ -570,8 +570,8 @@ function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
   end
 
   fltrd_noneq_densities   = filter(__NSFLTR, noneq_densities);
-  const mean_neq_entropy  = mean(fltrd_noneq_densities);
-  const std_neq_entropy   = std(fltrd_noneq_densities);
+  mean_neq_entropy  = mean(fltrd_noneq_densities);
+  std_neq_entropy   = std(fltrd_noneq_densities);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -579,7 +579,7 @@ function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
       if (noneq_densities[i, j] != __SENTINAL && 
           noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
           && noneq_densities[i, j] > col_f.ds_threshold)
-        const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+        delta              =  col_f.scale(sim, i, j, col_f.metric, 
                                                 noneq_densities);
         nfiltered               +=  1;
 
@@ -594,9 +594,9 @@ function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -610,9 +610,9 @@ end
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
 function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
-  const ni, nj    = size(sim.msm.rho);
-  const nbounds   = size(bounds, 2);
-  const feq_f     = col_f.inner_col_f!.feq_f;
+  ni, nj    = size(sim.msm.rho);
+  nbounds   = size(bounds, 2);
+  feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
@@ -634,8 +634,8 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
   end
 
   fltrd_noneq_densities   = filter(__NSFLTR, noneq_densities);
-  const mean_neq_entropy  = mean(fltrd_noneq_densities);
-  const std_neq_entropy   = std(fltrd_noneq_densities);
+  mean_neq_entropy  = mean(fltrd_noneq_densities);
+  std_neq_entropy   = std(fltrd_noneq_densities);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -643,7 +643,7 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
       if (noneq_densities[i, j] != __SENTINAL && 
           noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
           && noneq_densities[i, j] > col_f.ds_threshold)
-        const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+        delta              =  col_f.scale(sim, i, j, col_f.metric, 
                                                 noneq_densities);
         nfiltered               +=  1;
 
@@ -658,9 +658,9 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -673,8 +673,8 @@ end
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
 function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::Matrix{Bool})
-  const ni, nj    = size(sim.msm.rho);
-  const feq_f     = col_f.inner_col_f!.feq_f;
+  ni, nj    = size(sim.msm.rho);
+  feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
@@ -693,14 +693,14 @@ function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::Matrix{Bool})
   end
 
   fltrd_noneq_densities   = filter(__NSFLTR, noneq_densities);
-  const mean_neq_entropy  = mean(fltrd_noneq_densities);
-  const std_neq_entropy   = std(fltrd_noneq_densities);
+  mean_neq_entropy  = mean(fltrd_noneq_densities);
+  std_neq_entropy   = std(fltrd_noneq_densities);
 
   for j=1:nj, i=1:ni
     if (noneq_densities[i, j] != __SENTINAL && 
         noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
         && noneq_densities[i, j] > col_f.ds_threshold)
-      const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+      delta              =  col_f.scale(sim, i, j, col_f.metric, 
                                               noneq_densities);
       nfiltered               +=  1;
 
@@ -714,9 +714,9 @@ function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::Matrix{Bool})
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -729,8 +729,8 @@ end
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
 function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
-  const ni, nj    = size(sim.msm.rho);
-  const feq_f     = col_f.inner_col_f!.feq_f;
+  ni, nj    = size(sim.msm.rho);
+  feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
   nfiltered       = 0;
   ncollided       = 0;
@@ -749,14 +749,14 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
   end
 
   fltrd_noneq_densities   = filter(__NSFLTR, noneq_densities);
-  const mean_neq_entropy  = mean(fltrd_noneq_densities);
-  const std_neq_entropy   = std(fltrd_noneq_densities);
+  mean_neq_entropy  = mean(fltrd_noneq_densities);
+  std_neq_entropy   = std(fltrd_noneq_densities);
 
   for j=1:nj, i=1:ni
     if (noneq_densities[i, j] != __SENTINAL && 
         noneq_densities[i, j] > mean_neq_entropy + col_f.stds * std_neq_entropy
         && noneq_densities[i, j] > col_f.ds_threshold)
-      const delta              =  col_f.scale(sim, i, j, col_f.metric, 
+      delta              =  col_f.scale(sim, i, j, col_f.metric, 
                                               noneq_densities);
       nfiltered               +=  1;
 
@@ -770,9 +770,9 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
     end
   end
 
-  const percent_filtered  = nfiltered / ncollided;
+  percent_filtered  = nfiltered / ncollided;
   if percent_filtered > col_f.fltr_thrsh_warn
-    warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
+    @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
     info("Percent collapsed: $(percent_filtered * 100)");
@@ -781,7 +781,7 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
 end
 
 #! Filtered collision function with positivity rule
-type FltrPosCol <: FltrColFunction
+struct FltrPosCol <: FltrColFunction
   feq_f::LBXFunction;
   inner_col_f!::ColFunction;
 
@@ -790,7 +790,7 @@ end
 
 #! Filtered collision function with positivity rule (call)
 function (fpc::FltrPosCol)(sim::AbstractSim, args...)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   fpc.inner_col_f!(sim, args...);
   for j=1:nj, i=1:ni
     # find minimum value of f
@@ -804,11 +804,11 @@ function (fpc::FltrPosCol)(sim::AbstractSim, args...)
     
     # If any collisions results in a negative f, back up until zero
     if min_f < 0
-      const feq   = map(k -> fpc.feq_f(sim.lat, sim.msm, 
+      feq   = map(k -> fpc.feq_f(sim.lat, sim.msm, 
                                        view(sim.msm.u, :, i, j), i, j, k), 
                                        1:sim.lat.n);
 
-      @inbounds const δ     = min_f / (feq[min_k] - min_f);
+      @inbounds δ     = min_f / (feq[min_k] - min_f);
       for k=1:sim.lat.n
         @inbounds sim.lat.f[k, i, j] += δ * sim.lat.f[k, i, j] - feq[k];
       end

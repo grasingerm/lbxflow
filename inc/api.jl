@@ -4,13 +4,12 @@
 
 # TODO this entire mess needs rewritten... If you're reading this it's too late
 
-using PyCall;
-@pyimport yaml;
+import YAML;
 
 function parse_and_run(infile::String, args::Dict)
 
   if !isfile(infile)
-    warn(infile * " not found. Please use valid path to input file.");
+    @warn(infile * " not found. Please use valid path to input file.");
     return nothing;
   end
 
@@ -28,34 +27,34 @@ function parse_and_run(infile::String, args::Dict)
   );
 
   if args["verbose"]; info("parsing $infile from yaml..."); end
-  ins = yaml.load(readall(infile));
+  ins = YAML.load_file(infile);
 
   # Check version is consistent with input file
   if haskey(ins, "version")
 
     @assert(haskey(args, "LBX_VERSION"), "LBX_VERSION should be passed from " *
                                          "lbxflow.jl");
-    ins["version"] = eval(parse("v\"$(ins["version"])\""));
+    ins["version"] = eval(Meta.parse("v\"$(ins["version"])\""));
     @assert(ins["version"].major == args["LBX_VERSION"].major,
             "Major version specified in $infile, $(ins["version"]), does not " *
             "match major version of LBXFlow, $(args["LBX_VERSION"])."); 
     if ins["version"] > args["LBX_VERSION"]
-      warn("$infile recommends v$(ins["version"]), consider updating.");
+      @warn("$infile recommends v$(ins["version"]), consider updating.");
     end
 
   else
 
-    warn("$infile does not contain versioning information.");
+    @warn("$infile does not contain versioning information.");
 
   end
 
   if haskey(ins, "preamble")
     if args["verbose"]; info("evaluating preamble..."); end;
     pre = pop!(ins, "preamble");
-    if start(search(pre, "#")) != 0
-      warn("`#` character in the preamble can lead to undefined behavior");
+    if findfirst(isequal('#'), pre) == nothing
+      @warn("`#` character in the preamble can lead to undefined behavior");
     end
-    eval(parse(pre));
+    eval(Meta.parse(pre));
   end
 
   global defs = Dict();
@@ -65,18 +64,18 @@ function parse_and_run(infile::String, args::Dict)
 
       if !DEF_EXPR_ATTRS[k][:store]
         if args["verbose"]; info("evalling... $v"); end
-        eval(parse(v));
+        eval(Meta.parse(v));
       else
         if DEF_EXPR_ATTRS[k][:array]
           n = length(v);
           defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
           for i=1:n
             if args["verbose"]; info("evalling... $(v[i])"); end
-            defs[k][i] = eval(parse(v[i]));
+            defs[k][i] = eval(Meta.parse(v[i]));
           end
         else
           if args["verbose"]; info("evalling... $v"); end
-          defs[k] = convert(DEF_EXPR_ATTRS[k][:type], eval(parse(v)));
+          defs[k] = convert(DEF_EXPR_ATTRS[k][:type], eval(Meta.parse(v)));
         end
       end
 
@@ -84,7 +83,7 @@ function parse_and_run(infile::String, args::Dict)
       if typeof(v) <: Dict
         if v["expr"]
           if args["verbose"]; info("evalling... $v"); end
-          defs[k] = eval(parse(v["value"]));
+          defs[k] = eval(Meta.parse(v["value"]));
         else
           defs[k] = v["value"];
         end
@@ -129,8 +128,8 @@ function parse_and_run(infile::String, args::Dict)
   if haskey(defs, "obstacles")
     defs["active_cells"]  =   fill(true, defs["ni"], defs["nj"]);
     for obstacle_array in defs["obstacles"]
-      obs_type      =   parse(obstacle_array["type"]);
-      obs_locs      =   eval(parse(obstacle_array["coords"]));
+      obs_type      =   Meta.parse(obstacle_array["type"]);
+      obs_locs      =   eval(Meta.parse(obstacle_array["coords"]));
 
       @assert(size(obs_locs, 1) == 4, "Obstacle coordinates should be "      *
               "organized in columns, i.e. coords[:, ...] = i_min, i_max, "   *
@@ -198,7 +197,7 @@ function parse_and_run(infile::String, args::Dict)
         @assert(haskey(defs, "col_f"), "`col_f` must be provided in input file.");
         if haskey(defs, "states")
           if haskey(defs, "fill_x") || haskey(defs, "fill_y")
-            warn("'States' matrix was already provided. 'fill_\$D' variables " *
+            @warn("'States' matrix was already provided. 'fill_\$D' variables " *
                  "will be ignored");
           end
           isim = FreeSurfSim(lat, msm, Tracker(msm, defs["states"]), defs["rho_g"]);
@@ -213,7 +212,7 @@ function parse_and_run(infile::String, args::Dict)
       end
     end
     if "adaptive" in simtypes # adaptive time stepping?
-      warn("Adaptive time stepping is highly experimental. It has not yet been validated");
+      @warn("Adaptive time stepping is highly experimental. It has not yet been validated");
       incr = (!haskey(defs, "incr") || defs["incr"]) ? true : false;
       decr = (!haskey(defs, "decr") || defs["decr"]) ? true : false;
       relax = (haskey(defs, "relax")) ? defs["relax"] : 1.0;
@@ -255,7 +254,7 @@ function parse_and_run(infile::String, args::Dict)
             global nsim;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                              defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
-          end;
+          end
         );
       else
         if haskey(defs, "test_for_term_steps")
@@ -269,7 +268,7 @@ function parse_and_run(infile::String, args::Dict)
               nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
                                defs["test_for_term_steps"], defs["callbacks"], k); 
-            end;
+            end
           );
         else
           @profif(args["profile"],
@@ -278,7 +277,7 @@ function parse_and_run(infile::String, args::Dict)
               nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
                                defs["callbacks"], k); 
-            end;
+            end
           );
         end
       end
@@ -290,7 +289,7 @@ function parse_and_run(infile::String, args::Dict)
             global nsim;
             nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
                              defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
-          end;
+          end
         );
       else
         if haskey(defs, "test_for_term_steps")
@@ -304,7 +303,7 @@ function parse_and_run(infile::String, args::Dict)
               nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
                                defs["test_for_term_steps"], defs["callbacks"], k); 
-            end;
+            end
           );
         else
           @profif(args["profile"],
@@ -313,7 +312,7 @@ function parse_and_run(infile::String, args::Dict)
               nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
                                defs["callbacks"], k); 
-            end;
+            end
           );
         end
       end

@@ -6,7 +6,7 @@
 function dumpsim_jld(datadir::AbstractString, sim::AbstractSim, step::Real,
                      append_step_to_name::Bool = false)
   
-  const jldpath = (append_step_to_name) ? joinpath(datadir, "bak_$step.jld") :
+  jldpath = (append_step_to_name) ? joinpath(datadir, "bak_$step.jld") :
                                           joinpath(datadir, "bak.jld");
   JLD.jldopen(jldpath, "w") do file
     write(file, "sim", sim);
@@ -24,7 +24,7 @@ end
 
 #! Dump simulation to a text file
 function dumpsim(datadir::AbstractString, sim::Sim, step::Real)
-  const dumpdir = joinpath(datadir, "bak_$step");
+  dumpdir = joinpath(datadir, "bak_$step");
   if !isdir(dumpdir)
     mkpath(dumpdir);
   end
@@ -149,7 +149,7 @@ function load_latest_backup(datadir::AbstractString)
   end
 
 
-  const latest_fpath = joinpath(datadir, latest_path);
+  latest_fpath = joinpath(datadir, latest_path);
   if latest_path == ""; return 0, nothing;
   elseif isdir(latest_fpath)
     return load_backup_dir(latest_fpath);

@@ -6,7 +6,7 @@
 function extract_prof_callback(i::Int)
 
   return (sim::AbstractSim) -> begin
-    const nj = size(sim.msm.u, 3);
+    nj = size(sim.msm.u, 3);
     x = Array(Float64, (nj, 3));
 
     for j=1:nj
@@ -22,8 +22,8 @@ end
 function extract_ux_prof_callback(i::Int)
 
   return (sim::AbstractSim) -> begin
-    const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
-    const u = vec(sim.msm.u[1,i,:]);
+    ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+    u = vec(sim.msm.u[1,i,:]);
 
     x = linspace(-0.5, 0.5, nj);
     y = u;
@@ -37,8 +37,8 @@ end
 function extract_ubar_prof_callback(i::Int)
 
   return (sim::AbstractSim) -> begin
-    const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
-    const u = vec(sim.msm.u[1,i,:]);
+    ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+    u = vec(sim.msm.u[1,i,:]);
 
     x = linspace(-0.5, 0.5, nj);
     y = u / maximum(u);
@@ -58,7 +58,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
+      nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
@@ -81,8 +81,8 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
-      const u = vec(sim.msm.u[1,i,:]);
+      nj = size(sim.msm.u, 3);
+      u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -138,7 +138,7 @@ function plot_streamlines_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      ni, nj = size(sim.msm.rho);
       x = collect(linspace(0.0, 1.0, ni));
       y = collect(linspace(0.0, 1.0, nj));
 
@@ -172,7 +172,7 @@ function plot_pressure_contours_callback(iters_per_frame::Int,
 end
 
 # Default contour levels for mass contours
-const _DEFAULT_MASS_LEVELS = [-0.25; 0.0; 0.25; 0.50; 0.75; 1.0; 1.25]; 
+_DEFAULT_MASS_LEVELS = [-0.25; 0.0; 0.25; 0.50; 0.75; 1.0; 1.25]; 
 
 #! Plot mass matrix for the domain
 function plot_mass_contours_callback(iters_per_frame::Int,
@@ -196,8 +196,8 @@ end
 #! Plot strain rate matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -234,7 +234,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
+      nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
@@ -259,8 +259,8 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
-      const u = vec(sim.msm.u[1,i,:]);
+      nj = size(sim.msm.u, 3);
+      u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -319,7 +319,7 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::AbstractString,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      ni, nj = size(sim.msm.rho);
       x = collect(linspace(0.0, 1.0, ni));
       y = collect(linspace(0.0, 1.0, nj));
 
@@ -380,8 +380,8 @@ end
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -413,8 +413,8 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
                                                fname::AbstractString,
                                                gamma_min::AbstractFloat,
                                                pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -451,7 +451,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
+      nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
@@ -476,8 +476,8 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
-      const u = vec(sim.msm.u[1,i,:]);
+      nj = size(sim.msm.u, 3);
+      u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -538,7 +538,7 @@ function plot_streamlines_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      ni, nj = size(sim.msm.rho);
       x = collect(linspace(0.0, 1.0, ni));
       y = collect(linspace(0.0, 1.0, nj));
 
@@ -599,8 +599,8 @@ end
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 xy::Tuple{Number, Number},
                                                 pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -639,7 +639,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
+      nj = size(sim.msm.u, 3);
 
       x = linspace(-0.5, 0.5, nj);
       y = vec(sim.msm.u[1,i,:]);
@@ -666,8 +666,8 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const nj = size(sim.msm.u, 3);
-      const u = vec(sim.msm.u[1,i,:]);
+      nj = size(sim.msm.u, 3);
+      u = vec(sim.msm.u[1,i,:]);
 
       x = linspace(-0.5, 0.5, nj);
       y = u / maximum(u);
@@ -735,7 +735,7 @@ function plot_streamlines_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      ni, nj = size(sim.msm.rho);
       x = collect(linspace(0.0, 1.0, ni));
       y = collect(linspace(0.0, 1.0, nj));
 
@@ -802,8 +802,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 xy::Tuple{Number, Number},
                                                 fname::AbstractString,
                                                 pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -901,8 +901,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 levs::Vector,
                                                 pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -1008,8 +1008,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 levs::Vector, rects::Vector,
                                                 pause::AbstractFloat = 0.025)
-  const M = @DEFAULT_MRT_M();
-  const iM = @DEFAULT_MRT_IM();
+  M = @DEFAULT_MRT_M();
+  iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = Array(Float64, ni, nj);
@@ -1047,7 +1047,7 @@ function plot_streamlines_callback(iters_per_frame::Int,
 
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
-      const ni, nj = size(sim.msm.rho);
+      ni, nj = size(sim.msm.rho);
       x = collect(1:ni);
       y = collect(1:nj);
 

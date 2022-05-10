@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #! Multiple relaxation time collision operator 
-type MRT <: ColFunction
+struct MRT <: ColFunction
   feq_f::LBXFunction;
   constit_relation_f::LBXFunction;
   M::Matrix{Float64};
@@ -12,14 +12,14 @@ type MRT <: ColFunction
 
   function MRT(constit_relation_f::LBXFunction; feq_f::LBXFunction=feq_incomp,
                S::LBXFunction=S_fallah)
-    const M   = @DEFAULT_MRT_M;
-    const iM  = @DEFAULT_MRT_IM;
+    M   = @DEFAULT_MRT_M;
+    iM  = @DEFAULT_MRT_IM;
     return new(feq_f, constit_relation_f, M, iM, S);
   end
 end
 
 #! Multiple relaxation time collision operator with forcing 
-type MRT_F <: ColFunction
+struct MRT_F <: ColFunction
   feq_f::LBXFunction;
   constit_relation_f::LBXFunction;
   forcing_f::Force;
@@ -30,8 +30,8 @@ type MRT_F <: ColFunction
   function MRT_F(constit_relation_f::LBXFunction,
                  forcing_f::Force; 
                  feq_f::LBXFunction=feq_incomp, S::LBXFunction=S_fallah)
-    const M   = @DEFAULT_MRT_M;
-    const iM  = @DEFAULT_MRT_IM;
+    M   = @DEFAULT_MRT_M;
+    iM  = @DEFAULT_MRT_IM;
     return new(feq_f, constit_relation_f, forcing_f, M, iM, S);
   end
 end
@@ -43,8 +43,8 @@ end
 function (col_f::MRT)(sim::AbstractSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
-  const nbounds =   size(bounds, 2);
+  ni, nj  =   size(msm.rho);
+  nbounds =   size(bounds, 2);
 
   for r = 1:nbounds
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
@@ -60,9 +60,9 @@ function (col_f::MRT)(sim::AbstractSim, bounds::Matrix{Int64})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+      mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                    col_f.iM, i, j);
-      const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+      Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
 
@@ -80,8 +80,8 @@ end
 function (col_f::MRT_F)(sim::AbstractSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
-  const nbounds =   size(bounds, 2);
+  ni, nj  =   size(msm.rho);
+  nbounds =   size(bounds, 2);
 
   for r = 1:nbounds
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
@@ -97,11 +97,11 @@ function (col_f::MRT_F)(sim::AbstractSim, bounds::Matrix{Int64})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+      mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                col_f.iM, i, j);
-      const omega =   @omega(mu, lat.cssq, lat.dt);
-      const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-      const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
+      omega =   @omega(mu, lat.cssq, lat.dt);
+      Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+      F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
@@ -119,8 +119,8 @@ end
 function (col_f::MRT)(sim::FreeSurfSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
-  const nbounds =   size(bounds, 2);
+  ni, nj  =   size(msm.rho);
+  nbounds =   size(bounds, 2);
 
   for r = 1:nbounds
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
@@ -138,9 +138,9 @@ function (col_f::MRT)(sim::FreeSurfSim, bounds::Matrix{Int64})
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
-        const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+        mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                  col_f.iM, i, j);
-        const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+        Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
         @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
 
@@ -160,8 +160,8 @@ end
 function (col_f::MRT_F)(sim::FreeSurfSim, bounds::Matrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
-  const nbounds =   size(bounds, 2);
+  ni, nj  =   size(msm.rho);
+  nbounds =   size(bounds, 2);
 
   for r = 1:nbounds
     @inbounds i_min, i_max, j_min, j_max = bounds[:,r];
@@ -179,11 +179,11 @@ function (col_f::MRT_F)(sim::FreeSurfSim, bounds::Matrix{Int64})
           @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
         end
 
-        const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+        mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                  col_f.iM, i, j);
-        const omega =   @omega(mu, lat.cssq, lat.dt);
-        const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-        const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
+        omega =   @omega(mu, lat.cssq, lat.dt);
+        Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+        F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
         @inbounds lat.f[:, i, j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
@@ -203,7 +203,7 @@ end
 function (col_f::MRT)(sim::AbstractSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
+  ni, nj  =   size(msm.rho);
 
   for j = 1:nj, i = 1:ni
 
@@ -219,9 +219,9 @@ function (col_f::MRT)(sim::AbstractSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+      mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                    col_f.iM, i, j);
-      const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+      Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:, i, j] -= col_f.iM * Sij * col_f.M * fneq;
 
@@ -239,7 +239,7 @@ end
 function (col_f::MRT_F)(sim::AbstractSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
+  ni, nj  =   size(msm.rho);
 
   for j = 1:nj, i = 1:ni
 
@@ -255,11 +255,11 @@ function (col_f::MRT_F)(sim::AbstractSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+      mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                col_f.iM, i, j);
-      const omega =   @omega(mu, lat.cssq, lat.dt);
-      const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-      const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
+      omega =   @omega(mu, lat.cssq, lat.dt);
+      Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+      F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
@@ -277,7 +277,7 @@ end
 function (col_f::MRT)(sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
+  ni, nj  =   size(msm.rho);
 
   for j = 1:nj, i = 1:ni
 
@@ -293,9 +293,9 @@ function (col_f::MRT)(sim::FreeSurfSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+      mu        =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                    col_f.iM, i, j);
-      const Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+      Sij       =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq;
 
@@ -314,7 +314,7 @@ end
 function (col_f::MRT_F)(sim::FreeSurfSim, active_cells::Matrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
-  const ni, nj  =   size(msm.rho);
+  ni, nj  =   size(msm.rho);
 
   for j = 1:nj, i = 1:ni
 
@@ -330,11 +330,11 @@ function (col_f::MRT_F)(sim::FreeSurfSim, active_cells::Matrix{Bool})
         @inbounds fneq[k]         =   lat.f[k,i,j] - feq[k];
       end
 
-      const mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
+      mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                col_f.iM, i, j);
-      const omega =   @omega(mu, lat.cssq, lat.dt);
-      const Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-      const F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
+      omega =   @omega(mu, lat.cssq, lat.dt);
+      Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
+      F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 

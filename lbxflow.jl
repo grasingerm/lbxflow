@@ -64,7 +64,7 @@ pa["LBX_VERSION"] = LBX_VERSION; # add version to arguments
 
 if pa["version"]
   println();
-  println(readall(abspath(joinpath(dirname(@__FILE__), "banner.txt"))));
+  println(read(abspath(joinpath(dirname(@__FILE__), "banner.txt")), String));
   println("version:  $LBX_VERSION");
   println();
   exit(0);

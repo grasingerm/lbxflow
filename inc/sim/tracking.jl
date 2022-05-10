@@ -210,7 +210,7 @@ function _update_cell_states!(sim::FreeSurfSim,
   for (i, j) in new_fluid_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
-    #const unit_norm     =     _unit_normal(t, (i, j));
+    #unit_norm     =     _unit_normal(t, (i, j));
     unit_norm     =     unorms[(i, j)];
     v_sum               =     0.0;
 
@@ -260,7 +260,7 @@ function _update_cell_states!(sim::FreeSurfSim,
   for (i, j) in new_empty_cells
     cells_to_redist_to  =     Set{Tuple{Int, Int, AbstractFloat}}();
     all_int_nbrs        =     Set{Tuple{Int, Int}}();
-    #const unit_norm     =     _unit_normal(t, (i, j));
+    #unit_norm     =     _unit_normal(t, (i, j));
     unit_norm     =     unorms[(i, j)];
     v_sum               =     0.0;
 

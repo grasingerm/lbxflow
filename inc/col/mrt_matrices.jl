@@ -53,7 +53,7 @@ end
 #! \param dt Change in time
 #! \return Fallah relaxation matix
 function S_fallah(mu::Real, rho::Real, cssq::Real, dt::Real)
-	const s_8 = @fallah_8(mu, rho, cssq, dt);
+	s_8 = @fallah_8(mu, rho, cssq, dt);
 	return spdiagm([0.0; 1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8]);
 end
 
@@ -77,7 +77,7 @@ end
 #! \param   dt    Change in time
 #! \return        Unity relaxation matix
 function S_unity(μ::Real, ρ::Real, cssq::Real, dt::Real)
-  const s_8 = @fallah_8(μ, ρ, cssq, dt);
+  s_8 = @fallah_8(μ, ρ, cssq, dt);
   return spdiagm([0.0; 1.0; 1.0; 0.0; 1.0; 0.0; 1.0; s_8; s_8]);
 end
 
@@ -89,6 +89,6 @@ end
 #! \param   dt    Change in time
 #! \return        Unity relaxation matix
 function S_under(μ::Real, ρ::Real, cssq::Real, dt::Real)
-  const s_8 = @fallah_8(μ, ρ, cssq, dt);
+  s_8 = @fallah_8(μ, ρ, cssq, dt);
   return spdiagm([0.0; 0.8; 0.8; 0.0; 0.9; 0.0; 0.9; s_8; s_8]);
 end

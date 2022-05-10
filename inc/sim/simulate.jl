@@ -10,7 +10,7 @@ include("recolor.jl");
 #! \param temp_f Temp lattice to store streamed particle distributions on
 #! \param bounds Boundaries enclosing active streaming regions
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
   #! Stream
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -37,7 +37,7 @@ end
 #! \param t Mass tracker
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
                  t::Tracker)
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
   #! Stream
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -67,7 +67,7 @@ end
 #! \param   active_cells    Matrix of active flags
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, 
                  active_cells::Matrix{Bool})
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   #! Stream
   for j = 1:nj, i = 1:ni, k = 1:lat.n
@@ -92,7 +92,7 @@ end
 #! \param   t               Mass tracker
 function stream!(lat::Lattice, temp_f::Array{Float64,3}, 
                  active_cells::Matrix{Bool}, t::Tracker)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   #! Stream
   for j = 1:nj, i = 1:ni, k = 1:lat.n

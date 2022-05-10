@@ -24,7 +24,7 @@ function vel_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
     n = length(j_range);
     x = linspace(-0.5, 0.5, n);
 
-    f = @anon j -> _vel_acsr_kernal(sim, c, i, j);
+    f = j -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
 
     return x, y;
@@ -43,7 +43,7 @@ function vel_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
     n = length(i_range);
     x = linspace(-0.5, 0.5, n);
 
-    f = @anon i -> _vel_acsr_kernal(sim, c, i, j);
+    f = i -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, i_range);
 
     return x, y;
@@ -62,7 +62,7 @@ function vbar_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
     n = length(j_range);
     x = linspace(-0.5, 0.5, n);
 
-    f = @anon j -> _vel_acsr_kernal(sim, c, i, j);
+    f = j -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
     y /= maximum(y);
 
@@ -82,7 +82,7 @@ function vbar_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
     n = length(i_range);
     x = linspace(-0.5, 0.5, n);
 
-    f = @anon i -> _vel_acsr_kernal(sim, c, i, j);
+    f = i -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, i_range);
     y /= maximum(y);
 
@@ -179,7 +179,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Fluid pressure over domain
 function pressure_acsr(sim::AbstractSim)
-  f = @anon rho -> sim.lat.cssq * rho;
+  f = rho -> sim.lat.cssq * rho;
   return transpose(map(f, sim.msm.rho));
 end
 
@@ -188,7 +188,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Fluid pressure over domain
 function pressure_acsr(sim::M2PhaseSim)
-  f = @anon rho -> sim.simr.lat.cssq * rho;
+  f = rho -> sim.simr.lat.cssq * rho;
   return transpose(map(f, sim.simr.msm.rho)) + transpose(map(f, sim.simb.msm.rho));
 end
 

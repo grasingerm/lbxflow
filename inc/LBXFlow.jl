@@ -4,16 +4,16 @@
 
 module LBXFlow
 
+using Logging;
+
 #TODO clean up simulate! code with some kernal functions...
 macro _report_and_exit(e, i)
   return quote
     bt = catch_backtrace(); 
     showerror(STDERR, $e, bt);
-    warn();
-    warn("Showing backtrace:");
+    @warn("Showing backtrace:");
     Base.show_backtrace(STDERR, backtrace()); # display callstack
-    warn();
-    warn("Simulation interrupted at step ", $i, "!");
+    @warn("Simulation interrupted at step ", $i, "!");
     return $i;
   end
 end

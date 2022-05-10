@@ -18,25 +18,25 @@ end
 
 #! Mass inlet
 function north_mass_inlet!(sim::FreeSurfSim, m::Real)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_inlet!(sim, 1:ni, nj, m);
 end
 
 #! Mass inlet
 function south_mass_inlet!(sim::FreeSurfSim, m::Real)
-  const ni = size(sim.msm.rho, 1);
+  ni = size(sim.msm.rho, 1);
   mass_inlet!(sim, 1:ni, 1, m);
 end
 
 #! Mass inlet
 function east_mass_inlet!(sim::FreeSurfSim, m::Real)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_inlet!(sim, ni, 1:nj, m);
 end
 
 #! Mass inlet
 function west_mass_inlet!(sim::FreeSurfSim, m::Real)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_inlet!(sim, 1, 1:nj, m);
 end
 
@@ -60,25 +60,25 @@ end
 
 #! Mass inlet
 function north_mass_inlet!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_inlet!(sim, 1:ni, nj);
 end
 
 #! Mass inlet
 function south_mass_inlet!(sim::FreeSurfSim)
-  const ni = size(sim.msm.rho, 1);
+  ni = size(sim.msm.rho, 1);
   mass_inlet!(sim, 1:ni, 1);
 end
 
 #! Mass inlet
 function east_mass_inlet!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_inlet!(sim, ni, 1:nj);
 end
 
 #! Mass inlet
 function west_mass_inlet!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_inlet!(sim, 1, 1:nj);
 end
 
@@ -137,48 +137,48 @@ end
 
 #! Mass outlet
 function north_mass_outlet!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_outlet!(sim, 1:ni, nj, [6; 2; 5]);
 end
 
 #! Mass outlet
 function south_mass_outlet!(sim::FreeSurfSim)
-  const ni = size(sim.msm.rho, 1);
+  ni = size(sim.msm.rho, 1);
   mass_outlet!(sim, 1:ni, 1, [7; 4; 8]);
 end
 
 #! Mass outlet
 function east_mass_outlet!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_outlet!(sim, ni, 1:nj, [5; 1; 8]);
 end
 
 #! Mass outlet
 function west_mass_outlet!(sim::FreeSurfSim)
-  const nj = size(sim.msm.rho, 2);
+  nj = size(sim.msm.rho, 2);
   mass_outlet!(sim, 1, 1:nj, [6; 3; 7]);
 end
 
 #! Mass outlet
 function north_mass_open!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_boutlet!(sim, 1:ni, nj, [6; 2; 5], north_open!);
 end
 
 #! Mass outlet
 function south_mass_open!(sim::FreeSurfSim)
-  const ni = size(sim.msm.rho, 1);
+  ni = size(sim.msm.rho, 1);
   mass_boutlet!(sim, 1:ni, 1, [7; 4; 8], south_open!);
 end
 
 #! Mass outlet
 function east_mass_open!(sim::FreeSurfSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   mass_boutlet!(sim, ni, 1:nj, [5; 1; 8], east_open!);
 end
 
 #! Mass outelt
 function west_mass_open!(sim::FreeSurfSim)
-  const nj = size(sim.msm.rho, 2);
+  nj = size(sim.msm.rho, 2);
   mass_boutlet!(sim, 1, 1:nj, [6; 3; 7], west_open!);
 end

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 macro wrap_lat_bc(sim, bc)
-  return :(@anon sim -> $bc(sim.lat));
+  return :(sim -> $bc(sim.lat));
 end
 
 # Simulation to lattice wrappers
@@ -589,13 +589,13 @@ function north_pressure!(lat::LatticeD2Q9, rhoo::Real)
   ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
-    v = (-1. + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
-         + 2. * (lat.f[2,i,nj] + lat.f[5,i,nj] + lat.f[6,i,nj])) / rhoo);
+    v = (-1 + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
+         + 2 * (lat.f[2,i,nj] + lat.f[5,i,nj] + lat.f[6,i,nj])) / rhoo);
     ru = rhoo * v;
-    lat.f[4,i,nj] = lat.f[2,i,nj] - (2./3.)*ru;
-    lat.f[7,i,nj] = (lat.f[5,i,nj] - (1./6.)*ru
+    lat.f[4,i,nj] = lat.f[2,i,nj] - (2/3)*ru;
+    lat.f[7,i,nj] = (lat.f[5,i,nj] - (1/6)*ru
                      + 0.5 * (lat.f[1,i,nj] - lat.f[3,i,nj]));
-    lat.f[8,i,nj] = (lat.f[6,i,nj] - (1./6.)*ru
+    lat.f[8,i,nj] = (lat.f[6,i,nj] - (1/6)*ru
                      + 0.5 * (lat.f[3,i,nj] - lat.f[1,i,nj]));
   end
 end
@@ -606,12 +606,12 @@ function south_pressure!(lat::LatticeD2Q9, rhoo::Real)
 
   for i=1:ni
     v = (-1. + (lat.f[9,i,1] + lat.f[1,i,1] + lat.f[3,i,1]
-         + 2. * (lat.f[4,i,1] + lat.f[7,i,1] + lat.f[8,i,1])) / rhoo);
+         + 2 * (lat.f[4,i,1] + lat.f[7,i,1] + lat.f[8,i,1])) / rhoo);
     ru = rhoo * v;
-    lat.f[2,i,1] = lat.f[4,i,1] - (2./3.)*ru;
-    lat.f[5,i,1] = (lat.f[7,i,1] - (1./6.)*ru
+    lat.f[2,i,1] = lat.f[4,i,1] - (2/3.)*ru;
+    lat.f[5,i,1] = (lat.f[7,i,1] - (1/6)*ru
                     + 0.5 * (lat.f[3,i,1] - lat.f[1,i,1]));
-    lat.f[6,i,1] = (lat.f[8,i,1] - (1./6.)*ru
+    lat.f[6,i,1] = (lat.f[8,i,1] - (1/6)*ru
                     + 0.5 * (lat.f[1,i,1] - lat.f[3,i,1]));
   end
 end

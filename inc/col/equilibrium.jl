@@ -45,7 +45,7 @@ end
 
 #! Binds rho_0 to an HL equilibrium function
 function init_feq_incomp_HL(rho_0::AbstractFloat)
-  return (@anon (lat, msm, u, i, j, k) -> feq_incomp_HL(lat, msm, u, rho_0, i, j, k));
+  return ((lat, msm, u, i, j, k) -> feq_incomp_HL(lat, msm, u, rho_0, i, j, k));
 end
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow
@@ -147,7 +147,7 @@ end
 
 #! Binds α to a two-phase immisible equilibrium function
 function init_feq_mphase_immis(α::Real)
-  return (@anon (lat, msm, u, i, j, k) -> feq_incomp_mphase_immis(lat, msm, u, i, j, k, α));
+  return ((lat, msm, u, i, j, k) -> feq_incomp_mphase_immis(lat, msm, u, i, j, k, α));
 end
 
 #! Equilibrium frequency distribution for incompressible Newtonian flow with smoothing
@@ -200,5 +200,5 @@ end
 
 #! Binds α to smoothing equilibrium function
 function init_feq_incomp_smoothing(α::Real)
-  return (@anon (lat, msm, u, i, j, k) -> feq_incomp_smoothing(lat, msm, u, i, j, k; alpha=α));
+  return ((lat, msm, u, i, j, k) -> feq_incomp_smoothing(lat, msm, u, i, j, k; alpha=α));
 end

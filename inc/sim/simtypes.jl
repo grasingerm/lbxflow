@@ -33,7 +33,7 @@ struct _ConstConstit
   _ConstConstit(μ::Real) = new(μ);
 end
 #typealias LBXFunction Union{Function, FastAnonymous.AbstractClosure, ColFunction, _ConstConstit};
-const LBXFunction = Union{Function, ColFunction, _ConstConstit};
+LBXFunction = Union{Function, ColFunction, _ConstConstit};
 
 abstract type AbstractSim end;
 
@@ -49,12 +49,12 @@ struct Sim <: AbstractSim
 end
 
 #! Type system for cell states
-struct Gas; end;         const GAS = Gas();
-struct Interface; end;   const INTERFACE = Interface();
-struct Fluid; end;       const FLUID = Fluid();
+struct Gas; end;         GAS = Gas();
+struct Interface; end;   INTERFACE = Interface();
+struct Fluid; end;       FLUID = Fluid();
 
 #! Type alias for cell states
-const State = Union{Gas, Interface, Fluid};
+State = Union{Gas, Interface, Fluid};
 
 #! Mass and state tracker
 struct Tracker

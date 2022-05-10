@@ -11,8 +11,8 @@ function init_pcol_srt(constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
@@ -27,8 +27,8 @@ function init_pcol_srt(constit_relation_f::Function)
             feq[k] = feq_incomp(lat, rhoij, uij, k);
             fneq[k] = lat.f[k,i,j] - feq[k];
           end
-          const mu = constit_relation_f(sim, fneq, i, j);
-          const omega = @omega(mu, lat.cssq, lat.dt);
+          mu = constit_relation_f(sim, fneq, i, j);
+          omega = @omega(mu, lat.cssq, lat.dt);
           for k = 1:lat.n
             f[k] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]);
           end
@@ -50,8 +50,8 @@ function init_pcol_srt(constit_relation_f::Function,
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
@@ -66,8 +66,8 @@ function init_pcol_srt(constit_relation_f::Function,
             feq[k] = feq_incomp(lat, rhoij, uij, k);
             fneq[k] = lat.f[k,i,j] - feq[k];
           end
-          const mu = constit_relation_f(sim, fneq, i, j);
-          const omega = @omega(mu, lat.cssq, lat.dt);
+          mu = constit_relation_f(sim, fneq, i, j);
+          omega = @omega(mu, lat.cssq, lat.dt);
           for k = 1:lat.n
             f[k] = ((omega * feq[k] + (1.0 - omega) * lat.f[k,i,j])
                     + colf(lat, omega, uij, k));
@@ -90,8 +90,8 @@ function init_pcol_srt(constit_relation_f::Function, feq_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
@@ -104,8 +104,8 @@ function init_pcol_srt(constit_relation_f::Function, feq_f::Function)
           feq[k] = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
-        const mu = constit_relation_f(sim, fneq, i, j);
-        const omega = @omega(mu, lat.cssq, lat.dt);
+        mu = constit_relation_f(sim, fneq, i, j);
+        omega = @omega(mu, lat.cssq, lat.dt);
         for k = 1:lat.n
           lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]);
         end
@@ -125,12 +125,12 @@ end
 function init_pcol_srt(constit_relation_f::Function,
                        forcing_kf::Tuple{Function, Function}, feq_f::Function)
   error("Not yet implemented.");
-  const uf, colf = forcing_kf;
+  uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const ni, nj = size(msm.rho);
-    const nbounds = size(bounds, 2);
+    ni, nj = size(msm.rho);
+    nbounds = size(bounds, 2);
 
     for r = 1:nbounds
       i_min, i_max, j_min, j_max = bounds[:,r];
@@ -143,8 +143,8 @@ function init_pcol_srt(constit_relation_f::Function,
           feq[k] = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
-        const mu = constit_relation_f(sim, fneq, i, j);
-        const omega = @omega(mu, lat.cssq, lat.dt);
+        mu = constit_relation_f(sim, fneq, i, j);
+        omega = @omega(mu, lat.cssq, lat.dt);
         for k = 1:lat.n
           lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]
                           + colf(lat, omega, uij, k));
@@ -166,13 +166,13 @@ function init_pcol_mrt(constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
-    const ni, nj = size(msm.rho);
+    M = @DEFAULT_MRT_M();
+    iM = inv(M);
+    ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
     feq = Array(Float64, lat.n);
-    const nbounds = size(bounds, 2);
+    nbounds = size(bounds, 2);
 
     #! Stream
     for r = 1:nbounds
@@ -210,17 +210,17 @@ end
 function init_pcol_mrt(constit_relation_f::Function,
                        forcing_kf::Tuple{Function, Function})
   error("Not yet implemented.");
-  const uf, colf = forcing_kf;
+  uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
-    const ni, nj = size(msm.rho);
+    M = @DEFAULT_MRT_M();
+    iM = inv(M);
+    ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
     feq = Array(Float64, lat.n);
-    const nbounds = size(bounds, 2);
+    nbounds = size(bounds, 2);
 
     #! Stream
     for r = 1:nbounds
@@ -264,13 +264,13 @@ function init_pcol_mrt(constit_relation_f::Function, feq_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
-    const ni, nj = size(msm.rho);
+    M = @DEFAULT_MRT_M();
+    iM = inv(M);
+    ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
     feq = Array(Float64, lat.n);
-    const nbounds = size(bounds, 2);
+    nbounds = size(bounds, 2);
 
     #! Stream
     for r = 1:nbounds
@@ -309,17 +309,17 @@ end
 function init_pcol_mrt(constit_relation_f::Function,
                        forcing_kf::Tuple{Function, Function}, feq_f::Function)
   error("Not yet implemented.");
-  const uf, colf = forcing_kf;
+  uf, colf = forcing_kf;
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    const M = @DEFAULT_MRT_M();
-    const iM = inv(M);
-    const ni, nj = size(msm.rho);
+    M = @DEFAULT_MRT_M();
+    iM = inv(M);
+    ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
     feq = Array(Float64, lat.n);
-    const nbounds = size(bounds, 2);
+    nbounds = size(bounds, 2);
 
     #! Stream
     for r = 1:nbounds

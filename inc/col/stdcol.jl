@@ -18,8 +18,8 @@ include(joinpath("..", "sim", "simtypes.jl"));
 function col_srt!(sim::Sim, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  const ni, nj = size(msm.rho);
-  const nbounds = size(bounds, 2);
+  ni, nj = size(msm.rho);
+  nbounds = size(bounds, 2);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -41,8 +41,8 @@ end
 function col_srt_sukop!(sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  const ni, nj = size(msm.rho);
-  const nbounds = size(bounds, 2);
+  ni, nj = size(msm.rho);
+  nbounds = size(bounds, 2);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -66,8 +66,8 @@ end
 function col_srt_guo!(sim::Sim, F::Vector{Float64}, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  const ni, nj = size(msm.rho);
-  const nbounds = size(bounds, 2);
+  ni, nj = size(msm.rho);
+  nbounds = size(bounds, 2);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -97,13 +97,13 @@ function col_mrt!(sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
                   bounds::Array{Int64,2})
   lat = sim.lat;
   msm = sim.msm;
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
   feq = Array(Float64, lat.n);
 
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   #! Stream
   for r = 1:nbounds
@@ -131,14 +131,14 @@ end
 function col_mrt!(sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  M = @DEFAULT_MRT_M();
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
   feq = Array(Float64, lat.n);
 
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   #! Stream
   for r = 1:nbounds
@@ -168,15 +168,15 @@ function col_mrt!(sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
                   bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  M = @DEFAULT_MRT_M();
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
   feq = Array(Float64, lat.n);
   fdl = Array(Float64, lat.n);
 
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   #! Stream
   for r = 1:nbounds
@@ -219,13 +219,13 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
                                    bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  M = @DEFAULT_MRT_M();
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   feq = Array(Float64, lat.n);
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   #! Stream
   for r = 1:nbounds
@@ -282,13 +282,13 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
                                    relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  M = @DEFAULT_MRT_M();
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   feq = Array(Float64, lat.n);
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   #! Stream
   for r = 1:nbounds
@@ -357,13 +357,13 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
                                    bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  M = @DEFAULT_MRT_M();
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   feq = Array(Float64, lat.n);
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   #! Stream
   for r = 1:nbounds
@@ -443,13 +443,13 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
                                    bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  const M = @DEFAULT_MRT_M();
-  const iM = inv(M);
-  const ni, nj = size(msm.rho);
+  M = @DEFAULT_MRT_M();
+  iM = inv(M);
+  ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
   feq = Array(Float64, lat.n);
-  const nbounds = size(bounds, 2);
+  nbounds = size(bounds, 2);
 
   for r = 1:nbounds
     i_min, i_max, j_min, j_max = bounds[:,r];
@@ -499,7 +499,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
         mu_prev = muij;
       end
 
-      const omegaij = @omega(muij, lat.cssq, lat.dt);
+      omegaij = @omega(muij, lat.cssq, lat.dt);
 
       fdl = Array(Float64, lat.n);
       for k=1:lat.n
