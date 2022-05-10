@@ -4,8 +4,8 @@
 
 include("lattice.jl");
 
-#const _EPS_POS_F = -1e-2;
-const _EPS_POS_F = -2*eps();
+#_EPS_POS_F = -1e-2;
+_EPS_POS_F = -2*eps();
 
 #! Calculate the classical Boltzmann entropy
 #!
@@ -31,7 +31,7 @@ end
 #! \param   lat Lattice
 #! \return      Map of Boltzmann entropy over the domain 
 function entropy_lat_boltzmann(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   ent = Array{Float64,2}(lat.ni, lat.nj);
   for i = 1:ni, j = 1:nj
     ent[i, j] = lat_boltzmann_entropy(lat, i, j);
@@ -66,7 +66,7 @@ end
 function entropy_noneq_density(f::AbstractVector{Float64}, 
                                f_eq::AbstractVector{Float64},
                                f_neq::AbstractVector{Float64})
-  const nk = length(f);
+  nk = length(f);
   ds = 0.0;
   for k = 1:nk
     ds += f[k] * log(f[k] / f_eq[k]) - f_neq;
@@ -94,7 +94,7 @@ end
 function entropy_quadratic(f::AbstractVector{Float64}, 
                            f_eq::AbstractVector{Float64},
                            f_neq::AbstractVector{Float64})
-  const nk = length(f);
+  nk = length(f);
   ds = 0.0;
   for k = 1:nk
     ds += f_neq[k]^2 / (2 * f_eq[k]);

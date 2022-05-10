@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-abstract Lattice
+abstract type Lattice end
 
 #! D2Q9 lattice
-type LatticeD2Q9 <: Lattice
+struct LatticeD2Q9 <: Lattice
   dx::AbstractFloat
   dt::AbstractFloat
   cc::AbstractFloat
@@ -17,10 +17,10 @@ type LatticeD2Q9 <: Lattice
   n::Int
 
   # Default lattice speed vectors and associated weights
-  const cdef = [1 0; 0 1; -1 0; 0 -1; 1 1; -1 1; -1 -1; 1 -1; 0 0]';
-  const wdef = [1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/36.0; 1.0/36.0;
+  cdef = permutedims([1 0; 0 1; -1 0; 0 -1; 1 1; -1 1; -1 -1; 1 -1; 0 0]);
+  wdef = [1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/9.0; 1.0/36.0; 1.0/36.0;
                 1.0/36.0; 1.0/36.0; 4.0/9.0];
-  const n = length(wdef);
+  n = length(wdef);
 
   # Lattice functions for computing `c`, `cs`, and `cssq`
   cf(dx, dt)    = dx/dt;
@@ -45,7 +45,7 @@ type LatticeD2Q9 <: Lattice
 end
 
 #! D2Q4 lattice
-type LatticeD2Q4 <: Lattice
+struct LatticeD2Q4 <: Lattice
   dx::AbstractFloat
   dt::AbstractFloat
   cc::AbstractFloat
@@ -57,9 +57,9 @@ type LatticeD2Q4 <: Lattice
   n::Int
 
   # Default lattice speed vectors and associated weights
-  const cdef = [1 0; -1 0; 0 1; 0 -1]';
-  const n = size(cdef, 2);
-  const wdef = fill(1.0/4.0, n);
+  cdef = [1 0; -1 0; 0 1; 0 -1]';
+  n = size(cdef, 2);
+  wdef = fill(1.0/4.0, n);
 
   # Lattice functions for computing `c`, `cs`, and `cssq`
   cf(dx, dt)    = dx/dt;

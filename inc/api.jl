@@ -7,14 +7,14 @@
 using PyCall;
 @pyimport yaml;
 
-function parse_and_run(infile::AbstractString, args::Dict)
+function parse_and_run(infile::String, args::Dict)
 
   if !isfile(infile)
     warn(infile * " not found. Please use valid path to input file.");
     return nothing;
   end
 
-  const DEF_EXPR_ATTRS = Dict{AbstractString, Dict{Symbol, Any}}(
+  DEF_EXPR_ATTRS = Dict{String, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
                                            :type => LBXFunction ),
     "bcs"           =>  Dict{Symbol, Any}( :store => true,  :array => true,  
@@ -96,7 +96,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
 
   end
 
-  const DEF_DEFAULTS = Dict{AbstractString, Any}(
+  DEF_DEFAULTS = Dict{String, Any}(
     "simtype" =>  (defs::Dict) -> begin; return "default"; end,
     "rho_g"   =>  (defs::Dict) -> begin; return 1.0; end,
     "datadir" =>  (defs::Dict) -> begin; global datadir; return datadir; end,
@@ -171,7 +171,7 @@ function parse_and_run(infile::AbstractString, args::Dict)
   if !is_init
     # construct objects
     k = 0.0; # this is so every simulation can start from "k+1"
-    const simtypes = map(s -> strip(s), split(defs["simtype"], ','));
+    simtypes = map(s -> strip(s), split(defs["simtype"], ','));
     if "m2phase" in simtypes
       for key in (["Ar", "Ab", "αr", "αb", "β", "nu_r", "nu_b", "rho_0r", 
                    "rho_0b"])
@@ -214,9 +214,9 @@ function parse_and_run(infile::AbstractString, args::Dict)
     end
     if "adaptive" in simtypes # adaptive time stepping?
       warn("Adaptive time stepping is highly experimental. It has not yet been validated");
-      const incr = (!haskey(defs, "incr") || defs["incr"]) ? true : false;
-      const decr = (!haskey(defs, "decr") || defs["decr"]) ? true : false;
-      const relax = (haskey(defs, "relax")) ? defs["relax"] : 1.0;
+      incr = (!haskey(defs, "incr") || defs["incr"]) ? true : false;
+      decr = (!haskey(defs, "decr") || defs["decr"]) ? true : false;
+      relax = (haskey(defs, "relax")) ? defs["relax"] : 1.0;
       if haskey(defs, "xi")
         sim = AdaptiveTimeStepSim(isim, defs["xi"]; incr=incr, decr=decr, relax=relax);
       else

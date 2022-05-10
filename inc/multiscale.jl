@@ -48,7 +48,7 @@ immutable MultiscaleMap <: AbstractMultiscaleMap
   rho::Matrix{Float64};
 
   function MultiscaleMap(nu::AbstractFloat, lat::Lattice, rho::AbstractFloat = 1.0)
-    const ni, nj, = (size(lat.f, 2), size(lat.f, 3));
+    ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 
     new(rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
         zeros(Float64, (2, ni, nj)), fill(rho, (ni, nj)));
@@ -64,8 +64,8 @@ end
 
 #! Map particle distribution frequencies to macroscopic variables
 function map_to_macro!(lat::Lattice, msm::MultiscaleMap)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
-  const nk = lat.n;
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
+  nk = lat.n;
 
   for j=1:nj, i=1:ni
     msm.rho[i,j] = 0;
@@ -111,7 +111,7 @@ end
 #! \param msm Multiscale map
 #! \return Velocity magnitudes
 function u_mag(msm::MultiscaleMap)
-  const ni, nj = size(msm.u, 2), size(msm.u, 3);
+  ni, nj = size(msm.u, 2), size(msm.u, 3);
   u_mag_res = Array(Float64, (ni, nj));
 
   for j = 1:nj, i = 1:ni
@@ -134,7 +134,7 @@ function strain_rate_tensor(lat::Lattice, rho::Real, fneq::Vector{Float64},
                             omega::Number)
 
   D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
-  const ni = length(fneq);
+  ni = length(fneq);
 
   if rho != 0.0
     for alpha=1:2, beta=1:2
@@ -165,8 +165,8 @@ function strain_rate_tensor(lat::Lattice, rho::Real, fneq::Vector{Float64},
   D = zeros(Float64, (2, 2)); #!< Heuristic, 2D so 2x2
 
   if rho != 0.0
-    const ni = length(fneq);
-    const MiSM = iM * S * M;
+    ni = length(fneq);
+    MiSM = iM * S * M;
 
     for alpha=1:2, beta=1:2
       sum = 0;
@@ -186,7 +186,7 @@ end
 
 #! Calculate divergence of the strain rate tensor
 function div_strain_rate(D::Matrix{Float64}, c::Matrix{Float64})
-  const ni, = size(c);
+  ni, = size(c);
   divD = zeros(ni);
 
   for beta = 1:2
@@ -200,7 +200,7 @@ end
 
 #! Calculate the flow potential
 function flow_ϕ(u::Matrix{Float64}, v::Matrix{Float64})
-  const ni, nj  =   size(u, 2), size(u, 3);
+  ni, nj  =   size(u, 2), size(u, 3);
 
   cx  =   _cumsimp(sub(u, :, 1));
   cy  =   _cumsimp(sub(v, 1, :));
@@ -222,7 +222,7 @@ flow_potential = flow_ϕ;
 
 #! Calculate the stream function
 function flow_ψ(u::Matrix{Float64}, v::Matrix{Float64})
-  const ni, nj  =   size(u, 2), size(u, 3);
+  ni, nj  =   size(u, 2), size(u, 3);
 
   cx  =   _cumsimp(sub(v, :, 1));
   cy  =   _cumsimp(sub(u, 1, :));
@@ -244,8 +244,8 @@ stream_function = flow_ψ; # alias for input files that do not support unicode
 
 #! Find center of vortex
 function vortex_center(msm::MultiscaleMap)
-  const ψ = flow_ψ(msm);
-  const ni, nj = size(ψ);
+  ψ = flow_ψ(msm);
+  ni, nj = size(ψ);
   max_i, max_j, max_ψ = 1, 1, ψ[1, 1];
   for j=1:nj, i=1:ni
     @inbounds if ψ[i, j] > max_ψ
@@ -261,9 +261,9 @@ function _cumsimp(y)
   # 3-points interpolation coefficients to midpoints.
   # Second-order polynomial (parabolic) interpolation coefficients
   # from  Xbasis = [0 1 2]  to  Xint = [.5 1.5]
-  const c1 = 3/8;
-  const c2 = 6/8;
-  const c3 = -1/8;
+  c1 = 3/8;
+  c2 = 6/8;
+  c3 = -1/8;
 
   # Determine the size of the input and make column if vector
   is_transpose  =   false;

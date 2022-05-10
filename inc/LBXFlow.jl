@@ -7,7 +7,7 @@ module LBXFlow
 #TODO clean up simulate! code with some kernal functions...
 macro _report_and_exit(e, i)
   return quote
-    const bt = catch_backtrace(); 
+    bt = catch_backtrace(); 
     showerror(STDERR, $e, bt);
     warn();
     warn("Showing backtrace:");

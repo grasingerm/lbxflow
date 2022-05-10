@@ -48,7 +48,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_bounce_back!(lat, 1, ni, nj);
 end
 
@@ -77,7 +77,7 @@ end
 
 #! Bounceback boundary condition for east boundary of domain
 function east_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_bounce_back!(lat, ni, 1, nj);
 end
 
@@ -92,7 +92,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_bounce_back!(lat::Lattice)
-  const nj = size(lat.f, 3);
+  nj = size(lat.f, 3);
   west_bounce_back!(lat, 1, 1, nj);
 end
 
@@ -107,7 +107,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_reflect!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_reflect!(lat, 2, ni-1, nj);
 end
 
@@ -136,7 +136,7 @@ end
 
 #! Bounceback boundary condition for east boundary of domain
 function east_reflect!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_reflect!(lat, ni, 2, nj-1);
 end
 
@@ -151,16 +151,16 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_reflect!(lat::Lattice)
-  const nj = size(lat.f, 3);
+  nj = size(lat.f, 3);
   west_reflect!(lat, 1, 2, nj-1);
 end
 
 # TODO: refactor half bounce back boundary schemes
 #! Bounceback boundary condition for north boundary
 function north_half_bounce_back!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
-  const ks_to   = (4, 7, 8);
-  const ks_from = (2, 5, 6);
-  const cs      = (0, -1, 1);
+  ks_to   = (4, 7, 8);
+  ks_from = (2, 5, 6);
+  cs      = (0, -1, 1);
 
   for i=i_begin:i_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
     lat.f[k_to, i+c, j-1] = lat.f[k_from, i, j];
@@ -169,7 +169,7 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_half_bounce_back!(lat::LatticeD2Q9)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_half_bounce_back!(lat, 2, ni-1, nj);
 
   lat.f[4, 1,    nj-1]     =   lat.f[2, 1,  nj];
@@ -181,9 +181,9 @@ end
 
 #! Bounceback boundary condition for south boundary
 function south_half_bounce_back!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
-  const ks_from = (4, 7, 8);
-  const ks_to   = (2, 5, 6);
-  const cs      = (0, 1, -1);
+  ks_from = (4, 7, 8);
+  ks_to   = (2, 5, 6);
+  cs      = (0, 1, -1);
 
   for i=i_begin:i_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
     lat.f[k_to, i+c, j+1] = lat.f[k_from, i, j];
@@ -192,7 +192,7 @@ end
 
 #! Bounceback boundary condition for south boundary of domain
 function south_half_bounce_back!(lat::LatticeD2Q9)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_half_bounce_back!(lat, 2, ni-1, 1);
 
   lat.f[2, 1, 2] = lat.f[4, 1, 1];
@@ -204,9 +204,9 @@ end
 
 #! Bounceback boundary condition for west boundary
 function east_half_bounce_back!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
-  const ks_to   = (3, 6, 7);
-  const ks_from = (1, 8, 5);
-  const cs      = (0, 1, -1);
+  ks_to   = (3, 6, 7);
+  ks_from = (1, 8, 5);
+  cs      = (0, 1, -1);
 
   for j=j_begin:j_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
     lat.f[k_to, i-1, j+c] = lat.f[k_from, i, j];
@@ -215,7 +215,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function east_half_bounce_back!(lat::LatticeD2Q9)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_half_bounce_back!(lat, ni, 2, nj-1);
 
   lat.f[3, ni-1, 1] = lat.f[1, ni, 1];
@@ -227,9 +227,9 @@ end
 
 #! Bounceback boundary condition for west boundary
 function west_half_bounce_back!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
-  const ks_to   = (1, 5, 8);
-  const ks_from = (2, 7, 6);
-  const cs      = (0, 1, -1);
+  ks_to   = (1, 5, 8);
+  ks_from = (2, 7, 6);
+  cs      = (0, 1, -1);
 
   for j=j_begin:j_end, (k_to, k_from, c) in zip(ks_to, ks_from, cs)
     lat.f[k_to, i+1, j+c] = lat.f[k_from, i, j];
@@ -238,7 +238,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_half_bounce_back!(lat::LatticeD2Q9)
-  const nj = size(lat.f, 2);
+  nj = size(lat.f, 2);
   west_half_bounce_back!(lat, 1, 2, nj-1);
 
   lat.f[1, 2, 1] = lat.f[3, 1, 1];
@@ -250,8 +250,8 @@ end
 
 #! Bounceback boundary condition for north boundary
 function north_halfa_bounce_back!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, j::Int)
-  const ks_to   = (4, 7, 8);
-  const ks_from = (2, 5, 6);
+  ks_to   = (4, 7, 8);
+  ks_from = (2, 5, 6);
 
   for i=i_begin:i_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[k_to, i, j] = lat.f[k_from, i, j];
@@ -264,15 +264,15 @@ end
 
 #! Bounceback boundary condition for north boundary of domain
 function north_halfa_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_halfa_bounce_back!(lat, 1, ni, nj);
 end
 
 #! Bounceback boundary condition for south boundary
 function south_halfa_bounce_back!(lat::LatticeD2Q9, i_begin::Int, i_end::Int, 
                                   j::Int)
-  const ks_from = (4, 7, 8);
-  const ks_to   = (2, 5, 6);
+  ks_from = (4, 7, 8);
+  ks_to   = (2, 5, 6);
 
   for i=i_begin:i_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[k_to, i, j] = lat.f[k_from, i, j];
@@ -285,15 +285,15 @@ end
 
 #! Bounceback boundary condition for south boundary of domain
 function south_halfa_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_halfa_bounce_back!(lat, 1, ni, 1);
 end
 
 #! Bounceback boundary condition for west boundary
 function east_halfa_bounce_back!(lat::LatticeD2Q9, i::Int, j_begin::Int, 
                                  j_end::Int)
-  const ks_to   = (3, 6, 7);
-  const ks_from = (3, 8, 5);
+  ks_to   = (3, 6, 7);
+  ks_from = (3, 8, 5);
 
   for j=j_begin:j_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[k_to, i, j] = lat.f[k_from, i, j];
@@ -306,14 +306,14 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function east_halfa_bounce_back!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_halfa_bounce_back!(lat, ni, 1, nj);
 end
 
 #! Bounceback boundary condition for west boundary
 function west_halfa_bounce_back!(lat::LatticeD2Q9, i::Int, j_begin::Int, j_end::Int)
-  const ks_to   = (1, 5, 8);
-  const ks_from = (2, 7, 6);
+  ks_to   = (1, 5, 8);
+  ks_from = (2, 7, 6);
 
   for j=j_begin:j_end, (k_to, k_from) in zip(ks_to, ks_from)
     lat.f[k_to, i, j] = lat.f[k_from, i, j];
@@ -326,7 +326,7 @@ end
 
 #! Bounceback boundary condition for west boundary of domain
 function west_halfa_bounce_back!(lat::Lattice)
-  const nj = size(lat.f, 3);
+  nj = size(lat.f, 3);
   west_halfa_bounce_back!(lat, 1, 1, nj);
 end
 
@@ -338,7 +338,7 @@ end
 function periodic!(lat::LatticeD2Q9, is::Vector{Int}, ks::Vector{Int},
                    j_from::Int, j_to::Int)
 
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i in is, k in ks
     c = lat.c[k, :];
@@ -362,7 +362,7 @@ end
 function periodic!(lat::LatticeD2Q9, i_from::Int, i_to::Int, js::Vector{Int},
                    ks::Vector{Int})
 
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for j in js, k in ks
     c = lat.c[k, :];
@@ -384,7 +384,7 @@ end
 
 #! Periodic east to west
 function periodic_east_to_west!(lat::LatticeD2Q9)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for j=1:nj, k in (1, 5, 8)
     lat.f[k, 1, j] = lat.f[k, ni-1, j];
@@ -397,7 +397,7 @@ end
 
 #! Periodic north to south 
 function periodic_north_to_south!(lat::LatticeD2Q9)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni, k in (2, 5, 6)
     lat.f[k, i, 1] = lat.f[k, i, nj-1];
@@ -416,9 +416,9 @@ end
 function north_velocity!(lat::LatticeD2Q9, u::Real, i_begin::Int, i_end::Int,
                          j::Int)
   for i=i_begin:i_end
-    const rhon = (lat.f[9, i, j] + lat.f[1, i, j] + lat.f[3, i, j] +
+    rhon = (lat.f[9, i, j] + lat.f[1, i, j] + lat.f[3, i, j] +
                   2.0 * (lat.f[2, i, j] + lat.f[5, i, j] + lat.f[6, i, j]));
-    const jy   = rhon * u;    
+    jy   = rhon * u;    
     lat.f[4, i, j] = lat.f[2, i, j] - 2.0/3.0 * jy;
     lat.f[7, i, j] = (lat.f[5, i, j] - 1.0/6.0 * jy +
                       0.5 * (lat.f[1, i, j] - lat.f[3, i, j]));
@@ -429,7 +429,7 @@ end
 
 #! North velocity boundary condition
 function north_velocity!(lat::Lattice, u::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_velocity!(lat, u, 1, ni, nj);
 end
 
@@ -437,7 +437,7 @@ end
 function north_velocity!(lat::Lattice, us::Vector{Float64}, i_begin::Int, 
                          j::Int)
   for (c, u) in enumerate(us)
-    const i = i_begin + c - 1;
+    i = i_begin + c - 1;
     north_velocity!(lat, u, i, i, j);
   end
 end
@@ -464,7 +464,7 @@ end
 
 #! South velocity boundary condition
 function south_velocity!(lat::Lattice, u::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   south_velocity!(lat, u, 1, ni, 1);
 end
 
@@ -472,7 +472,7 @@ end
 function south_velocity!(lat::Lattice, us::Vector{Float64}, i_begin::Int, 
                          j::Int)
   for (c, u) in enumerate(us)
-    const i = i_begin + c - 1;
+    i = i_begin + c - 1;
     south_velocity!(lat, u, i, i, j);
   end
 end
@@ -506,7 +506,7 @@ end
 function east_velocity!(lat::Lattice, us::Vector{Float64}, i::Int, 
                          j_begin::Int)
   for (c, u) in enumerate(us)
-    const j = j_begin + c - 1;
+    j = j_begin + c - 1;
     east_velocity!(lat, u, i, j, j);
   end
 end
@@ -542,7 +542,7 @@ end
 function west_velocity!(lat::Lattice, us::Vector{Float64}, i::Int, 
                          j_begin::Int)
   for (c, u) in enumerate(us)
-    const j = j_begin + c - 1;
+    j = j_begin + c - 1;
     west_velocity!(lat, u, i, j, j);
   end
 end
@@ -555,7 +555,7 @@ west_velocity!(lat::Lattice, us::Vector{Float64}, i::Int,
 
 #! Lid driven flow
 function lid_driven!(lat::LatticeD2Q9, u::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
     rho = (lat.f[9, i, nj] + lat.f[1, i, nj] + lat.f[3, i, nj] + 
@@ -572,9 +572,9 @@ end
 #! \param   u_avg   Desired average velocity
 #! \return          Boundary condition
 function south_velocity_profile!(L::Int, u_avg::Real)
-  const h       =   (L - 1) / 2.0;
-  const pgrad   =   -3.0 * u_avg / (h^2);
-  const us      =   analytical_poise_newton(1.0, pgrad, L);
+  h       =   (L - 1) / 2.0;
+  pgrad   =   -3.0 * u_avg / (h^2);
+  us      =   analytical_poise_newton(1.0, pgrad, L);
   return (sim) -> begin
     south_velocity!(sim.lat, us, 1, 1); 
   end
@@ -586,7 +586,7 @@ end
 
 #! Pressure north direction
 function north_pressure!(lat::LatticeD2Q9, rhoo::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
     v = (-1. + (lat.f[9,i,nj] + lat.f[1,i,nj] + lat.f[3,i,nj]
@@ -602,7 +602,7 @@ end
 
 #! Pressure south direction
 function south_pressure!(lat::LatticeD2Q9, rhoo::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   for i=1:ni
     v = (-1. + (lat.f[9,i,1] + lat.f[1,i,1] + lat.f[3,i,1]
@@ -635,7 +635,7 @@ end
 
 #! Pressure east direction
 function east_pressure!(lat::LatticeD2Q9, rho_out::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   # middle of inlet
   east_pressure!(lat, rho_out, ni, 2, nj-1);
@@ -678,7 +678,7 @@ end
 
 #! Pressure west direction
 function west_pressure!(lat::LatticeD2Q9, rho_in::Real)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
 
   # middle
   west_pressure!(lat, rho_in, 1, 2, nj-1);
@@ -717,7 +717,7 @@ end
 
 #! North open boundary
 function north_open!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   north_open!(lat, 1, ni, nj);
 end
 
@@ -732,7 +732,7 @@ end
 
 #! South open boundary
 function south_open!(lat::Lattice)
-  const ni = size(lat.f, 2);
+  ni = size(lat.f, 2);
   south_open!(lat, 1, ni, 1);
 end
 
@@ -747,7 +747,7 @@ end
 
 #! East open boundary
 function east_open!(lat::Lattice)
-  const ni, nj = size(lat.f, 2), size(lat.f, 3);
+  ni, nj = size(lat.f, 2), size(lat.f, 3);
   east_open!(lat, ni, 1, nj);
 end
 
@@ -762,7 +762,7 @@ end
 
 #! West open boundary
 function west_open!(lat::Lattice)
-  const nj = size(lat.f, 3);
+  nj = size(lat.f, 3);
   west_open!(lat, 1, 1, nj);
 end
 

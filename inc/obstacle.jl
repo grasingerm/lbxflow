@@ -40,7 +40,7 @@ function _add_obstacle_reflector!(active_cells::Matrix{Bool},
   push!(bcs!, @anon sim -> west_reflect!(sim.lat, i_max, j_min, j_max));
 end
 
-const _obstacle_hash_table! = Dict([
+_obstacle_hash_table! = Dict([
   (:bounce_back,   _add_obstacle_bounce_back!),
   (:reflector,     _add_obstacle_reflector!) 
   ]);

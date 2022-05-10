@@ -17,11 +17,11 @@ end
 #! \param   nnodes    Number of nodes in the channel width
 #! \return            Velocity profile array
 function analytical_poise_newton(mu::Real, pgrad::Real, nnodes::Int)
-  const h       =   (nnodes - 1) / 2.0;
+  h       =   (nnodes - 1) / 2.0;
 
   results       =   zeros(nnodes);
   for i = 1:nnodes
-    const x       =   i - nnodes/2.0 - 0.5;
+    x       =   i - nnodes/2.0 - 0.5;
     results[i]    =   -1.0 / (2.0 * mu) * pgrad * (h^2 - x^2);
   end
 
@@ -36,12 +36,12 @@ end
 #! \param   nnodes    Number of nodes in the channel width
 #! \return            Velocity profile array
 function analytical_poise_bingham(mu::Real, tau::Real, pgrad::Real, nnodes::Int)
-  const y_tau   =   -tau / pgrad;
-  const h       =   (nnodes - 1) / 2.0;
+  y_tau   =   -tau / pgrad;
+  h       =   (nnodes - 1) / 2.0;
 
   results       =   zeros(nnodes);
   for i = 1:nnodes
-    const x       =   i - nnodes/2.0 - 0.5;
+    x       =   i - nnodes/2.0 - 0.5;
     if abs(x) <= y_tau
       results[i]    =   (-1.0 / (2.0 * mu) * pgrad * (h^2 - y_tau^2) 
                          - tau / mu * (h - y_tau));
@@ -66,12 +66,12 @@ function analytical_poise_hb(k::AbstractFloat, n::Real, tau::Real, pgrad::Real,
                              nnodes::Int)
   error("'analytical_poise_hb' not yet implemented");
 
-  const y_tau   =   -tau / pgrad;
-  const h       =   (nnodes - 1) / 2.0;
+  y_tau   =   -tau / pgrad;
+  h       =   (nnodes - 1) / 2.0;
 
   results       =   zeros(nnodes);
   for i = 1:nnodes
-    const x       =   i - nnodes/2.0 - 0.5;
+    x       =   i - nnodes/2.0 - 0.5;
     if abs(x) <= y_tau
       results[i]    =   (-1.0 / (2.0 * mu) * pgrad * (h^2 - y_tau^2) 
                          - tau / mu * (h - y_tau));
@@ -93,13 +93,13 @@ end
 #! \return            Velocity profile array
 function analytical_poise_power_law(k::AbstractFloat, n::Real, 
                                     pgrad::Real, nnodes::Int)
-  const h       =   (nnodes - 1.0) / 2.0;
-  const n_rat   =   convert(Float64, (n + 1.0) / n);
+  h       =   (nnodes - 1.0) / 2.0;
+  n_rat   =   convert(Float64, (n + 1.0) / n);
 
   results       =   zeros(nnodes);
   for i = 1:nnodes
-    const x       =   i - nnodes/2.0 - 0.5;
-    const l_n     =   1.0 / n_rat * (-pgrad / k)^(1.0 / n);
+    x       =   i - nnodes/2.0 - 0.5;
+    l_n     =   1.0 / n_rat * (-pgrad / k)^(1.0 / n);
     results[i]    =   l_n * (h^n_rat - abs(x)^n_rat);
   end
 
@@ -126,17 +126,17 @@ end
 #! \return                        Lp errors
 function lbm_error(sim::AbstractSim, analytical_solution::LBXFunction, d::Int,
                    idx::Int; ps::Vector=[2, Inf], plot_errors::Bool=false,
-                   show_plot::Bool=false, basename::AbstractString="",
+                   show_plot::Bool=false, basename::String="",
                    plot_size::Tuple{Int, Int}=(6, 6))
   @assert(size(sim.msm.u, 1) >= d, 
           "Dimension of direction is larger than dimension of lattice.");
   @assert(size(sim.msm.u, d+1) >= idx, 
           "Index in which to take cross-section is out of the domain.");
 
-  const nnodes  =   (d == 1) ? size(sim.msm.u, 3) : size(sim.msm.u, 2);
-  const approx  =   ((d == 1) ? vec(sim.msm.u[d, idx, :]) : 
+  nnodes  =   (d == 1) ? size(sim.msm.u, 3) : size(sim.msm.u, 2);
+  approx  =   ((d == 1) ? vec(sim.msm.u[d, idx, :]) : 
                                 vec(sim.msm.u[d, :, idx]));
-  const analyt  =   analytical_solution(nnodes);
+  analyt  =   analytical_solution(nnodes);
   rerrors       =   [];
   for p in ps
     push!(rerrors, @Lp_rel_error(analyt, approx, p));
@@ -170,7 +170,7 @@ end
 #! \param   plot_size             Tuple of dimensions for plot (inches)
 function plot_lbm_vs_analyt(sim::AbstractSim, analytical_solution::LBXFunction, 
                             d::Int, idx::Int; show_plot::Bool=false, 
-                            fname::AbstractString="", 
+                            fname::String="", 
                             plot_size::Tuple{Int, Int}=(6, 6))
   @assert(size(sim.msm.u, 1) >= d, 
           "Dimension of direction is larger than dimension of lattice.");
@@ -178,15 +178,15 @@ function plot_lbm_vs_analyt(sim::AbstractSim, analytical_solution::LBXFunction,
           "Index in which to take cross-section is out of the domain.");
   gd = Gadfly;
 
-  const nnodes  =   (d == 1) ? size(sim.msm.u, 3) : size(sim.msm.u, 2);
-  const approx  =   ((d == 1) ? vec(sim.msm.u[d, idx, :]) : 
+  nnodes  =   (d == 1) ? size(sim.msm.u, 3) : size(sim.msm.u, 2);
+  approx  =   ((d == 1) ? vec(sim.msm.u[d, idx, :]) : 
                                 vec(sim.msm.u[d, :, idx]));
-  const analyt  =   analytical_solution(nnodes);
+  analyt  =   analytical_solution(nnodes);
 
-  const x       =   linspace(-0.5, 0.5, nnodes);
-  const df1     =   DataFrames.DataFrame(x=x, y=approx, label="LBM"); 
-  const df2     =   DataFrames.DataFrame(x=x, y=analyt, label="Analytical");
-  const df      =   DataFrames.vcat(df1, df2);
+  x       =   linspace(-0.5, 0.5, nnodes);
+  df1     =   DataFrames.DataFrame(x=x, y=approx, label="LBM"); 
+  df2     =   DataFrames.DataFrame(x=x, y=analyt, label="Analytical");
+  df      =   DataFrames.vcat(df1, df2);
   
   #uplt = gd.plot(df, x="x", y="y", color="label", gd.Geom.line,
   #               gd.Guide.XLabel("x (lat)"), gd.Guide.YLabel("u (lat/sec)"));
@@ -205,10 +205,10 @@ end
 
 #! Initialize function for reporting LBM error
 function report_lbm_error(f_analyt::LBXFunction, d::Int, idx::Int, 
-                          datadir::AbstractString; plot_errors=false)
+                          datadir::String; plot_errors=false)
 
   (sim::AbstractSim, k::Real) -> begin
-    const errors            =   lbm_error(sim, f_analyt, d, idx; ps=[2, Inf], 
+    errors            =   lbm_error(sim, f_analyt, d, idx; ps=[2, Inf], 
                                           plot_errors=plot_errors, 
                                           basename=joinpath(datadir, 
                                                             "error-plots"));
@@ -224,7 +224,7 @@ end
 
 #! Initialize function for plotting lbm approx against analytical solution
 function init_plot_lbm_vs_analyt(f_analyt::LBXFunction, d::Int, idx::Int,
-                                 datadir::AbstractString)
+                                 datadir::String)
 
   return ((sim::AbstractSim, k::Int) -> begin;
     plot_lbm_vs_analyt(sim, f_analyt, d, 

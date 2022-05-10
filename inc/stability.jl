@@ -9,7 +9,7 @@ end
 
 #! Stabilize mass
 function stabilize_mass_callback!(sim::FreeSurfSim, k::Real)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   for j=1:nj, i=1:ni
     if sim.tracker.state[i, j] == FLUID # if a fluid cell, reset to rho 
       sim.tracker.M[i, j] = sim.msm.rho[i, j];
@@ -21,8 +21,8 @@ function stabilize_mass_callback!(sim::FreeSurfSim, k::Real)
         mass_sum = 0;
         counter::UInt = 0;
         for k=1:sim.lat.n-1
-          const i_nbr = i + sim.lat.c[1, k];
-          const j_nbr = j + sim.lat.c[2, k];
+          i_nbr = i + sim.lat.c[1, k];
+          j_nbr = j + sim.lat.c[2, k];
           if (inbounds(i_nbr, j_nbr, [1; ni; 1; nj;]) && 
               !isnan(sim.tracker.M[i_nbr, j_nbr]) &&
               !isinf(sim.tracker.M[i_nbr, j_nbr]))

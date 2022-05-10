@@ -21,11 +21,11 @@ end
 function vel_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
-    const n = length(j_range);
-    const x = linspace(-0.5, 0.5, n);
+    n = length(j_range);
+    x = linspace(-0.5, 0.5, n);
 
     f = @anon j -> _vel_acsr_kernal(sim, c, i, j);
-    const y = pmap(f, j_range);
+    y = pmap(f, j_range);
 
     return x, y;
   end
@@ -40,11 +40,11 @@ end
 function vel_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
-    const n = length(i_range);
-    const x = linspace(-0.5, 0.5, n);
+    n = length(i_range);
+    x = linspace(-0.5, 0.5, n);
 
     f = @anon i -> _vel_acsr_kernal(sim, c, i, j);
-    const y = pmap(f, i_range);
+    y = pmap(f, i_range);
 
     return x, y;
   end
@@ -59,8 +59,8 @@ end
 function vbar_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
-    const n = length(j_range);
-    const x = linspace(-0.5, 0.5, n);
+    n = length(j_range);
+    x = linspace(-0.5, 0.5, n);
 
     f = @anon j -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
@@ -79,8 +79,8 @@ end
 function vbar_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
-    const n = length(i_range);
-    const x = linspace(-0.5, 0.5, n);
+    n = length(i_range);
+    x = linspace(-0.5, 0.5, n);
 
     f = @anon i -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, i_range);
@@ -103,7 +103,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
 function vel_mag_acsr(sim::M2PhaseSim)
-  const ni, nj = size(sim.isim.msm);
+  ni, nj = size(sim.isim.msm);
   u_mag = Array{Float64}(ni, nj);
   for j=1:nj, i=1:ni
     ux = sim.simr.msm.u[1, i, j] + sim.simb.msm.u[1, i, j];
@@ -118,7 +118,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
 function vel_mag_acsr(sim::AdaptiveTimeStepSim)
-  const ni, nj = size(sim.isim.msm);
+  ni, nj = size(sim.isim.msm);
   u_mag = Array{Float64}(ni, nj);
   for j=1:nj, i=1:ni
     ux = sim.isim.msm.u[1, i, j] / sim.Δt;
@@ -133,7 +133,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
 function vel_field_acsr(sim::AbstractSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   return (transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
           transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
 end
@@ -143,7 +143,7 @@ end
 #! \param   sim   Simulation object
 #! \return        Velocity magnitude over domain
 function vel_field_acsr(sim::AdaptiveTimeStepSim)
-  const ni, nj = size(sim.isim.msm.rho);
+  ni, nj = size(sim.isim.msm.rho);
   return (transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 1, :, :)), 
                     (ni, nj))), 
           transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 2, :, :)), 
@@ -221,7 +221,7 @@ end
 #! \param   sim   Simulation object
 #! \return        x, y, u, v for streamlines
 function streamlines_acsr(sim::AbstractSim)
-  const ni, nj = size(sim.msm.rho);
+  ni, nj = size(sim.msm.rho);
   return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
           transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
           transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
@@ -232,7 +232,7 @@ end
 #! \param   sim   Simulation object
 #! \return        x, y, u, v for streamlines
 function streamlines_acsr(sim::AdaptiveTimeStepSim)
-  const ni, nj = size(sim.isim.msm);
+  ni, nj = size(sim.isim.msm);
   u = Array{Float64}(ni, nj);
   v = Array{Float64}(ni, nj);
   for j=1:nj, i=1:ni
@@ -265,7 +265,7 @@ end
 function fluid_frac_acsr(color::Symbol=:red)
   if      color == :red
     return (sim::M2PhaseSim) -> begin
-      const ni, nj  =  size(sim.simr.msm.rho);
+      ni, nj  =  size(sim.simr.msm.rho);
       ff            =  Array{Float64}(ni, nj); 
       for j=1:nj, i=1:ni
         ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
@@ -275,7 +275,7 @@ function fluid_frac_acsr(color::Symbol=:red)
     end
   elseif  color == :blue
     return (sim::M2PhaseSim) -> begin
-      const ni, nj  =  size(sim.simr.msm.rho);
+      ni, nj  =  size(sim.simr.msm.rho);
       ff            =  Array{Float64}(ni, nj); 
       for j=1:nj, i=1:ni
         ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
@@ -289,4 +289,4 @@ function fluid_frac_acsr(color::Symbol=:red)
 end
 
 #! Initialize a default fluid fraction accessor for red fluids
-const red_fluid_frac_acsr = fluid_frac_acsr();
+red_fluid_frac_acsr = fluid_frac_acsr();
