@@ -7,6 +7,7 @@ const LBX_VERSION = v"1.1.0";
 
 # load dependencies
 using ArgParse;
+using Logging;
 
 s = ArgParseSettings();
 @add_arg_table s begin
@@ -21,8 +22,9 @@ s = ArgParseSettings();
     help = "file extension of input file(s) (for directory search)"
     default = "yaml"
   "--verbose", "-v"
-    help = "print extra information about execution status"
-    action = :store_true
+    help = "verbosity level: 0-nothing, 1-errors, 2-warnings, 3-info"
+    arg_type = Int
+    default = 3
   "--clean", "-c"
     help = "clean out `datadir` defined in input file(s)"
     action = :store_true
@@ -62,6 +64,18 @@ end
 pa = parse_args(s);
 pa["LBX_VERSION"] = LBX_VERSION; # add version to arguments
 
+if pa["verbose"] == 3
+  global_logger(ConsoleLogger(stderr, Logging.Info));
+elseif pa["verbose"] == 2
+  global_logger(ConsoleLogger(stderr, Logging.Warn));
+elseif pa["verbose"] == 1
+  global_logger(ConsoleLogger(stderr, Logging.Error));
+else
+  global_logger(Logging.NullLogger());
+end
+
+pa["verbose"] = pa["verbose"] >= 2;
+
 if pa["version"]
   println();
   println(read(abspath(joinpath(dirname(@__FILE__), "banner.txt")), String));
@@ -95,7 +109,7 @@ end
 # recursively search directory for input files
 function recursively_search_for_input_files(dir::AbstractString, 
                                             ext::AbstractString)
-  files = Array(String, 0);
+  files = String[];
   function recursively_add_input_files!(files::Array{String}, 
                                         dir::AbstractString, 
                                         ext::AbstractString)

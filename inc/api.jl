@@ -13,6 +13,8 @@ function parse_and_run(infile::String, args::Dict)
     return nothing;
   end
 
+  do_profile = args["profile"];
+
   DEF_EXPR_ATTRS = Dict{String, Dict{Symbol, Any}}(
     "col_f"         =>  Dict{Symbol, Any}( :store => true,  :array => false,
                                            :type => LBXFunction ),
@@ -26,7 +28,7 @@ function parse_and_run(infile::String, args::Dict)
                                            :type => LBXFunction )
   );
 
-  if args["verbose"]; info("parsing $infile from yaml..."); end
+  if args["verbose"]; @info("parsing $infile from yaml..."); end
   ins = YAML.load_file(infile);
 
   # Check version is consistent with input file
@@ -49,7 +51,7 @@ function parse_and_run(infile::String, args::Dict)
   end
 
   if haskey(ins, "preamble")
-    if args["verbose"]; info("evaluating preamble..."); end;
+    if args["verbose"]; @info("evaluating preamble..."); end;
     pre = pop!(ins, "preamble");
     if findfirst(isequal('#'), pre) == nothing
       @warn("`#` character in the preamble can lead to undefined behavior");
@@ -63,18 +65,18 @@ function parse_and_run(infile::String, args::Dict)
     if haskey(DEF_EXPR_ATTRS, k)
 
       if !DEF_EXPR_ATTRS[k][:store]
-        if args["verbose"]; info("evalling... $v"); end
+        if args["verbose"]; @info("evalling... $v"); end
         eval(Meta.parse(v));
       else
         if DEF_EXPR_ATTRS[k][:array]
           n = length(v);
-          defs[k] = Array(DEF_EXPR_ATTRS[k][:type], (n));
+          defs[k] = Array{DEF_EXPR_ATTRS[k][:type]}(undef, n);
           for i=1:n
-            if args["verbose"]; info("evalling... $(v[i])"); end
+            if args["verbose"]; @info("evalling... $(v[i])"); end
             defs[k][i] = eval(Meta.parse(v[i]));
           end
         else
-          if args["verbose"]; info("evalling... $v"); end
+          if args["verbose"]; @info("evalling... $v"); end
           defs[k] = convert(DEF_EXPR_ATTRS[k][:type], eval(Meta.parse(v)));
         end
       end
@@ -82,7 +84,7 @@ function parse_and_run(infile::String, args::Dict)
     else
       if typeof(v) <: Dict
         if v["expr"]
-          if args["verbose"]; info("evalling... $v"); end
+          if args["verbose"]; @info("evalling... $v"); end
           defs[k] = eval(Meta.parse(v["value"]));
         else
           defs[k] = v["value"];
@@ -104,14 +106,14 @@ function parse_and_run(infile::String, args::Dict)
     "ni"      =>  (defs::Dict) -> begin; error("`ni` is a required parameter."); end,
     "nj"      =>  (defs::Dict) -> begin; error("`nj` is a required parameter."); end,
     "nsteps"  =>  (defs::Dict) -> begin; error("`nsteps` is a required parameter."); end,
-    "sbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
-    "cbounds" =>  (defs::Dict) -> begin; [1 defs["ni"] 1 defs["nj"];]'; end,
-    "bcs"     =>  (defs::Dict) -> begin; Array(Function, 0); end,
-    "callbacks" =>  (defs::Dict) -> begin; Array(Function, 0); end,
-    "finally" =>  (defs::Dict) -> begin; Array(Function, 0); end
+    "sbounds" =>  (defs::Dict) -> begin; permutedims([1 defs["ni"] 1 defs["nj"];]); end,
+    "cbounds" =>  (defs::Dict) -> begin; permutedims([1 defs["ni"] 1 defs["nj"];]); end,
+    "bcs"     =>  (defs::Dict) -> begin; Function[]; end,
+    "callbacks" =>  (defs::Dict) -> begin; Function[]; end,
+    "finally" =>  (defs::Dict) -> begin; Function[]; end
   );
 
-  if args["verbose"]; info("setting defaults."); end
+  if args["verbose"]; @info("setting defaults."); end
   # set defaults
   for (k, f) in DEF_DEFAULTS
     if !haskey(defs, k)
@@ -147,7 +149,7 @@ function parse_and_run(infile::String, args::Dict)
 
   # if datadir does not exist, create it
   if !isdir(defs["datadir"])
-    info(defs["datadir"] * " does not exist. Creating now...");
+    @info(defs["datadir"] * " does not exist. Creating now...");
     mkpath(defs["datadir"]); # makes all directories in a given path
   end
 
@@ -160,9 +162,9 @@ function parse_and_run(infile::String, args::Dict)
   if args["resume"]
     k, sim = load_latest_backup(defs["datadir"]);
     if k == 0 || sim == nothing
-      if args["verbose"]; info("No backup files found."); end
+      if args["verbose"]; @info("No backup files found."); end
     else
-      if args["verbose"]; info("Loaded previous simulation data from step $k."); end
+      if args["verbose"]; @info("Loaded previous simulation data from step $k."); end
       is_init = true;
     end
   end
@@ -226,7 +228,7 @@ function parse_and_run(infile::String, args::Dict)
     end
   end
  
-  if args["profile"]
+  if do_profile
     Profile.clear();
     Profile.init(delay=args["profile-delay"]);
   end
@@ -243,27 +245,24 @@ function parse_and_run(infile::String, args::Dict)
                     zeros(1);
                   end);
 
-  @_checkdebug_mass_cons("simulation", mass_matrix, try
-    tic();
+  try
+    start_t = time();
 
     if !haskey(defs, "obstacles")
       if !haskey(defs, "test_for_term")
         # this simulate should be more memory and computationally efficient
-        @profif(args["profile"],
-          begin;
+        profif(do_profile, () -> begin;
             global nsim;
             nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                              defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
-          end
-        );
+          end);
       else
         if haskey(defs, "test_for_term_steps")
           @assert(defs["test_for_term_steps"] > 1, 
                   "'test_for_term_steps', i.e. the number of steps to average " *
                   "over when checking for steady-state conditions, should be "  *
                   "greater than 1 (or not specified).");
-          @profif(args["profile"],
-            begin;
+          profif(do_profile, () -> begin;
               global nsim;
               nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
@@ -271,8 +270,7 @@ function parse_and_run(infile::String, args::Dict)
             end
           );
         else
-          @profif(args["profile"],
-            begin;
+          profif(do_profile, () -> begin;
               global nsim;
               nsim = simulate!(sim, defs["sbounds"], defs["col_f"], defs["cbounds"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
@@ -284,8 +282,7 @@ function parse_and_run(infile::String, args::Dict)
     else
       if !haskey(defs, "test_for_term")
         # this simulate should be more memory and computationally efficient
-        @profif(args["profile"],
-          begin;
+        profif(do_profile, () -> begin;
             global nsim;
             nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
                              defs["bcs"], defs["nsteps"], defs["callbacks"], k); 
@@ -297,8 +294,7 @@ function parse_and_run(infile::String, args::Dict)
                   "'test_for_term_steps', i.e. the number of steps to average " *
                   "over when checking for steady-state conditions, should be "  *
                   "greater than 1 (or not specified).");
-          @profif(args["profile"],
-            begin;
+          profif(do_profile, () -> begin;
               global nsim;
               nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
@@ -306,8 +302,7 @@ function parse_and_run(infile::String, args::Dict)
             end
           );
         else
-          @profif(args["profile"],
-            begin;
+          profif(do_profile, () -> begin;
               global nsim;
               nsim = simulate!(sim, defs["col_f"], defs["active_cells"],
                                defs["bcs"], defs["nsteps"], defs["test_for_term"], 
@@ -318,8 +313,13 @@ function parse_and_run(infile::String, args::Dict)
       end
     end
 
-  catch e
-    @_report_and_exit(e, 0.0);
+  catch err
+    bt = catch_backtrace(); 
+    showerror(stderr, err, bt);
+    @warn("Showing backtrace:");
+    Base.show_backtrace(stderr, backtrace()); # display callstack
+    @warn("Simulation interrupted at step ", 0, "!");
+    return 0;
 
   finally
     for fin in defs["finally"]
@@ -328,10 +328,10 @@ function parse_and_run(infile::String, args::Dict)
 
     if args["verbose"]
       println("$infile:\tSteps simulated: $nsim");
-      toc();
+      println("Time elapsed: $(time() - start_t)");
     end
 
-    if args["profile"]
+    if do_profile
       Profile.print(args["profile-io"], cols=args["profile-cols"]);
     end
 
@@ -342,11 +342,11 @@ function parse_and_run(infile::String, args::Dict)
         write(file, "bt", bt);
         write(file, "lidict", lidict);
       end
-    elseif args["profile"] && args["profile-view"]
+    elseif do_profile && args["profile-view"]
       ProfileView.view();
       println("Press enter to continue...");
-      readline(STDIN);
+      readline(stdin);
     end
-  end, 1e-12);
+  end
 
 end

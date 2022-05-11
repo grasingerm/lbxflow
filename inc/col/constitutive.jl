@@ -58,14 +58,14 @@ function init_constit_srt_bingham_explicit(mu_p::AbstractFloat,
     omegaij = sim.msm.omega[i,j];
 
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
 
     # update relaxation matrix
     gamma = gamma < gamma_min ? gamma_min : gamma;
-    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muij = nu(omegaij, sim.lat.cssq, sim.lat.dt);
     muij = (
              (1 - relax) * muij
-              + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+              + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
            );
     return muij;
   end
@@ -96,7 +96,7 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
     omegaij = msm.omega[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = (omegaij != 0.0) ? @nu(omegaij, sim.lat.cssq, sim.lat.dt) : 1.0;
+    muo = (omegaij != 0.0) ? nu(omegaij, sim.lat.cssq, sim.lat.dt) : 1.0;
     @assert(!isnan(muo), "Initial guess is for mu is NaN");
 
     # iteratively determine mu
@@ -108,16 +108,16 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
       iters += 1;
 
       D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
       @assert(!isnan(gamma), "GAMMA IS NAN");
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
-                + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+                + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
-      omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
+      omegaij = omega(muij, sim.lat.cssq, sim.lat.dt);
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol
@@ -230,14 +230,14 @@ function init_constit_srt_hb_explicit(k::AbstractFloat, n::Number,
     omegaij = sim.msm.omega[i,j];
 
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
 
     # update relaxation matrix
     gamma = gamma < gamma_min ? gamma_min : gamma;
-    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muij = nu(omegaij, sim.lat.cssq, sim.lat.dt);
     muij = (
              (1 - relax) * muij
-              + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+              + relax * mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
            );
     return muij;
   end
@@ -269,7 +269,7 @@ function init_constit_srt_hb_implicit(k::AbstractFloat, n::Number,
     omegaij = msm.omega[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muo = nu(omegaij, sim.lat.cssq, sim.lat.dt);
 
     # iteratively determine mu
     iters = 0;
@@ -280,15 +280,15 @@ function init_constit_srt_hb_implicit(k::AbstractFloat, n::Number,
       iters += 1;
 
       D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
-                + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+                + relax * mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
              );
-      omegaij = @omega(muij, sim.lat.cssq, sim.lat.dt);
+      omegaij = omega(muij, sim.lat.cssq, sim.lat.dt);
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol
@@ -321,10 +321,10 @@ function init_constit_srt_power_law_explicit(k::AbstractFloat, n::Number,
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     rhoij = sim.msm.rho[i,j];
     omegaij = sim.msm.omega[i,j];
-    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muij = nu(omegaij, sim.lat.cssq, sim.lat.dt);
 
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
     gamma = gamma < gamma_min ? gamma_min : gamma;
 
     # update relaxation matrix
@@ -357,7 +357,7 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
     omegaij = msm.omega[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muo = nu(omegaij, sim.lat.cssq, sim.lat.dt);
 
     # iteratively determine mu
     iters = 0;
@@ -368,7 +368,7 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
       iters += 1;
 
       D = strain_rate_tensor(lat, rhoij, fneq, omegaij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
       gamma = gamma < gamma_min ? gamma_min : gamma;
 
       # update relaxation matrix
@@ -376,7 +376,7 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
                (1 - relax) * muij
                 + relax * k * gamma^(n-1);
              );
-      omegaij = @omega(muij, lat.cssq, lat.dt);
+      omegaij = omega(muij, lat.cssq, lat.dt);
 
       # check for convergence
       if abs(mu_prev - muij) / muo <= tol
@@ -419,8 +419,8 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat,
                                                       max_iters, tol, relax);
 
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    mu_min = @nu(1/rt_min, sim.lat.cssq, sim.lat.dt);
-    mu_max = @nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
+    mu_min = nu(1/rt_min, sim.lat.cssq, sim.lat.dt);
+    mu_max = nu(1/rt_max, sim.lat.cssq, sim.lat.dt);
     mu = inner_f(sim, fneq, i, j);
     if mu < mu_min
       return mu_min;
@@ -446,10 +446,10 @@ function init_constit_srt_casson_explicit(k::AbstractFloat, n::Number,
   return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
     rhoij = sim.msm.rho[i,j];
     omegaij = sim.msm.omega[i,j];
-    muij = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
+    muij = nu(omegaij, sim.lat.cssq, sim.lat.dt);
 
     D = strain_rate_tensor(sim.lat, rhoij, fneq, omegaij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
     gamma = gamma < gamma_min ? gamma_min : gamma;
 
     # update relaxation matrix
@@ -457,65 +457,6 @@ function init_constit_srt_casson_explicit(k::AbstractFloat, n::Number,
              (1 - relax) * muij
               + relax * k * gamma^(n-1);
            );
-    return muij;
-  end
-end
-
-#! Initialize an explicit power law constitutive relationship
-#!
-#! \param k Flow consistency index
-#! \param n Power law index
-#! \param gamma_min Minimum allowable strain rate
-#! \param max_iters Maximum iterations
-#! \param tol Convergence tolerance
-#! \param relax Relaxation coefficient
-#! \return Constitutive relation function
-function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
-                                             gamma_min::AbstractFloat,
-                                             max_iters::Int, tol::AbstractFloat,
-                                             relax::Number = 1.0)
-
-  return (sim::AbstractSim, fneq::Vector{Float64}, i::Int, j::Int) -> begin
-    lat = sim.lat;
-    msm = sim.msm;
-    rhoij = sim.msm.rho[i,j];
-    omegaij = msm.omega[i,j];
-
-    # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = @nu(omegaij, sim.lat.cssq, sim.lat.dt);
-
-    # iteratively determine mu
-    iters = 0;
-    mu_prev = muo;
-    muij = muo;
-
-    while true
-      iters += 1;
-
-      D = strain_rate_tensor(lat, rhoij, fneq, omegaij);
-      gamma = @strain_rate(D);
-      gamma = gamma < gamma_min ? gamma_min : gamma;
-
-      # update relaxation matrix
-      muij = (
-               (1 - relax) * muij
-                + relax * k * gamma^(n-1);
-             );
-      omegaij = @omega(muij, lat.cssq, lat.dt);
-
-      # check for convergence
-      if abs(mu_prev - muij) / muo <= tol
-        break;
-      end
-
-      if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
-        #@show i, j;
-        break;
-      end
-
-      mu_prev = muij;
-    end
     return muij;
   end
 end
@@ -535,7 +476,7 @@ end
 function init_constit_mrt_const_local()
   return (sim::AbstractSim, fneq::Vector{Float64}, S::Function, 
           M::Matrix{Float64}, iM::Matrix{Float64}, i::Int, j::Int) -> begin
-    return @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
+    return nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
   end
 end
 
@@ -558,17 +499,17 @@ function init_constit_mrt_bingham_explicit(mu_p::AbstractFloat,
     rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muij = @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
+    muij = nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
     Sij = S(muij, rhoij, sim.lat.cssq, sim.lat.dt);
     
     D = strain_rate_tensor(sim.lat, rhoij, fneq, M, iM, Sij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
 
     # update relaxation matrix
     gamma = gamma < gamma_min ? gamma_min : gamma;
     muij = (
              (1 - relax) * muij
-              + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+              + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
            );
     return muij;
   end
@@ -599,7 +540,7 @@ function init_constit_mrt_bingham_implicit(mu_p::AbstractFloat,
     rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+    muo = nu(msm.omega[i,j], lat.cssq, lat.dt);
     muij = muo;
     Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -611,13 +552,13 @@ function init_constit_mrt_bingham_implicit(mu_p::AbstractFloat,
       iters += 1;
 
       D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
-                + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+                + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -658,17 +599,17 @@ function init_constit_mrt_hb_explicit(k::AbstractFloat, n::Number,
     rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muij = @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
+    muij = nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
     Sij = S(muij, rhoij, sim.lat.cssq, sim.lat.dt);
     
     D = strain_rate_tensor(sim.lat, rhoij, fneq, M, iM, Sij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
 
     # update relaxation matrix
     gamma = gamma < gamma_min ? gamma_min : gamma;
     muij = (
              (1 - relax) * muij
-              + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+              + relax * mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
            );
     return muij;
   end
@@ -700,7 +641,7 @@ function init_constit_mrt_hb_implicit(k::AbstractFloat, n::Number,
     rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+    muo = nu(msm.omega[i,j], lat.cssq, lat.dt);
     muij = muo;
     Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -712,13 +653,13 @@ function init_constit_mrt_hb_implicit(k::AbstractFloat, n::Number,
       iters += 1;
 
       D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
-                + relax * @mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
+                + relax * mu_papanstasiou(k * gamma^(n-1), tau_y, m, gamma);
              );
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -755,11 +696,11 @@ function init_constit_mrt_power_law_explicit(k::AbstractFloat, n::Number,
     rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muij = @nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
+    muij = nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt);
     Sij = S(muij, rhoij, sim.lat.cssq, sim.lat.dt);
     
     D = strain_rate_tensor(sim.lat, rhoij, fneq, M, iM, Sij);
-    gamma = @strain_rate(D);
+    gamma = strain_rate(D);
 
     # update relaxation matrix
     gamma = gamma < gamma_min ? gamma_min : gamma;
@@ -793,7 +734,7 @@ function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
     rhoij = sim.msm.rho[i,j];
 
     # initialize density, viscosity, and relaxation matrix at node i,j
-    muo = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+    muo = nu(msm.omega[i,j], lat.cssq, lat.dt);
     muij = muo;
     Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -805,7 +746,7 @@ function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
       iters += 1;
 
       D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;

@@ -2,20 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using Logging;
+using LinearAlgebra;
+
 module LBXFlow
 
-using Logging;
-
 #TODO clean up simulate! code with some kernal functions...
-macro _report_and_exit(e, i)
+macro _report_and_exit(err, i)
   return quote
     bt = catch_backtrace(); 
-    showerror(STDERR, $e, bt);
+    showerror(stderr, $err, bt);
     @warn("Showing backtrace:");
-    Base.show_backtrace(STDERR, backtrace()); # display callstack
+    Base.show_backtrace(stderr, backtrace()); # display callstack
     @warn("Simulation interrupted at step ", $i, "!");
     return $i;
   end
+end
+
+@inline function _report_and_exit(err, i)
+  bt = catch_backtrace(); 
+  showerror(stderr, err, bt);
+  @warn("Showing backtrace:");
+  Base.show_backtrace(stderr, backtrace()); # display callstack
+  @warn("Simulation interrupted at step ", i, "!");
+  rethrow(err);
 end
 
 include("debug.jl");

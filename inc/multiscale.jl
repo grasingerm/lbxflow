@@ -5,40 +5,26 @@
 using SparseArrays;
 
 #! Calculate strain rate from strain rate tensor
-macro strain_rate(D)
-  return :(sqrt(2.0 * ddot($D, $D)));
-end
+@inline strain_rate(D) = sqrt(2.0 * ddot(D, D));
 
 # TODO: create a type `ConstitutiveModel`
 #! Calculate apparent viscosity of a Bingham plastic using Papanstasiou's model
-macro mu_papanstasiou(mu_p, tau_y, m, gamma)
-  return :($mu_p + $tau_y / $gamma * (1 - exp(-$m * abs($gamma))));
-end
+@inline mu_papanstasiou(mu_p, tau_y, m, gamma) = mu_p + tau_y / gamma * (1 - exp(-m * abs(gamma)));
 
 #! Calculate relaxation time
-macro relax_t(nu, cssq, dt)
-  return :($nu / ($cssq*$dt) + 0.5);
-end
+@inline relax_t(nu, cssq, dt) = nu / (cssq*dt) + 0.5;
 
 #! Calculate collision frequency
-macro omega(nu, cssq, dt)
-	return :(1.0 / @relax_t($nu, $cssq, $dt));
-end
+@inline omega(nu, cssq, dt) = 1.0 / relax_t(nu, cssq, dt);
 
 #! Viscosity from collision frequency
-macro nu(omega, cssq, dt)
-  return :($cssq*$dt * (1.0/$omega - 0.5));
-end
+@inline nu(omega, cssq, dt) = cssq*dt * (1.0/omega - 0.5);
 
 #! Macroscopic pressure from rho
-macro p(rho, cssq)
-  return :($rho * $cssq);
-end
+@inline p(rho, cssq) = rho * cssq;
 
 #! Macroscopic rho from pressure
-macro rho(p, cssq)
-  return :($p / $cssq);
-end
+@inline rho(p, cssq) = p / cssq;
 
 abstract type AbstractMultiscaleMap end;
 
@@ -52,8 +38,8 @@ struct MultiscaleMap <: AbstractMultiscaleMap
   function MultiscaleMap(nu::AbstractFloat, lat::Lattice, rho::AbstractFloat = 1.0)
     ni, nj, = (size(lat.f, 2), size(lat.f, 3));
 
-    new(rho, fill(@omega(nu, lat.cssq, lat.dt), (ni, nj)),
-        zeros(Float64, (2, ni, nj)), fill(rho, (ni, nj)));
+    new(rho, fill(omega(nu, lat.cssq, lat.dt), (ni, nj)),
+        zeros(2, ni, nj), fill(rho, (ni, nj)));
   end
   
   MultiscaleMap(rho_0::AbstractFloat, omega::Matrix{Float64},
@@ -114,7 +100,7 @@ end
 #! \return Velocity magnitudes
 function u_mag(msm::MultiscaleMap)
   ni, nj = size(msm.u, 2), size(msm.u, 3);
-  u_mag_res = Array(Float64, (ni, nj));
+  u_mag_res = zeros(ni, nj);
 
   for j = 1:nj, i = 1:ni
     u = msm.u[1, i, j];

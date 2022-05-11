@@ -7,7 +7,7 @@ function extract_prof_callback(i::Int)
 
   return (sim::AbstractSim) -> begin
     nj = size(sim.msm.u, 3);
-    x = Array(Float64, (nj, 3));
+    x = zeros(nj, 3);
 
     for j=1:nj
       x[j,:] = [j, sim.msm.u[1,i,j], sim.msm.u[2,i,j]];
@@ -200,17 +200,17 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                     sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = @strain_rate(D);
+        sr[i,j] = strain_rate(D);
       end
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr));
@@ -384,17 +384,17 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                   sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = @strain_rate(D);
+        sr[i,j] = strain_rate(D);
       end
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr));
@@ -417,17 +417,17 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                   sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = (@strain_rate(D) > gamma_min) ? 1.0 : 0.0;
+        sr[i,j] = (strain_rate(D) > gamma_min) ? 1.0 : 0.0;
       end
       PyPlot.clf();
       PyPlot.contourf(transpose(sr), levels=[0.0, 1.0]);
@@ -603,17 +603,17 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                   sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = @strain_rate(D);
+        sr[i,j] = strain_rate(D);
       end
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr));
@@ -806,17 +806,17 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                   sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = @strain_rate(D);
+        sr[i,j] = strain_rate(D);
       end
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr));
@@ -905,17 +905,17 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                   sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = @strain_rate(D);
+        sr[i,j] = strain_rate(D);
       end
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr), levels=levs);
@@ -1012,17 +1012,17 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
   iM = @DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
-      sr = Array(Float64, ni, nj);
+      sr = zeros(ni, nj);
       for j=1:nj, i=1:ni
-        Sij = S_luo(@nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
+        Sij = S_luo(nu(sim.msm.omega[i,j], sim.lat.cssq, sim.lat.dt),
                     sim.msm.rho[i,j], sim.lat.cssq, sim.lat.dt);
-        feq = Array(Float64, sim.lat.n);
+        feq = zeros(sim.lat.n);
         for k=1:sim.lat.n
           feq[k] = feq_incomp(sim.lat, sim.msm.rho[i,j], sim.msm.u[:,i,j], k);
         end
         D = strain_rate_tensor(sim.lat, sim.msm.rho[i,j],
                                sim.lat.f[:,i,j] - feq, M, iM, Sij);
-        sr[i,j] = @strain_rate(D);
+        sr[i,j] = strain_rate(D);
       end
       PyPlot.clf();
       cs = PyPlot.contourf(transpose(sr), levels=levs);

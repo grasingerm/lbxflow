@@ -104,7 +104,7 @@ end
 #! \return        Velocity magnitude over domain
 function vel_mag_acsr(sim::M2PhaseSim)
   ni, nj = size(sim.isim.msm);
-  u_mag = Array{Float64}(ni, nj);
+  u_mag = zeros(ni, nj);
   for j=1:nj, i=1:ni
     ux = sim.simr.msm.u[1, i, j] + sim.simb.msm.u[1, i, j];
     uy = sim.simr.msm.u[2, i, j] + sim.simb.msm.u[2, i, j];
@@ -119,7 +119,7 @@ end
 #! \return        Velocity magnitude over domain
 function vel_mag_acsr(sim::AdaptiveTimeStepSim)
   ni, nj = size(sim.isim.msm);
-  u_mag = Array{Float64}(ni, nj);
+  u_mag = zeros(ni, nj);
   for j=1:nj, i=1:ni
     ux = sim.isim.msm.u[1, i, j] / sim.Δt;
     uy = sim.isim.msm.u[2, i, j] / sim.Δt;
@@ -233,8 +233,8 @@ end
 #! \return        x, y, u, v for streamlines
 function streamlines_acsr(sim::AdaptiveTimeStepSim)
   ni, nj = size(sim.isim.msm);
-  u = Array{Float64}(ni, nj);
-  v = Array{Float64}(ni, nj);
+  u = zeros(ni, nj);
+  v = zeros(ni, nj);
   for j=1:nj, i=1:ni
     u[j, i] = sim.isim.msm[1, i, j] / sim.Δt;
     v[j, i] = sim.isim.msm[2, i, j] / sim.Δt;
@@ -266,7 +266,7 @@ function fluid_frac_acsr(color::Symbol=:red)
   if      color == :red
     return (sim::M2PhaseSim) -> begin
       ni, nj  =  size(sim.simr.msm.rho);
-      ff            =  Array{Float64}(ni, nj); 
+      ff            =  zeros(ni, nj); 
       for j=1:nj, i=1:ni
         ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
         ff[i, j]      =  ρ_r / (ρ_r + ρ_b);
@@ -276,7 +276,7 @@ function fluid_frac_acsr(color::Symbol=:red)
   elseif  color == :blue
     return (sim::M2PhaseSim) -> begin
       ni, nj  =  size(sim.simr.msm.rho);
-      ff            =  Array{Float64}(ni, nj); 
+      ff            =  zeros(ni, nj); 
       for j=1:nj, i=1:ni
         ρ_r, ρ_b      =  sim.simr.msm.rho[i, j], sim.simb.msm.rho[i, j]; 
         ff[i, j]      =  ρ_b / (ρ_r + ρ_b);

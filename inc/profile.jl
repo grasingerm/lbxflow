@@ -13,3 +13,11 @@ macro profif(condition, statement)
     end
   end
 end
+
+@inline profif(condition, lambda) = begin
+    if condition
+      @profile lambda();
+    else
+      lambda();
+    end
+  end

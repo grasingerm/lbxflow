@@ -9,7 +9,7 @@ function pause_sim_callback(stepout::Real)
   return (sim::AbstractSim, k::Real) -> begin
     if k % stepout < sim.Δt
       println("Press ENTER to continue...");
-      readline(STDIN);
+      readline(stdin);
     end
   end
 end

@@ -2,15 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include(joinpath("..", "debug.jl"));
-include("equilibrium.jl");
-include("freecol.jl");
-include(joinpath("..", "lattice.jl"));
-include("mrt_matrices.jl");
-include(joinpath("..", "multiscale.jl"));
-include(joinpath("..", "numerics.jl"));
-include(joinpath("..", "sim", "simtypes.jl"));
-
 #! Single relaxation time collision function for incompressible Newtonian flow
 #!
 #! \param sim Simulation object
@@ -101,7 +92,7 @@ function col_mrt!(sim::Sim, M::Matrix{Float64}, S::SparseMatrixCSC,
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
-  feq = Array(Float64, lat.n);
+  feq = zeros(lat.n);
 
   nbounds = size(bounds, 2);
 
@@ -136,7 +127,7 @@ function col_mrt!(sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
-  feq = Array(Float64, lat.n);
+  feq = zeros(lat.n);
 
   nbounds = size(bounds, 2);
 
@@ -173,8 +164,8 @@ function col_mrt!(sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_n))
-  feq = Array(Float64, lat.n);
-  fdl = Array(Float64, lat.n);
+  feq = zeros(lat.n);
+  fdl = zeros(lat.n);
 
   nbounds = size(bounds, 2);
 
@@ -224,7 +215,7 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  feq = Array(Float64, lat.n);
+  feq = zeros(lat.n);
   nbounds = size(bounds, 2);
 
   #! Stream
@@ -237,7 +228,7 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
       for k=1:lat.n; feq[k] = feq_incomp(lat, rhoij, uij, k); end
 
       # initialize density, viscosity, and relaxation matrix at node i,j
-      muij = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+      muij = nu(msm.omega[i,j], lat.cssq, lat.dt);
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
@@ -246,20 +237,20 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
       fneq = f - feq;
 
       D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
-                + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+                + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       lat.f[:,i,j] = f - iM * Sij * (mij - meq); # perform collision
 
       # update collision frequency matrix
-      msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
+      msm.omega[i,j] = omega(muij, lat.cssq, lat.dt);
     end
   end
 end
@@ -287,7 +278,7 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  feq = Array(Float64, lat.n);
+  feq = zeros(lat.n);
   nbounds = size(bounds, 2);
 
   #! Stream
@@ -300,7 +291,7 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
       for k=1:lat.n; feq[k] = feq_incomp(lat, rhoij, uij, k); end
 
       # initialize density, viscosity, and relaxation matrix at node i,j
-      muij = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+      muij = nu(msm.omega[i,j], lat.cssq, lat.dt);
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
@@ -309,18 +300,18 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
       fneq = f - feq;
 
       D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-      gamma = @strain_rate(D);
+      gamma = strain_rate(D);
 
       # update relaxation matrix
       gamma = gamma < gamma_min ? gamma_min : gamma;
       muij = (
                (1 - relax) * muij
-                + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+                + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
              );
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
-      omegaij = @omega(muij, lat.cssq, lat.dt);
+      omegaij = omega(muij, lat.cssq, lat.dt);
 
-      fdl = Array(Float64, lat.n);
+      fdl = zeros(lat.n);
       for k=1:lat.n
         ck = lat.c[:,k];
         fdl[k] = (1 - 0.5 * omegaij) * lat.w[k] * dot(((ck - uij) / lat.cssq +
@@ -362,7 +353,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  feq = Array(Float64, lat.n);
+  feq = zereos(lat.n);
   nbounds = size(bounds, 2);
 
   #! Stream
@@ -375,7 +366,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
       for k=1:lat.n; feq[k] = feq_incomp(lat, rhoij, uij, k); end
 
       # initialize density, viscosity, and relaxation matrix at node i,j
-      muij = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+      muij = nu(msm.omega[i,j], lat.cssq, lat.dt);
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
@@ -392,13 +383,13 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
         iters += 1;
 
         D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-        gamma = @strain_rate(D);
+        gamma = strain_rate(D);
 
         # update relaxation matrix
         gamma = gamma < gamma_min ? gamma_min : gamma;
         muij = (
                  (1 - relax) * muij
-                  + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+                  + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
                );
         Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -417,7 +408,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
       lat.f[:,i,j] = f - iM * Sij * (mij - meq); # perform collision
 
       # update collision frequency matrix
-      msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
+      msm.omega[i,j] = omega(muij, lat.cssq, lat.dt);
     end
   end
 end
@@ -448,7 +439,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
   ni, nj = size(msm.rho);
 
   # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-  feq = Array(Float64, lat.n);
+  feq = zeros(lat.n);
   nbounds = size(bounds, 2);
 
   for r = 1:nbounds
@@ -460,7 +451,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
       for k=1:lat.n; feq[k] = feq_incomp(lat, rhoij, uij, k); end
 
       # initialize density, viscosity, and relaxation matrix at node i,j
-      muij = @nu(msm.omega[i,j], lat.cssq, lat.dt);
+      muij = nu(msm.omega[i,j], lat.cssq, lat.dt);
       Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
       f = lat.f[:,i,j];
@@ -477,13 +468,13 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
         iters += 1;
 
         D = strain_rate_tensor(lat, rhoij, fneq, M, iM, Sij);
-        gamma = @strain_rate(D);
+        gamma = strain_rate(D);
 
         # update relaxation matrix
         gamma = gamma < gamma_min ? gamma_min : gamma;
         muij = (
                  (1 - relax) * muij
-                  + relax * @mu_papanstasiou(mu_p, tau_y, m, gamma);
+                  + relax * mu_papanstasiou(mu_p, tau_y, m, gamma);
                );
         Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
@@ -499,9 +490,9 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
         mu_prev = muij;
       end
 
-      omegaij = @omega(muij, lat.cssq, lat.dt);
+      omegaij = omega(muij, lat.cssq, lat.dt);
 
-      fdl = Array(Float64, lat.n);
+      fdl = zeros(lat.n);
       for k=1:lat.n
         ck = lat.c[:,k];
         fdl[k] = (1 - 0.5 * omegaij) * lat.w[k] * dot(((ck - uij) / lat.cssq +

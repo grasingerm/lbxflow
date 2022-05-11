@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("lattice.jl");
-
 #_EPS_POS_F = -1e-2;
 _EPS_POS_F = -2*eps();
 
@@ -31,7 +29,7 @@ end
 #! \return      Map of Boltzmann entropy over the domain 
 function entropy_lat_boltzmann(lat::Lattice)
   ni, nj = size(lat.f, 2), size(lat.f, 3);
-  ent = Array{Float64,2}(lat.ni, lat.nj);
+  ent = zeros(lat.ni, lat.nj);
   for i = 1:ni, j = 1:nj
     ent[i, j] = lat_boltzmann_entropy(lat, i, j);
   end

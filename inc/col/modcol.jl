@@ -20,14 +20,14 @@ function init_col_srt(constit_relation_f::Function;
       for j = j_min:j_max, i = i_min:i_max
         rhoij = msm.rho[i,j];
         uij = msm.u[:,i,j];
-        feq = Array(Float64, lat.n); 
-        fneq = Array(Float64, lat.n); 
+        feq = zeros(lat.n); 
+        fneq = zeros(lat.n); 
         for k = 1:lat.n 
           feq[k] = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
         mu = constit_relation_f(sim, fneq, i, j);
-        omega = @omega(mu, lat.cssq, lat.dt);
+        omega = omega(mu, lat.cssq, lat.dt);
         for k = 1:lat.n
           lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]);
         end
@@ -58,14 +58,14 @@ function init_col_srt(constit_relation_f::Function,
       for j = j_min:j_max, i = i_min:i_max
         rhoij = msm.rho[i,j];
         uij = uf(lat, msm.u[:,i,j]);
-        feq = Array(Float64, lat.n); 
-        fneq = Array(Float64, lat.n); 
+        feq = zeros(lat.n); 
+        fneq = zeros(lat.n); 
         for k = 1:lat.n 
           feq[k] = feq_f(lat, rhoij, uij, k);
           fneq[k] = lat.f[k,i,j] - feq[k];
         end
         mu = constit_relation_f(sim, fneq, i, j);
-        omega = @omega(mu, lat.cssq, lat.dt);
+        omega = omega(mu, lat.cssq, lat.dt);
         for k = 1:lat.n
           lat.f[k,i,j] = (omega * feq[k] + (1.0 - omega) * lat.f[k,i,j]
                           + colf(lat, omega, uij, k));
@@ -92,7 +92,7 @@ function init_col_mrt(constit_relation_f::Function, S::Function;
     ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-    feq = Array(Float64, lat.n);
+    feq = zeros(lat.n);
     nbounds = size(bounds, 2);
 
     #! Stream
@@ -113,7 +113,7 @@ function init_col_mrt(constit_relation_f::Function, S::Function;
         lat.f[:,i,j] = fij - iM * Sij * M * fneq; # perform collision
 
         # update collision frequency matrix
-        msm.omega[i,j] = @omega(muij, lat.cssq, lat.dt);
+        msm.omega[i,j] = omega(muij, lat.cssq, lat.dt);
       end
     end
   end
@@ -138,7 +138,7 @@ function init_col_mrt(constit_relation_f::Function,
     ni, nj = size(msm.rho);
 
     # calc f_eq vector ((f_eq_1, f_eq_2, ..., f_eq_9))
-    feq = Array(Float64, lat.n);
+    feq = zeros(lat.n);
     nbounds = size(bounds, 2);
 
     for r = 1:nbounds
@@ -153,10 +153,10 @@ function init_col_mrt(constit_relation_f::Function,
         fneq = fij - feq;
 
         muij = constit_relation_f(sim, fneq, S, M, iM, i, j);
-        omegaij = @omega(muij, lat.cssq, lat.dt);
+        omegaij = omega(muij, lat.cssq, lat.dt);
         Sij = S(muij, rhoij, lat.cssq, lat.dt);
 
-        fdl = Array(Float64, lat.n);
+        fdl = zeros(lat.n);
         for k = 1:lat.n
           fdl[k] = colf(lat, omegaij, uij, k);
         end

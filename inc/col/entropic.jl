@@ -37,8 +37,8 @@ function init_col_entropic_srt(constit_relation_f::Function;
 
         rhoij       =   msm.rho[i,j];
         uij         =   msm.u[:,i,j];
-        feq         =   Array(Float64, lat.n); 
-        fneq        =   Array(Float64, lat.n); 
+        feq         =   zeros(lat.n); 
+        fneq        =   zeros(lat.n); 
         f     =   lat.f[:,i,j];
 
         for k = 1:lat.n 
@@ -47,7 +47,7 @@ function init_col_entropic_srt(constit_relation_f::Function;
         end
 
         mu      =   constit_relation_f(sim, fneq, i, j);
-        omega   =   @omega(mu, lat.cssq, lat.dt);
+        omega   =   omega(mu, lat.cssq, lat.dt);
 
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
@@ -111,8 +111,8 @@ function init_col_entropic_srt(constit_relation_f::Function,
 
         rhoij       =   msm.rho[i,j];
         uij         =   uf(lat, msm.u[:,i,j]);
-        feq         =   Array(Float64, lat.n); 
-        fneq        =   Array(Float64, lat.n); 
+        feq         =   zeros(lat.n); 
+        fneq        =   zeros(lat.n); 
         f     =   lat.f[:,i,j];
 
         for k = 1:lat.n 
@@ -121,7 +121,7 @@ function init_col_entropic_srt(constit_relation_f::Function,
         end
 
         mu      =   constit_relation_f(sim, fneq, i, j);
-        omega   =   @omega(mu, lat.cssq, lat.dt);
+        omega   =   omega(mu, lat.cssq, lat.dt);
 
         if (entropy_lat_boltzmann(lat, feq) - entropy_lat_boltzmann(lat, f)
             < eps_ds) # do not to enforce entropic stability, use standard BGK
@@ -188,8 +188,8 @@ function init_col_entropic_mrt(constit_relation_f::Function;
 
         rhoij     = msm.rho[i,j];
         uij       = msm.u[:,i,j];
-        feq       = Array(Float64, lat.n); 
-        fneq      = Array(Float64, lat.n); 
+        feq       = zeros(lat.n); 
+        fneq      = zeros(lat.n); 
         f   = lat.f[:,i,j];
 
         for k = 1:lat.n 
@@ -212,7 +212,7 @@ function init_col_entropic_mrt(constit_relation_f::Function;
           end
         end
 
-        msm.omega[i,j] = @omega(mu, lat.cssq, lat.dt);;
+        msm.omega[i,j] = omega(mu, lat.cssq, lat.dt);;
       end
     end
 
@@ -259,8 +259,8 @@ function init_col_entropic_mrt(constit_relation_f::Function,
 
         rhoij     = msm.rho[i,j];
         uij       = uf(lat, msm.u[:,i,j]);
-        feq       = Array(Float64, lat.n); 
-        fneq      = Array(Float64, lat.n); 
+        feq       = zeros(lat.n); 
+        fneq      = zeros(lat.n); 
         f   = lat.f[:,i,j];
 
         for k = 1:lat.n 
@@ -270,8 +270,8 @@ function init_col_entropic_mrt(constit_relation_f::Function,
 
         muij    = constit_relation_f(sim, fneq, S, M, iM, i, j);
         Sij     = S(muij, rhoij, lat.cssq, lat.dt);
-        omegaij = @omega(mu, lat.cssq, lat.dt);;
-        fdl           = Array(Float64, lat.n);
+        omegaij = omega(mu, lat.cssq, lat.dt);;
+        fdl           = zeros(lat.n);
 
         for k = 1:lat.n
           fdl[k] = colf(lat, omegaij, uij, k);
@@ -363,7 +363,7 @@ function search_alpha_entropic_involution_db(lat::Lattice, f::Vector{Float64},
                         - entropy_lat_boltzmann(lat, f));
 
   # Determine appropriate search upperbound
-  bs = Array{Float64}(lat.n);
+  bs = zeros(lat.n);
   for i=1:lat.n
     bs[i] = abs(f[i] / (f[i] - feq[i]));
   end
@@ -433,7 +433,7 @@ function search_alpha_entropic_contraction_db(lat::Lattice, f::Vector{Float64},
   end
 
   # Determine appropriate search upperbound
-  bs = Array{Float64}(lat.n);
+  bs = zeros(lat.n);
   for i=1:lat.n
     bs[i] = abs(f[i] / (f[i] - feq[i]));
   end

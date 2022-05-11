@@ -18,15 +18,15 @@ function (col_f::M2PhaseColFunction)(sim::M2PhaseSim, args...)
   println("Red collision function");
   col_f.col_fr!(sim.simr, args...);
   println("Is there an NaN?", true in isnan(sim.simr.lat.f));
-  readline(STDIN);
+  readline(stdin);
   println("Blue collision function");
   col_f.col_fb!(sim.simb, args...);
   println("Is there an NaN?", true in isnan(sim.simb.lat.f));
-  readline(STDIN);
+  readline(stdin);
   println("2 phase collision function");
   col_f.m2phase_col_f!(sim, args...);
   println("Is there an NaN?", true in isnan(sim.simr.lat.f));
-  readline(STDIN);
+  readline(stdin);
 end
 
 #! Calculate color gradient

@@ -50,7 +50,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
                            entropy_cache::EntropyCache)
 
   ni, nj      = size(sim.msm.rho);
-  nbr_densities     = Array{Float64}(sim.lat.n-1);
+  nbr_densities     = zeros(sim.lat.n-1);
   nvalid            = 0; 
 
   for k=1:sim.lat.n-1
@@ -64,7 +64,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
     else
       if i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr; continue; end
 
-      feq                       = Array{Float64}(sim.lat.n);
+      feq                       = zeros(sim.lat.n);
 
       for p=1:sim.lat.n
         feq[p]                    = feq_f(sim.lat, sim.msm, 
@@ -82,7 +82,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int, metric::LBXFunction
   end
 
   if !haskey(entropy_cache, (i, j))
-    feq                       = Array{Float64}(sim.lat.n);
+    feq                       = zeros(sim.lat.n);
 
     for p=1:sim.lat.n
       feq[p]                    = feq_f(sim.lat, sim.msm,
@@ -117,7 +117,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
                            entropy_cache::EntropyCache)
 
   ni, nj      = size(sim.msm.rho);
-  nbr_densities     = Array{Float64}(sim.lat.n-1);
+  nbr_densities     = zeros(sim.lat.n-1);
   nvalid            = 0; 
 
   for k=1:sim.lat.n-1
@@ -132,7 +132,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
       if !(i_nbr < 1 || ni < i_nbr || j_nbr < 1 || nj < j_nbr ||
            sim.tracker.state[i_nbr, j_nbr] == GAS)
 
-        feq                       = Array{Float64}(sim.lat.n);
+        feq                       = zeros(sim.lat.n);
 
         for p=1:sim.lat.n
           feq[p]                    = feq_f(sim.lat, sim.msm,
@@ -151,7 +151,7 @@ function scale_root_median(sim::FreeSurfSim, i::Int, j::Int, metric::LBXFunction
   end
 
   if !haskey(entropy_cache, (i, j))
-    feq                       = Array{Float64}(sim.lat.n);
+    feq                       = zeros(sim.lat.n);
 
     for p=1:sim.lat.n
       feq[p]                    = feq_f(sim.lat, sim.msm,
@@ -185,7 +185,7 @@ function scale_root_median(sim::AbstractSim, i::Int, j::Int,
                            noneq_densities::Matrix{Float64})
 
   ni, nj      = size(sim.msm.rho);
-  nbr_densities     = Array{Float64}(sim.lat.n-1);
+  nbr_densities     = zeros(sim.lat.n-1);
   nvalid            = 0; 
 
   for k=1:sim.lat.n-1 # last vector is a "rest" particle
@@ -231,8 +231,8 @@ function __uij_rhoij_f_feq_fneq_kernal(lat::Lattice, msm::MultiscaleMap,
   @inbounds rhoij       =   msm.rho[i, j];
   @inbounds uij         =   view(msm.u, : ,i ,j);
   @inbounds f     =   view(lat.f, :, i, j);
-  feq         =   Array(Float64, lat.n); 
-  fneq        =   Array(Float64, lat.n);
+  feq         =   zeros(lat.n); 
+  fneq        =   zeros(lat.n);
 
   for k = 1:lat.n 
     @inbounds feq[k]      =   feq_f(lat, msm, uij, i, j, k);
@@ -278,7 +278,7 @@ end
 function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
   nbounds   =   size(bounds, 2);
   feq_f     =   col_f.feq_f; # alias
-  noneq_densities =   Array{Float64}(size(sim.msm.rho));
+  noneq_densities =   zeros(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
@@ -338,7 +338,7 @@ end
 function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
   nbounds   =   size(bounds, 2);
   feq_f     =   col_f.feq_f; # alias
-  noneq_densities =   Array{Float64}(size(sim.msm.rho));
+  noneq_densities =   zeros(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
@@ -400,7 +400,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim,
               active_cells::Matrix{Bool})
   ni, nj    =   size(sim.msm.rho);
   feq_f     =   col_f.feq_f; # alias
-  noneq_densities =   Array{Float64}(size(sim.msm.rho));
+  noneq_densities =   zeros(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;
@@ -461,7 +461,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
               active_cells::Matrix{Bool})
   ni, nj    =   size(sim.msm.rho);
   feq_f     =   col_f.feq_f; # alias
-  noneq_densities =   Array{Float64}(size(sim.msm.rho));
+  noneq_densities =   zeros(size(sim.msm.rho));
   cache           =   EntropyCache();
   nfiltered       =   0;
   ncollided       =   0;

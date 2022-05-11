@@ -76,8 +76,8 @@ struct Tracker
 
     ni, nj        = size(state);
     lst           = Set{Tuple{Int64, Int64}}();
-    M             = Array{Float64}(ni, nj);
-    eps           = Array{Float64}(ni, nj);
+    M             = zeros(ni, nj);
+    eps           = zeros(ni, nj);
 
     for j=1:nj, i=1:ni
       if state[i,j] == GAS

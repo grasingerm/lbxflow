@@ -41,7 +41,7 @@ end
 #! \param dt Change in time
 #! \return Chen relaxation matix
 function S_LBGK(mu::Real, rho::Real, cssq::Real, dt::Real)
-  omega = @omega(mu, cssq, dt);
+  omega = omega(mu, cssq, dt);
   return spdiagm([omega; omega; omega; omega; omega; omega; omega; omega; omega]);
 end
 
@@ -65,7 +65,7 @@ end
 #! \param dt Change in time
 #! \return Luo relaxation matix
 function S_luo(mu::Real, rho::Real, cssq::Real, dt::Real)
-  omega = @omega(mu, cssq, dt);
+  omega = omega(mu, cssq, dt);
   return spdiagm([0.0; 1.1; 1.0; 0.0; 1.2; 0.0; 1.2; omega; omega]);
 end
 

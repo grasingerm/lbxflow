@@ -36,11 +36,12 @@ struct LatticeD2Q9 <: Lattice
 
   function LatticeD2Q9(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int,
                        rho::AbstractFloat)
-    f = zeros(Float64, (n, ni, nj));
+    n = length(_wdef29);
+    f = zeros(n, ni, nj);
     for k=1:n
-      f[k,:,:] = fill(rho * wdef[k], (ni, nj));
+      f[k,:,:] = fill(rho * _wdef29[k], (ni, nj));
     end
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef29, _wdef29, length(_wdef29));
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef29, _wdef29, n);
   end
 end
 
@@ -74,11 +75,12 @@ struct LatticeD2Q4 <: Lattice
 
   function LatticeD2Q4(dx::AbstractFloat, dt::AbstractFloat, ni::Int, nj::Int,
                    rho::Float64)
-    f = zeros(Float64, (n, ni, nj));
+    n = length(_wdef24);
+    f = zeros(n, ni, nj);
     for k=1:n
-      f[k,:,:] = fill(rho * wdef[k], (ni, nj));
+      f[k,:,:] = fill(rho * _wdef24[k], (ni, nj));
     end
-    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef24, _wdef24, length(_wdef24));
+    new(dx, dt, cf(dx, dt), csf(dx, dt), cssqf(dx, dt), f, _cdef24, _wdef24, n);
   end
 end
 
