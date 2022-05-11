@@ -8,6 +8,7 @@ const LBX_VERSION = v"1.1.0";
 # load dependencies
 using ArgParse;
 using Logging;
+using DelimitedFiles;
 
 s = ArgParseSettings();
 @add_arg_table s begin
@@ -22,7 +23,7 @@ s = ArgParseSettings();
     help = "file extension of input file(s) (for directory search)"
     default = "yaml"
   "--verbose", "-v"
-    help = "verbosity level: 0-nothing, 1-errors, 2-warnings, 3-info"
+    help = "verbosity level: 0-nothing, 1-errors, 2-warnings, 3-@info"
     arg_type = Int
     default = 3
   "--clean", "-c"
@@ -57,7 +58,7 @@ s = ArgParseSettings();
     arg_type = Int
     default = 40
   "--version"
-    help = "display information about the program"
+    help = "display @information about the program"
     action = :store_true
 end
 
@@ -92,7 +93,9 @@ elseif pa["profile"]
   pa["profile-io"] = STDOUT;
 end
 
-if pa["profile-view"]; using ProfileView; end
+if pa["profile-view"]; 
+  using ProfileView; 
+end
 
 # Load lattice Boltzmann method simulation module
 push!(LOAD_PATH, "inc");

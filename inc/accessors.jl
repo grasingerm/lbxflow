@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using Distributed;
+
 #! Kernal function for accessing velocities
 function _vel_acsr_kernal(sim::AbstractSim, c::Int, i::Int, j::Int)
   return sim.msm.u[c, i, j];
@@ -22,7 +24,7 @@ function vel_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
     n = length(j_range);
-    x = linspace(-0.5, 0.5, n);
+    x = range(-0.5, 0.5; length=n);
 
     f = j -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
@@ -41,7 +43,7 @@ function vel_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
     n = length(i_range);
-    x = linspace(-0.5, 0.5, n);
+    x = range(-0.5, 0.5; length=n);
 
     f = i -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, i_range);
@@ -60,7 +62,7 @@ function vbar_prof_acsr(c::Int, i::Int, j_range::UnitRange{Int})
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
     n = length(j_range);
-    x = linspace(-0.5, 0.5, n);
+    x = range(-0.5, 0.5; length=n);
 
     f = j -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, j_range);
@@ -80,7 +82,7 @@ function vbar_prof_acsr(c::Int, i_range::UnitRange{Int}, j::Int)
   @assert(c <= 3, "Component should be less than or equal to 3"); 
   return (sim::AbstractSim) -> begin
     n = length(i_range);
-    x = linspace(-0.5, 0.5, n);
+    x = range(-0.5, 0.5; length=n);
 
     f = i -> _vel_acsr_kernal(sim, c, i, j);
     y = pmap(f, i_range);
@@ -134,8 +136,8 @@ end
 #! \return        Velocity magnitude over domain
 function vel_field_acsr(sim::AbstractSim)
   ni, nj = size(sim.msm.rho);
-  return (transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
-          transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
+  return (transpose(reshape(view(sim.msm.u, 1, :, :), (ni, nj))), 
+          transpose(reshape(view(sim.msm.u, 2, :, :), (ni, nj))));
 end
 
 #! Velocity field accessor
@@ -144,9 +146,9 @@ end
 #! \return        Velocity magnitude over domain
 function vel_field_acsr(sim::AdaptiveTimeStepSim)
   ni, nj = size(sim.isim.msm.rho);
-  return (transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 1, :, :)), 
+  return (transpose(map(u -> u / sim.Δt, reshape(view(sim.msm.u, 1, :, :)), 
                     (ni, nj))), 
-          transpose(map(u -> u / sim.Δt, reshape(sub(sim.msm.u, 2, :, :)), 
+          transpose(map(u -> u / sim.Δt, reshape(view(sim.msm.u, 2, :, :)), 
                     (ni, nj))));
 end
 
@@ -222,9 +224,9 @@ end
 #! \return        x, y, u, v for streamlines
 function streamlines_acsr(sim::AbstractSim)
   ni, nj = size(sim.msm.rho);
-  return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
-          transpose(reshape(sub(sim.msm.u, 1, :, :), (ni, nj))), 
-          transpose(reshape(sub(sim.msm.u, 2, :, :), (ni, nj))));
+  return (collect(range(0.0, 1.0; length=ni)), collect(range(0.0, 1.0; length=nj)),
+          transpose(reshape(view(sim.msm.u, 1, :, :), (ni, nj))), 
+          transpose(reshape(view(sim.msm.u, 2, :, :), (ni, nj))));
 end
 
 #! Streamline fields accessor
@@ -239,7 +241,7 @@ function streamlines_acsr(sim::AdaptiveTimeStepSim)
     u[j, i] = sim.isim.msm[1, i, j] / sim.Δt;
     v[j, i] = sim.isim.msm[2, i, j] / sim.Δt;
   end
-  return (collect(linspace(0.0, 1.0, ni)), collect(linspace(0.0, 1.0, nj)),
+  return (collect(range(0.0, 1.0; length=ni)), collect(range(0.0, 1.0; length=nj)),
           u, v);
 end
 

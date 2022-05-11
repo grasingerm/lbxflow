@@ -6,7 +6,7 @@ function sample_u_uniform_sqr(i_begin::Int, j_begin::Int, nside::Int,
                               nsidepts::Int)
   return (sim::AbstractSim) -> begin
     dn    =   convert(Int, floor(nside / nsidepts));
-    vals  =   Vector{Float64}(nsidepts * nsidepts);
+    vals  =   zeros(nsidepts * nsidepts);
 
     i       =   i_begin;
     j       =   j_begin;
@@ -30,7 +30,7 @@ function sample_v_uniform_sqr(i_begin::Int, j_begin::Int, nside::Int,
                               nsidepts::Int)
   return (sim::AbstractSim) -> begin
     dn    =   convert(Int, floor(nside / nsidepts));
-    vals  =   Vector{Float64}(nsidepts * nsidepts);
+    vals  =   zeros(nsidepts * nsidepts);
 
     i       =   i_begin;
     j       =   j_begin;
@@ -54,7 +54,7 @@ function sample_ρ_uniform_sqr(i_begin::Int, j_begin::Int, nside::Int,
                               nsidepts::Int)
   return (sim::AbstractSim) -> begin
     dn    =   convert(Int, floor(nside / nsidepts));
-    vals  =   Vector{Float64}(nsidepts * nsidepts);
+    vals  =   zeros(nsidepts * nsidepts);
 
     i       =   i_begin;
     j       =   j_begin;

@@ -25,11 +25,11 @@ end
 #!
 #! \param F Body force vector
 #! \return (momentum_function, forcing_function)
-function init_sukop_Fk(F::Vector{Float64}, ftype::Symbol=:ConstForce)
-  return eval(:($ftype(
+function init_sukop_Fk(F::Vector{Float64}, ftype=ConstForce)
+  return ftype(
     _sukop_f1,
-    (sim, omega, k, i, j) -> _sukop_f2(sim, omega, k, i, j, $F)
-    )));
+    (sim, omega, k, i, j) -> _sukop_f2(sim, omega, k, i, j, F)
+  );
 end
 
 # Function aliases
@@ -55,11 +55,11 @@ end
 #!
 #! \param g Gravitation acceleration
 #! \return (momentum_function, forcing_function)
-function init_sukop_gravity_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
-  return eval(:($ftype(
+function init_sukop_gravity_Fk(g::Vector{Float64}, ftype=ConstForce)
+  return ftype(
     _sukop_f1, 
-    (sim, omega, k, i, j) -> _sukop_gravity(sim, k, i, j, $g)
-    )));
+    (sim, omega, k, i, j) -> _sukop_gravity(sim, k, i, j, g)
+    );
 end
 
 
@@ -67,8 +67,8 @@ end
 #! Velocity coupled gravitational acceleration
 function _vel_coup_gravity(sim::AbstractSim, k::Int, i::Int, j::Int, 
                            g::Vector{Float64})
-  ck = sub(sim.lat.c ,:, k);
-  u  = sub(sim.msm.u, :, i, j);
+  ck = view(sim.lat.c ,:, k);
+  u  = view(sim.msm.u, :, i, j);
   return (sim.lat.w[k] * sim.lat.dt / sim.lat.cssq * sim.msm.rho[i, j] * 
           dot(g, (ck - u) + dot(ck, u)*ck/sim.lat.cssq));
 end
@@ -76,8 +76,8 @@ end
 #! Velocity coupled gravitational acceleration
 function _vel_coup_gravity(sim::FreeSurfSim, k::Int, i::Int, j::Int, 
                            g::Vector{Float64})
-  ck = sub(sim.lat.c ,:, k);
-  u  = sub(sim.msm.u, :, i, j);
+  ck = view(sim.lat.c ,:, k);
+  u  = view(sim.msm.u, :, i, j);
   return (sim.tracker.eps[i, j] * sim.lat.w[k] * sim.lat.dt / sim.lat.cssq 
           * sim.msm.rho[i, j] * 
           dot(g, (ck - u) + dot(ck, u)*ck/sim.lat.cssq));
@@ -87,11 +87,11 @@ end
 #!
 #! \param g Gravitation acceleration
 #! \return (momentum_function, forcing_function)
-function init_vel_coup_gravity_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
-  return eval(:($ftype(
+function init_vel_coup_gravity_Fk(g::Vector{Float64}, ftype=ConstForce)
+  return ftype(
     _sukop_f1,
-    (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, $g)
-    )));
+    (sim, omega, k, i, j) -> _vel_coup_gravity(sim, k, i, j, g)
+  );
 end
 
 _tp_vec(cssq) = [1/3; 1/3; 1/3; 1/3; 1/12; 1/12; 1/12; 1/12; 1 - 5/3 * cssq];
@@ -101,16 +101,16 @@ _tp_vec(cssq) = [1/3; 1/3; 1/3; 1/3; 1/12; 1/12; 1/12; 1/12; 1 - 5/3 * cssq];
 #!
 #! \param g Gravitation acceleration
 #! \return (momentum_function, forcing_function)
-function init_gs_Fk(g::Vector{Float64}, ftype::Symbol=:ConstForce)
-  return eval(:($ftype(
+function init_gs_Fk(g::Vector{Float64}, ftype=ConstForce)
+  return ftype(
           (sim, i, j) -> if sim.msm.rho[i, j] != 0.0
-                           sim.msm.u[:, i, j] + 0.5 * $g / sim.msm.rho[i, j]
+                           sim.msm.u[:, i, j] + 0.5 * g / sim.msm.rho[i, j]
                          else
-                           sim.msm.u[:, i, j] + 0.5 * $g
+                           sim.msm.u[:, i, j] + 0.5 * g
                          end,
           (sim, omega, k, i, j) -> (_tp_vec(sim.lat.cssq)[k] * 
-                                    dot(sub(sim.lat.c, :, k), $g))
-    )));
+                                    dot(view(sim.lat.c, :, k), g))
+    );
 end
 
 struct ScalableForce <: Force

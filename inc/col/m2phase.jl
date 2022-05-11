@@ -37,7 +37,7 @@ function _color_grad(sim::M2PhaseSim, cbounds::Matrix{Int64}, i::Int, j::Int)
     j_nbr   =   j + sim.simr.lat.c[2, k];
 
     if inbounds(i_nbr, j_nbr, cbounds)
-      F += sub(sim.simr.lat.c, :, k) * (sim.simr.msm.rho[i_nbr, j_nbr] - 
+      F += view(sim.simr.lat.c, :, k) * (sim.simr.msm.rho[i_nbr, j_nbr] - 
                                         sim.simb.msm.rho[i_nbr, j_nbr]);
     end
   end
@@ -52,7 +52,7 @@ function _color_grad(sim::M2PhaseSim, active_cells::Matrix{Bool}, i::Int, j::Int
     j_nbr   =   j + sim.simr.lat.c[2, k];
 
     if active_cells[i_nbr, j_nbr]
-      F += sub(sim.simr.lat.c, :, k) * (sim.simr.msm.rho[i_nbr, j_nbr] - 
+      F += view(sim.simr.lat.c, :, k) * (sim.simr.msm.rho[i_nbr, j_nbr] - 
                                         sim.simb.msm.rho[i_nbr, j_nbr]);
     end
   end
@@ -65,13 +65,13 @@ __B = Float64[2/27, 2/27, 2/27, 2/27, 5/108, 5/108, 5/108, 5/108, -4/27];
 function m2phase_col_f!(sim::M2PhaseSim, cbounds::Matrix{Int64})
   nbounds = size(cbounds, 2);
   for r = 1:nbounds
-    i_min, i_max, j_min, j_max = sub(cbounds, :, r);
+    i_min, i_max, j_min, j_max = view(cbounds, :, r);
     for j=j_min:j_max, i=i_min:i_max
       F         =   _color_grad(sim, cbounds, i, j);
       Fmag      =   norm(F, 2);
       if (Fmag*Fmag > eps())
         for k=1:sim.simr.lat.n
-          Fdotcsq   =   (dot(F, sub(sim.simr.lat.c, :, k)))^2;
+          Fdotcsq   =   (dot(F, view(sim.simr.lat.c, :, k)))^2;
           sim.simr.lat.f[k, i, j] += if Fmag != 0.0
                                        (sim.Ar/2 * Fmag * 
                                          (sim.simr.lat.w[k] * 
@@ -80,7 +80,7 @@ function m2phase_col_f!(sim::M2PhaseSim, cbounds::Matrix{Int64})
                                        0.0;
                                      end
           if isnan(sim.simr.lat.f[k, i, j])
-            @show F, sub(sim.simr.lat.c, :, k)
+            @show F, view(sim.simr.lat.c, :, k)
             @show Fdotcsq, sim.Ar/2, Fmag, sim.simr.lat.w[k], __B[k];
             @show k, i, j, sim.simr.lat.f[k, i, j]
           end
@@ -106,7 +106,7 @@ function m2phase_col_f!(sim::M2PhaseSim, active_cells::Matrix{Bool})
       Fmag      =   norm(F, 2);
       if (Fmag*Fmag > eps())
         for k=1:sim.simr.lat.n
-          Fdotcsq   =   (dot(F, sub(sim.simr.lat.c, :, k)))^2;
+          Fdotcsq   =   (dot(F, view(sim.simr.lat.c, :, k)))^2;
           @show Fdotcsq, sim.Ar/2, Fmag, sim.simr.lat.w[k], __B[k];
           sim.simr.lat.f[k, i, j] += if Fmag != 0.0
                                        (sim.Ar/2 * Fmag * 

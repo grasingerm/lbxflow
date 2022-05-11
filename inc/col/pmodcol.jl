@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using Distributed;
+
 #! Single relaxation time collision function for incompressible Newtonian flow
 #!
 #! \param sim Simulation object
@@ -166,7 +168,7 @@ function init_pcol_mrt(constit_relation_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    M = @DEFAULT_MRT_M();
+    M = DEFAULT_MRT_M();
     iM = inv(M);
     ni, nj = size(msm.rho);
 
@@ -214,7 +216,7 @@ function init_pcol_mrt(constit_relation_f::Function,
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    M = @DEFAULT_MRT_M();
+    M = DEFAULT_MRT_M();
     iM = inv(M);
     ni, nj = size(msm.rho);
 
@@ -264,7 +266,7 @@ function init_pcol_mrt(constit_relation_f::Function, feq_f::Function)
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    M = @DEFAULT_MRT_M();
+    M = DEFAULT_MRT_M();
     iM = inv(M);
     ni, nj = size(msm.rho);
 
@@ -313,7 +315,7 @@ function init_pcol_mrt(constit_relation_f::Function,
   return (sim::Sim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    M = @DEFAULT_MRT_M();
+    M = DEFAULT_MRT_M();
     iM = inv(M);
     ni, nj = size(msm.rho);
 

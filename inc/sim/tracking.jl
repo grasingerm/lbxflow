@@ -6,7 +6,7 @@
 #!
 #! \param sim FreeSurfSim object
 #! \param sbounds Bounds where fluid can be streaming
-function masstransfer!(sim::FreeSurfSim, sbounds::Matrix{Int64})
+function masstransfer!(sim::FreeSurfSim, sbounds::AbstractMatrix{Int64})
   t   = sim.tracker;
   lat = sim.lat;
   msm = sim.msm;
@@ -48,7 +48,7 @@ end
 #!
 #! \param   sim           FreeSurfSim object
 #! \param   active_cells  Flags of active cells in the domain
-function masstransfer!(sim::FreeSurfSim, active_cells::Matrix{Bool})
+function masstransfer!(sim::FreeSurfSim, active_cells::AbstractMatrix{Bool})
   t             =   sim.tracker;
   lat           =   sim.lat;
   msm           =   sim.msm;
@@ -91,7 +91,7 @@ function _update_fluid_fraction!(sim::FreeSurfSim, kappa::Real)
   new_fluid_cells   = Set{Tuple{Int, Int}}();
 
   for (i, j) in t.interfacels
-    t.eps[i, j] =   @_safe_calc_eps(t.M[i, j], sim.msm.rho[i, j]);
+    t.eps[i, j] =   _safe_calc_eps(t.M[i, j], sim.msm.rho[i, j]);
 
     if      t.M[i, j] > (1 + kappa) * sim.msm.rho[i, j]
       push!(new_fluid_cells, (i, j));
@@ -236,14 +236,14 @@ function _update_cell_states!(sim::FreeSurfSim,
 
       for (ii, jj, v_i) in cells_to_redist_to
         t.M[ii, jj]      +=   v_i / v_sum * mex;
-        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
+        t.eps[ii, jj]     =   _safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     elseif length(all_int_nbrs) != 0
 
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
-        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
+        t.eps[ii, jj]     =   _safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     else
@@ -286,14 +286,14 @@ function _update_cell_states!(sim::FreeSurfSim,
 
       for (ii, jj, v_i) in cells_to_redist_to
         t.M[ii, jj]      +=   v_i / v_sum * mex;
-        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
+        t.eps[ii, jj]     =   _safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     elseif length(all_int_nbrs) != 0
 
       for (ii, jj) in all_int_nbrs
         t.M[ii, jj]      +=   mex / length(all_int_nbrs);
-        t.eps[ii, jj]     =   @_safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
+        t.eps[ii, jj]     =   _safe_calc_eps(t.M[ii, jj], msm.rho[ii, jj]);
       end
 
     else
@@ -310,7 +310,7 @@ function _update_cell_states!(sim::FreeSurfSim,
   if !isnan(dm)
     for (i, j) in t.interfacels
       t.M[i, j]   +=  dm;
-      t.eps[i, j]  =  @_safe_calc_eps(t.M[i, j], msm.rho[i, j]); 
+      t.eps[i, j]  =  _safe_calc_eps(t.M[i, j], msm.rho[i, j]); 
     end
   end
 end

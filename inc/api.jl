@@ -46,7 +46,7 @@ function parse_and_run(infile::String, args::Dict)
 
   else
 
-    @warn("$infile does not contain versioning information.");
+    @warn("$infile does not contain versioning @information.");
 
   end
 
@@ -246,7 +246,7 @@ function parse_and_run(infile::String, args::Dict)
                   end);
 
   try
-    start_t = time();
+    global _start_t = time();
 
     if !haskey(defs, "obstacles")
       if !haskey(defs, "test_for_term")
@@ -323,12 +323,13 @@ function parse_and_run(infile::String, args::Dict)
 
   finally
     for fin in defs["finally"]
-      fin(sim, nsim);
+      @eval $fin($sim, $nsim);
     end
 
     if args["verbose"]
+      global _start_t;
       println("$infile:\tSteps simulated: $nsim");
-      println("Time elapsed: $(time() - start_t)");
+      println("Time elapsed: $(time() - _start_t)");
     end
 
     if do_profile

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using DelimitedFiles;
+
 #! Dump simulation to JLD file
 function dumpsim_jld(datadir::AbstractString, sim::AbstractSim, step::Real,
                      append_step_to_name::Bool = false)
@@ -129,7 +131,7 @@ function load_backup_dir(backup_dir::AbstractString)
   return parse(split(backup_dir, "_")[end]), Sim(lat, msm);
 end
 
-#! Search data directory for latest backup information
+#! Search data directory for latest backup @information
 function load_latest_backup(datadir::AbstractString)
   if isfile(joinpath(datadir, "bak.jld"))
     return loadsim_jld(joinpath(datadir, "bak.jld"))
@@ -160,7 +162,7 @@ function load_latest_backup(datadir::AbstractString)
   return 0, nothing; # no backup files found
 end
 
-#! Search data directory for latest backup information
+#! Search data directory for latest backup @information
 function load_latest_jld(datadir::AbstractString)
   if isfile(joinpath(datadir, "bak.jld"))
     return loadsim_jld(joinpath(datadir, "bak.jld"))

@@ -175,8 +175,8 @@ function init_col_entropic_mrt(constit_relation_f::Function;
   return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    M = @DEFAULT_MRT_M();
-    iM = @DEFAULT_MRT_IM();
+    M = DEFAULT_MRT_M();
+    iM = DEFAULT_MRT_IM();
     ni, nj = size(msm.rho);
     nbounds = size(bounds, 2);
 
@@ -246,8 +246,8 @@ function init_col_entropic_mrt(constit_relation_f::Function,
   return (sim::AbstractSim, bounds::Matrix{Int64}) -> begin
     lat = sim.lat;
     msm = sim.msm;
-    M = @DEFAULT_MRT_M();
-    iM = @DEFAULT_MRT_IM();
+    M = DEFAULT_MRT_M();
+    iM = DEFAULT_MRT_IM();
     ni, nj = size(msm.rho);
     nbounds = size(bounds, 2);
 

@@ -122,7 +122,7 @@ end
 function col_mrt!(sim::Sim, S::SparseMatrixCSC, bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  M = @DEFAULT_MRT_M();
+  M = DEFAULT_MRT_M();
   iM = inv(M);
   ni, nj = size(msm.rho);
 
@@ -159,7 +159,7 @@ function col_mrt!(sim::Sim, S::SparseMatrixCSC, F::Vector{Float64},
                   bounds::Matrix{Int64})
   lat = sim.lat;
   msm = sim.msm;
-  M = @DEFAULT_MRT_M();
+  M = DEFAULT_MRT_M();
   iM = inv(M);
   ni, nj = size(msm.rho);
 
@@ -210,7 +210,7 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
                                    bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  M = @DEFAULT_MRT_M();
+  M = DEFAULT_MRT_M();
   iM = inv(M);
   ni, nj = size(msm.rho);
 
@@ -273,7 +273,7 @@ function col_mrt_bingham_explicit!(sim::Sim, S::Function, mu_p::Number,
                                    relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  M = @DEFAULT_MRT_M();
+  M = DEFAULT_MRT_M();
   iM = inv(M);
   ni, nj = size(msm.rho);
 
@@ -348,7 +348,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
                                    bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  M = @DEFAULT_MRT_M();
+  M = DEFAULT_MRT_M();
   iM = inv(M);
   ni, nj = size(msm.rho);
 
@@ -434,7 +434,7 @@ function col_mrt_bingham_implicit!(sim::Sim, S::Function, mu_p::Number,
                                    bounds::Matrix{Int64}, relax::Number = 1.0)
   lat = sim.lat;
   msm = sim.msm;
-  M = @DEFAULT_MRT_M();
+  M = DEFAULT_MRT_M();
   iM = inv(M);
   ni, nj = size(msm.rho);
 

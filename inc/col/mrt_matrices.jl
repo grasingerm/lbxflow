@@ -3,8 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #! Initializes the default multiple relaxation time transformation matrix
-macro DEFAULT_MRT_M()
-  return :([
+const DEFAULT_MRT_M = ([
              1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0    1.0;
             -1.0   -1.0   -1.0   -1.0    2.0    2.0    2.0    2.0   -4.0;
             -2.0   -2.0   -2.0   -2.0    1.0    1.0    1.0    1.0    4.0;
@@ -15,12 +14,9 @@ macro DEFAULT_MRT_M()
              1.0   -1.0    1.0   -1.0    0.0    0.0    0.0    0.0    0.0;
              0.0    0.0    0.0    0.0    1.0   -1.0    1.0   -1.0    0.0;
            ]);
-end
 
 #! Initializes the inverse default multiple relaxation time transformation matrix
-macro DEFAULT_MRT_IM()
-  return :(inv(eval(@DEFAULT_MRT_M())));
-end
+const DEFAULT_MRT_IM = inv(DEFAULT_MRT_M);
 
 #! Fallah relaxation coefficient for s77, s88
 #!
@@ -29,9 +25,7 @@ end
 #! \param c_ssq Lattice speed of sound squared
 #! \param dt Change in time
 #! \return Fallah relaxation coefficient for s77 and s88
-macro fallah_8(mu, rho, cssq, dt)
-  return :(1.0/($mu / ($rho * $cssq * $dt) + 0.5));
-end
+@inline fallah_8(mu, rho, cssq, dt) = 1.0/(mu / (rho * cssq * dt) + 0.5);
 
 #! LBGK relaxation matrix
 #!
@@ -53,7 +47,7 @@ end
 #! \param dt Change in time
 #! \return Fallah relaxation matix
 function S_fallah(mu::Real, rho::Real, cssq::Real, dt::Real)
-	s_8 = @fallah_8(mu, rho, cssq, dt);
+	s_8 = fallah_8(mu, rho, cssq, dt);
 	return spdiagm([0.0; 1.1; 1.1; 0.0; 1.1; 0.0; 1.1; s_8; s_8]);
 end
 
@@ -77,7 +71,7 @@ end
 #! \param   dt    Change in time
 #! \return        Unity relaxation matix
 function S_unity(μ::Real, ρ::Real, cssq::Real, dt::Real)
-  s_8 = @fallah_8(μ, ρ, cssq, dt);
+  s_8 = fallah_8(μ, ρ, cssq, dt);
   return spdiagm([0.0; 1.0; 1.0; 0.0; 1.0; 0.0; 1.0; s_8; s_8]);
 end
 
@@ -89,6 +83,6 @@ end
 #! \param   dt    Change in time
 #! \return        Unity relaxation matix
 function S_under(μ::Real, ρ::Real, cssq::Real, dt::Real)
-  s_8 = @fallah_8(μ, ρ, cssq, dt);
+  s_8 = fallah_8(μ, ρ, cssq, dt);
   return spdiagm([0.0; 0.8; 0.8; 0.0; 0.9; 0.0; 0.9; s_8; s_8]);
 end

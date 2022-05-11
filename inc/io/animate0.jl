@@ -25,7 +25,7 @@ function extract_ux_prof_callback(i::Int)
     ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
     u = vec(sim.msm.u[1,i,:]);
 
-    x = linspace(-0.5, 0.5, nj);
+    x = range(-0.5, 0.5; length=nj);
     y = u;
 
     return [x y];
@@ -40,7 +40,7 @@ function extract_ubar_prof_callback(i::Int)
     ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
     u = vec(sim.msm.u[1,i,:]);
 
-    x = linspace(-0.5, 0.5, nj);
+    x = range(-0.5, 0.5; length=nj);
     y = u / maximum(u);
 
     return [x y];
@@ -60,7 +60,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
     if k % iters_per_frame == 0
       nj = size(sim.msm.u, 3);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = vec(sim.msm.u[1,i,:]);
 
       PyPlot.clf();
@@ -84,7 +84,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       nj = size(sim.msm.u, 3);
       u = vec(sim.msm.u[1,i,:]);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = u / maximum(u);
 
       PyPlot.clf();
@@ -139,8 +139,8 @@ function plot_streamlines_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       ni, nj = size(sim.msm.rho);
-      x = collect(linspace(0.0, 1.0, ni));
-      y = collect(linspace(0.0, 1.0, nj));
+      x = collect(range(0.0, 1.0; length=ni));
+      y = collect(range(0.0, 1.0; length=nj));
 
       PyPlot.clf();
       PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
@@ -196,8 +196,8 @@ end
 #! Plot strain rate matrix for the domain
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);
@@ -236,7 +236,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
     if k % iters_per_frame == 0
       nj = size(sim.msm.u, 3);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = vec(sim.msm.u[1,i,:]);
 
       PyPlot.clf();
@@ -262,7 +262,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       nj = size(sim.msm.u, 3);
       u = vec(sim.msm.u[1,i,:]);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = u / maximum(u);
 
       PyPlot.clf();
@@ -320,8 +320,8 @@ function plot_streamlines_callback(iters_per_frame::Int, fname::AbstractString,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       ni, nj = size(sim.msm.rho);
-      x = collect(linspace(0.0, 1.0, ni));
-      y = collect(linspace(0.0, 1.0, nj));
+      x = collect(range(0.0, 1.0; length=ni));
+      y = collect(range(0.0, 1.0; length=nj));
 
       PyPlot.clf();
       PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
@@ -380,8 +380,8 @@ end
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);
@@ -413,8 +413,8 @@ function plot_is_yielded_mrt_contours_callback(iters_per_frame::Int,
                                                fname::AbstractString,
                                                gamma_min::AbstractFloat,
                                                pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);
@@ -453,7 +453,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
     if k % iters_per_frame == 0
       nj = size(sim.msm.u, 3);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = vec(sim.msm.u[1,i,:]);
 
       PyPlot.clf();
@@ -479,7 +479,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       nj = size(sim.msm.u, 3);
       u = vec(sim.msm.u[1,i,:]);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = u / maximum(u);
 
       PyPlot.clf();
@@ -539,8 +539,8 @@ function plot_streamlines_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       ni, nj = size(sim.msm.rho);
-      x = collect(linspace(0.0, 1.0, ni));
-      y = collect(linspace(0.0, 1.0, nj));
+      x = collect(range(0.0, 1.0; length=ni));
+      y = collect(range(0.0, 1.0; length=nj));
 
       PyPlot.clf();
       PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
@@ -599,8 +599,8 @@ end
 function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 xy::Tuple{Number, Number},
                                                 pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);
@@ -641,7 +641,7 @@ function plot_ux_profile_callback(i::Int, iters_per_frame::Int,
     if k % iters_per_frame == 0
       nj = size(sim.msm.u, 3);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = vec(sim.msm.u[1,i,:]);
 
       PyPlot.clf();
@@ -669,7 +669,7 @@ function plot_ubar_profile_callback(i::Int, iters_per_frame::Int,
       nj = size(sim.msm.u, 3);
       u = vec(sim.msm.u[1,i,:]);
 
-      x = linspace(-0.5, 0.5, nj);
+      x = range(-0.5, 0.5; length=nj);
       y = u / maximum(u);
 
       PyPlot.clf();
@@ -736,8 +736,8 @@ function plot_streamlines_callback(iters_per_frame::Int,
   return (sim::AbstractSim, k::Int) -> begin
     if k % iters_per_frame == 0
       ni, nj = size(sim.msm.rho);
-      x = collect(linspace(0.0, 1.0, ni));
-      y = collect(linspace(0.0, 1.0, nj));
+      x = collect(range(0.0, 1.0; length=ni));
+      y = collect(range(0.0, 1.0; length=nj));
 
       PyPlot.clf();
       PyPlot.streamplot(x, y, transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), 
@@ -802,8 +802,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 xy::Tuple{Number, Number},
                                                 fname::AbstractString,
                                                 pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);
@@ -901,8 +901,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 levs::Vector,
                                                 pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);
@@ -1008,8 +1008,8 @@ function plot_strain_rate_mrt_contours_callback(iters_per_frame::Int,
                                                 fname::AbstractString,
                                                 levs::Vector, rects::Vector,
                                                 pause::AbstractFloat = 0.025)
-  M = @DEFAULT_MRT_M();
-  iM = @DEFAULT_MRT_IM();
+  M = DEFAULT_MRT_M();
+  iM = DEFAULT_MRT_IM();
   return (sim::AbstractSim, k_iter::Int) -> begin
     if k_iter % iters_per_frame == 0
       sr = zeros(ni, nj);

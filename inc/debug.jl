@@ -15,7 +15,7 @@ macro mdebug(message)
   if _NDEBUG
     return;
   else
-    return :(@warn($message));
+    return :(warn($message));
   end
 end
 

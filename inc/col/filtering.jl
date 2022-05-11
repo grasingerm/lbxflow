@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using Statistics;
+
 const EntropyCache = Dict{Tuple{Int, Int}, Real};
 
 __DEFAULT_DELTA     =   0.0;
@@ -19,7 +21,7 @@ end
 #! Dissipate energy flux
 function contract_qx!(lat::Lattice, i::Int, j::Int, delta::Real,
                       feq::AbstractArray{Float64, 1}; weight_a::Real=0.5)
-  f = sub(lat.f, :, i, j);
+  f = view(lat.f, :, i, j);
   qxij = qx_neq(f, feq, f-feq);
   weight_b = 1.0 - weight_a;
 
@@ -182,7 +184,7 @@ end
 #! \return                   Scale for entropic filtering
 function scale_root_median(sim::AbstractSim, i::Int, j::Int,
                            metric::LBXFunction,
-                           noneq_densities::Matrix{Float64})
+                           noneq_densities::AbstractMatrix{Float64})
 
   ni, nj      = size(sim.msm.rho);
   nbr_densities     = zeros(sim.lat.n-1);
@@ -275,7 +277,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::AbstractMatrix{Int64})
   nbounds   =   size(bounds, 2);
   feq_f     =   col_f.feq_f; # alias
   noneq_densities =   zeros(size(sim.msm.rho));
@@ -327,7 +329,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim, bounds::Matrix{Int64})
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -335,7 +337,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::AbstractMatrix{Int64})
   nbounds   =   size(bounds, 2);
   feq_f     =   col_f.feq_f; # alias
   noneq_densities =   zeros(size(sim.msm.rho));
@@ -388,7 +390,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -397,7 +399,7 @@ end
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
 function (col_f::FltrFixedDSCol)(sim::AbstractSim, 
-              active_cells::Matrix{Bool})
+              active_cells::AbstractMatrix{Bool})
   ni, nj    =   size(sim.msm.rho);
   feq_f     =   col_f.feq_f; # alias
   noneq_densities =   zeros(size(sim.msm.rho));
@@ -449,7 +451,7 @@ function (col_f::FltrFixedDSCol)(sim::AbstractSim,
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -458,7 +460,7 @@ end
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
 function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
-              active_cells::Matrix{Bool})
+              active_cells::AbstractMatrix{Bool})
   ni, nj    =   size(sim.msm.rho);
   feq_f     =   col_f.feq_f; # alias
   noneq_densities =   zeros(size(sim.msm.rho));
@@ -508,7 +510,7 @@ function (col_f::FltrFixedDSCol)(sim::FreeSurfSim,
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their " *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 end
 
@@ -547,7 +549,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::FltrStdCol)(sim::AbstractSim, bounds::AbstractMatrix{Int64})
   ni, nj    = size(sim.msm.rho);
   nbounds   = size(bounds, 2);
   feq_f     = col_f.inner_col_f!.feq_f;
@@ -599,17 +601,16 @@ function (col_f::FltrStdCol)(sim::AbstractSim, bounds::Matrix{Int64})
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end
-
 
 #! Calling filtered collision function
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::AbstractMatrix{Int64})
   ni, nj    = size(sim.msm.rho);
   nbounds   = size(bounds, 2);
   feq_f     = col_f.inner_col_f!.feq_f;
@@ -649,7 +650,7 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
 
         @inbounds rhoij          =   sim.msm.rho[i, j];
         @inbounds uij            =   view(sim.msm.u, :, i, j);
-        feq                      =   map(k -> feq_f(sim.lat, msm, uij, i, j, k), 
+        feq                      =   map(k -> feq_f(sim.lat, sim.msm, uij, i, j, k), 
                                          1:sim.lat.n);
         
         col_f.diss!(sim.lat, i, j, delta, feq); 
@@ -663,7 +664,7 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, bounds::Matrix{Int64})
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end
@@ -672,7 +673,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
-function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::Matrix{Bool})
+function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::AbstractMatrix{Bool})
   ni, nj    = size(sim.msm.rho);
   feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
@@ -719,7 +720,7 @@ function (col_f::FltrStdCol)(sim::AbstractSim, active_cells::Matrix{Bool})
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end
@@ -728,7 +729,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   active_cells  Active flags for domain
-function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
+function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::AbstractMatrix{Bool})
   ni, nj    = size(sim.msm.rho);
   feq_f     = col_f.inner_col_f!.feq_f;
   noneq_densities = fill(__SENTINAL, size(sim.msm.rho));
@@ -775,7 +776,7 @@ function (col_f::FltrStdCol)(sim::FreeSurfSim, active_cells::Matrix{Bool})
     @warn("More than $(col_f.fltr_thrsh_warn * 100)% of the nodes had their "       *
          "non-equilibrium volume collapsed due to entropic filtering. This " *
          "can produce nonphysical results.");
-    info("Percent collapsed: $(percent_filtered * 100)");
+    @info("Percent collapsed: $(percent_filtered * 100)");
   end
 
 end

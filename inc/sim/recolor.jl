@@ -9,7 +9,7 @@ function recolor!(sim::M2PhaseSim, cbounds::Matrix{Int64}, feq_fa::LBXFunction,
   u0      = Float64[0; 0];
 
   for r = 1:nbounds
-    i_min, i_max, j_min, j_max = sub(cbounds, :, r);
+    i_min, i_max, j_min, j_max = view(cbounds, :, r);
     for j=j_min:j_max, i=i_min:i_max
       # TODO should we have just cached the color gradient somewhere by now?
       F       =   _color_grad(sim, cbounds, i, j);
@@ -20,7 +20,7 @@ function recolor!(sim::M2PhaseSim, cbounds::Matrix{Int64}, feq_fa::LBXFunction,
       Σ2      =   Σ * Σ;
       if Σ2 > eps() && Σ > eps()
         for k=1:sim.simr.lat.n-1
-          ck      =   sub(sim.simr.lat.c, :, k);
+          ck      =   view(sim.simr.lat.c, :, k);
           Fmag    =   norm(F, 2);
           if Fmag > eps()
             cosϕ    =   dot(F, ck) / (norm(F, 2) * norm(ck, 2));
@@ -54,7 +54,7 @@ function recolor!(sim::M2PhaseSim, active_cells::Matrix{Bool},
       Σ2      =   Σ * Σ;
       if Σ2 > eps() && Σ > eps()
         for k=1:sim.simr.lat.n
-          ck      =   sub(sim.simr.lat.c, :, k);
+          ck      =   view(sim.simr.lat.c, :, k);
           cosϕ    =   dot(F, ck);
           N_k     =   sim.simr.lat.f[k, i, j] + sim.simb.lat.f[k, i, j];
           sim.simr.lat.f[k, i, j] = (R / Σ * N_k + sim.β * RB/Σ2 * 

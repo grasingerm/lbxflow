@@ -9,7 +9,7 @@ include("recolor.jl");
 #! \param lat Lattice to stream on
 #! \param temp_f Temp lattice to store streamed particle distributions on
 #! \param bounds Boundaries enclosing active streaming regions
-function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2})
+function stream!(lat::Lattice, temp_f::AbstractArray{Float64,3}, bounds::AbstractMatrix{Int64})
   nbounds = size(bounds, 2);
   #! Stream
   for r = 1:nbounds
@@ -35,7 +35,7 @@ end
 #! \param temp_f Temp lattice to store streamed particle distributions on
 #! \param bounds Boundaries enclosing active streaming regions
 #! \param t Mass tracker
-function stream!(lat::Lattice, temp_f::Array{Float64,3}, bounds::Array{Int64,2},
+function stream!(lat::Lattice, temp_f::AbstractArray{Float64,3}, bounds::AbstractMatrix{Int64},
                  t::Tracker)
   nbounds = size(bounds, 2);
   #! Stream
@@ -120,7 +120,7 @@ function sim_step!(sim::Sim,
   stream!(lat, temp_f, sbounds);
 
   for bc! in bcs!
-    bc!(sim);
+    @eval $bc!($sim);
   end
 
   map_to_macro!(lat, msm);
@@ -175,36 +175,33 @@ function sim_step!(sim::FreeSurfSim,
   t                 =   sim.tracker;
   unorms            =   Dict{Tuple{Int, Int}, Vector{Float64}}();
 
-  @_checkdebug_mass_cons("whole step", t.M, begin
   # Algorithm should be:
   # 1.  mass transfer
-  @_checkdebug_mass_cons("masstransfer!", t.M, masstransfer!(sim, sbounds), 1e-9);
+  masstransfer!(sim, sbounds);
 
   # 2.  stream
-  @_checkdebug_mass_cons("stream!", t.M, stream!(lat, temp_f, sbounds, t), 1e-9);
+  stream!(lat, temp_f, sbounds, t);
 
   # 3.  reconstruct distribution functions from empty cells
   # 4.  reconstruct distribution functions along interface normal
-  @_checkdebug_mass_cons("f_reconst!", t.M, for (i, j) in t.interfacels
+  for (i, j) in t.interfacels
     unorms[(i, j)] = f_reconst!(sim, t, (i, j), collision_f!.feq_f, sim.rho_g);
-  end, 1e-9);
+  end;
 
   # 5.  particle collisions
-  @_checkdebug_mass_cons("collision_f!", t.M, collision_f!(sim, cbounds), 1e-9);
+  collision_f!(sim, cbounds);
   
   # 6.  enforce boundary conditions
-  @_checkdebug_mass_cons("bcs!", t.M, for bc! in bcs!
-    bc!(sim);
-  end, 1e-9);
+  for bc! in bcs!
+    @eval $bc!($sim);
+  end;
 
   # 7.  calculate macroscopic variables
-  @_checkdebug_mass_cons("map_to_macro!", t.M, map_to_macro!(lat, msm), 1e-9);
+  map_to_macro!(lat, msm);
 
   # 8.  update fluid fractions
   # 9.  update cell states
-  @_checkdebug_mass_cons("update!", t.M, 
-    update!(sim, collision_f!.feq_f, unorms), 1e-9);
-  end, 1e-9);
+  update!(sim, collision_f!.feq_f, unorms);
 end
 
 # Adaptive time step simulation step
@@ -363,7 +360,7 @@ function simulate!(sim::AbstractSim, sbounds::AbstractMatrix{Int64},
     c!(sim, (k+=sim.Δt));
   end
 
-  prev_msms = Vector{MultiscaleMap}(steps_for_term);
+  prev_msms = Vector{MultiscaleMap}(undef, steps_for_term);
   for i=1:steps_for_term; prev_msms[i] = MultiscaleMap(sim.msm); end;
 
   idx = 0;
@@ -503,7 +500,7 @@ function simulate!(sim::AbstractSim,
     c!(sim, (k+=sim.Δt));
   end
 
-  prev_msms = Vector{MultiscaleMap}(steps_for_term);
+  prev_msms = Vector{MultiscaleMap}(undef, steps_for_term);
   for i=1:steps_for_term; prev_msms[i] = MultiscaleMap(sim.msm); end;
 
   idx = 0;

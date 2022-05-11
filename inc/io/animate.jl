@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using Printf;
+import PyPlot;
 
 #! Create callback for pausing the simulation
 function pause_sim_callback(stepout::Real)
@@ -43,9 +44,10 @@ end
 
 #! Initialize plotting environment
 macro init_plot_env()
-  return quote
+  println("init_plot_env() is deprecated");
+  #=return quote
     import PyPlot;
-  end
+  end=#
 end
 
 #! Change default figure size
@@ -83,60 +85,58 @@ function pyplot_callback(stepout::Real, accessor::LBXFunction;
 
   return (sim::AbstractSim, k::Real) -> begin
     if k % stepout < sim.Δt
-      eval(if showfig == true
-             :(PyPlot.ion(););
-           else
-             :(PyPlot.ioff(););
-           end);
+      if showfig == true
+        PyPlot.ion();
+      else
+        PyPlot.ioff();
+      end;
 
       x, y = accessor(sim);
 
       PyPlot.clf();
       fig = PyPlot.plot(x, y);
 
-      eval(if title != ""
-             :(PyPlot.title($title));
-           end)
-      eval(if xlabel != ""
-             :(PyPlot.xlabel($xlabel));
-           end);
-      eval(if ylabel != ""
-             :(PyPlot.ylabel($ylabel));
-           end);
+      if title != ""
+        PyPlot.title(title);
+      end
+      if xlabel != ""
+        PyPlot.xlabel(xlabel);
+      end;
+      if ylabel != ""
+        PyPlot.ylabel(ylabel);
+      end;
 
-      eval(if xlim != false
-             :(PyPlot.xlim($xlim));
-           end);
-      eval(if ylim != false
-             :(PyPlot.ylim($ylim));
-           end);
+      if xlim != false
+        PyPlot.xlim(xlim);
+      end;
+      if ylim != false
+        PyPlot.ylim(ylim);
+      end;
 
-      eval(if xlogscale != false
-             :(PyPlot.xscale("log"));
-           end);
-      eval(if ylogscale != false
-             :(PyPlot.yscale("log"));
-           end);
+      if xlogscale != false
+        PyPlot.xscale("log");
+      end;
+      if ylogscale != false
+        PyPlot.yscale("log");
+      end;
       
-      eval(if grid != false
-             :(PyPlot.grid());
-           end);
+      if grid != false
+        PyPlot.grid();
+      end;
 
-      eval(if xticks != false
-             :(PyPlot.xticks($xticks));
-           end);
-      eval(if yticks != false
-             :(PyPlot.yticks($yticks));
-           end);
+      if xticks != false
+        PyPlot.xticks(xticks);
+      end;
+      if yticks != false
+        PyPlot.yticks(yticks);
+      end;
 
-      eval(if rects != false
-            quote
-              for rect in rects
-                PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
-                               facecolor=$rcolor);
-              end
-            end
-          end);
+      if rects != false
+        for rect in rects
+          PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
+                         facecolor=rcolor);
+        end
+      end;
 
       PyPlot.draw();
 
@@ -144,15 +144,13 @@ function pyplot_callback(stepout::Real, accessor::LBXFunction;
         PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
       end
 
-      eval(if showfig == true
-             quote
-               PyPlot.pause(0.00001);
-             end
-           else
-             :(fig = 0);
-           end);
-         end
-       end
+      if showfig == true
+        PyPlot.pause(0.00001);
+      else
+        fig = 0;
+      end;
+    end
+  end
 
 end
 
@@ -186,11 +184,11 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
 
   return (sim::AbstractSim, k::Real) -> begin
     if k % stepout < sim.Δt
-      eval(if showfig == true
-             :(PyPlot.ion(););
-           else
-             :(PyPlot.ioff(););
-           end);
+      if showfig == true
+        PyPlot.ion();
+      else
+        PyPlot.ioff();
+      end;
 
       mat = accessor(sim);
 
@@ -221,42 +219,40 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
        end
      end
       
-      eval(if title != ""
-             :(PyPlot.title($title));
-           end)
-      eval(if xlabel != ""
-             :(PyPlot.xlabel($xlabel));
-           end);
-      eval(if ylabel != ""
-             :(PyPlot.ylabel($ylabel));
-           end);
+      if title != ""
+        PyPlot.title(title);
+      end
+      if xlabel != ""
+        PyPlot.xlabel(xlabel);
+      end;
+      if ylabel != ""
+        PyPlot.ylabel(ylabel);
+      end;
 
-      eval(if xlim != false
-             :(PyPlot.xlim($xlim));
-           end);
-      eval(if ylim != false
-             :(PyPlot.ylim($ylim));
-           end);
+      if xlim != false
+        PyPlot.xlim(xlim);
+      end;
+      if ylim != false
+        PyPlot.ylim(ylim);
+      end
 
-      eval(if grid != false
-             :(PyPlot.grid());
-           end);
+      if grid != false
+        PyPlot.grid();
+      end;
 
-      eval(if xticks != false
-             :(PyPlot.xticks($xticks));
-           end);
-      eval(if yticks != false
-             :(PyPlot.yticks($yticks));
-           end);
+      if xticks != false
+        PyPlot.xticks(xticks);
+      end
+      if yticks != false
+        PyPlot.yticks(yticks);
+      end;
 
-      eval(if rects != false
-            quote
-              for rect in $rects
-                PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
-                               facecolor=$rcolor);
-              end
-            end
-          end);
+      if rects != false
+        for rect in rects
+          PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
+                         facecolor=rcolor);
+        end
+      end
 
       PyPlot.draw();
 
@@ -264,13 +260,12 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
         PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
       end
 
-      eval(if showfig == true
-             quote
-               PyPlot.pause(0.00001);
-             end
-           else
-             cs = 0;
-           end);
+      if showfig == true
+        PyPlot.pause(0.00001);
+      else
+        cs = 0;
+      end
+
     end
   end
 end
@@ -302,53 +297,51 @@ function pyquiver_callback(stepout::Real, accessor::LBXFunction;
 
   return (sim::AbstractSim, k::Real) -> begin
     if k % stepout < sim.Δt
-      eval(if showfig == true
-             :(PyPlot.ion(););
+      if showfig == true
+             PyPlot.ion();
            else
-             :(PyPlot.ioff(););
-           end);
+             PyPlot.ioff()
+           end;
 
       u, v = accessor(sim);
 
       PyPlot.clf();
       fig = PyPlot.quiver(u, v);
       
-      eval(if title != ""
-             :(PyPlot.title($title));
-           end)
-      eval(if xlabel != ""
-             :(PyPlot.xlabel($xlabel));
-           end);
-      eval(if ylabel != ""
-             :(PyPlot.ylabel($ylabel));
-           end);
+      if title != ""
+             PyPlot.title(title);
+           end
+      if xlabel != ""
+             PyPlot.xlabel(xlabel);
+           end;
+      if ylabel != ""
+             PyPlot.ylabel(ylabel);
+           end;
 
-      eval(if xlim != false
-             :(PyPlot.xlim($xlim));
-           end);
-      eval(if ylim != false
-             :(PyPlot.ylim($ylim));
-           end);
+      if xlim != false
+             PyPlot.xlim(xlim);
+           end;
+      if ylim != false
+             PyPlot.ylim(ylim);
+           end;
 
-      eval(if grid != false
-             :(PyPlot.grid());
-           end);
+      if grid != false
+             PyPlot.grid();
+           end;
 
-      eval(if xticks != false
-             :(PyPlot.xticks($xticks));
-           end);
-      eval(if yticks != false
-             :(PyPlot.yticks($yticks));
-           end);
+      if xticks != false
+             PyPlot.xticks(xticks);
+           end;
+      if yticks != false
+             PyPlot.yticks(yticks);
+           end;
 
-      eval(if rects != false
-            quote
-              for rect in $rects
+      if rects != false
+              for rect in rects
                 PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
-                               facecolor=$rcolor);
+                               facecolor=rcolor);
               end
-            end
-          end);
+          end;
 
       PyPlot.draw();
 
@@ -356,16 +349,13 @@ function pyquiver_callback(stepout::Real, accessor::LBXFunction;
         PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
       end
 
-      eval(if showfig == true
-             quote
+      if showfig == true
                PyPlot.pause(0.00001);
-             end
            else
              fig = 0;
-           end);
-         end
        end
-
+     end
+   end
 end
 
 #! Create a pyplot callback function for visualizing the simulation
@@ -395,53 +385,51 @@ function pystream_callback(stepout::Real, accessor::LBXFunction;
 
   return (sim::AbstractSim, k::Real) -> begin
     if k % stepout < sim.Δt
-      eval(if showfig == true
-             :(PyPlot.ion(););
+      if showfig == true
+             PyPlot.ion();
            else
-             :(PyPlot.ioff(););
-           end);
+             PyPlot.ioff();
+           end;
 
       x, y, u, v = accessor(sim);
 
       PyPlot.clf();
       fig = PyPlot.streamplot(x, y, u, v);
       
-      eval(if title != ""
-             :(PyPlot.title($title));
-           end)
-      eval(if xlabel != ""
-             :(PyPlot.xlabel($xlabel));
-           end);
-      eval(if ylabel != ""
-             :(PyPlot.ylabel($ylabel));
-           end);
+      if title != ""
+             PyPlot.title(title);
+           end
+      if xlabel != ""
+             PyPlot.xlabel(xlabel);
+           end;
+      if ylabel != ""
+             PyPlot.ylabel(ylabel);
+           end;
 
-      eval(if xlim != false
-             :(PyPlot.xlim($xlim));
-           end);
-      eval(if ylim != false
-             :(PyPlot.ylim($ylim));
-           end);
+      if xlim != false
+             PyPlot.xlim(xlim);
+           end;
+      if ylim != false
+             PyPlot.ylim(ylim);
+           end;
 
-      eval(if grid != false
-             :(PyPlot.grid());
-           end);
+      if grid != false
+             PyPlot.grid();
+           end;
 
-      eval(if xticks != false
-             :(PyPlot.xticks($xticks));
-           end);
-      eval(if yticks != false
-             :(PyPlot.yticks($yticks));
-           end);
+      if xticks != false
+             PyPlot.xticks(xticks);
+           end;
+      if yticks != false
+             PyPlot.yticks(yticks);
+           end;
 
-      eval(if rects != false
-            quote
-              for rect in $rects
+      if rects != false
+              for rect in rects
                 PyPlot.axhspan(rect[1], rect[2], xmin=rect[3], xmax=rect[4], 
-                               facecolor=$rcolor);
+                               facecolor=rcolor);
               end
-            end
-          end);
+          end;
 
       PyPlot.draw();
 
@@ -449,14 +437,12 @@ function pystream_callback(stepout::Real, accessor::LBXFunction;
         PyPlot.savefig(@sprintf("%s_step-%09d.png", fname, convert(Int, round(k))));
       end
 
-      eval(if showfig == true
-             quote
+      if showfig == true
                PyPlot.pause(0.00001);
-             end
            else
              fig = 0;
-           end);
-         end
        end
+     end
+   end
 
 end

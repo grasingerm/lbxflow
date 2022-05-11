@@ -146,7 +146,7 @@ function lbm_error(sim::AbstractSim, analytical_solution::LBXFunction, d::Int,
     gd = Gadfly;
     for (model_error, etype) in zip((analyt-approx, (analyt-approx)/maximum(analyt)),
                                     ("Absolute", "Relative"))
-      eplt = gd.plot(x=linspace(-0.5, 0.5, nnodes), y=model_error, gd.Geom.line,
+      eplt = gd.plot(x=range(-0.5, 0.5; length=nnodes), y=model_error, gd.Geom.line,
                      gd.Guide.XLabel("x"), gd.Guide.YLabel("$etype error"));
       gd.draw(gd.PDF("$(basename)_$(etype)_error.pdf", plot_size[1]gd.inch, 
               plot_size[2]gd.inch), eplt); 
@@ -183,7 +183,7 @@ function plot_lbm_vs_analyt(sim::AbstractSim, analytical_solution::LBXFunction,
                                 vec(sim.msm.u[d, :, idx]));
   analyt  =   analytical_solution(nnodes);
 
-  x       =   linspace(-0.5, 0.5, nnodes);
+  x       =   range(-0.5, 0.5; length=nnodes);
   df1     =   DataFrames.DataFrame(x=x, y=approx, label="LBM"); 
   df2     =   DataFrames.DataFrame(x=x, y=analyt, label="Analytical");
   df      =   DataFrames.vcat(df1, df2);
@@ -213,8 +213,8 @@ function report_lbm_error(f_analyt::LBXFunction, d::Int, idx::Int,
                                           basename=joinpath(datadir, 
                                                             "error-plots"));
     
-    info("Relative L2 error   = $(errors[1])");
-    info("Relative LInf error = $(errors[2])");
+    @info("Relative L2 error   = $(errors[1])");
+    @info("Relative LInf error = $(errors[2])");
     h = open(joinpath(datadir, "rerrors.txt"), "w");
     write(h, "Relative L2 error   = $(errors[1])\n");
     write(h, "Relative LInf error = $(errors[2])\n");

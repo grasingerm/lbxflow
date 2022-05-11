@@ -3,8 +3,8 @@ version: 1.0.0
 preamble: >
   @init_plot_env();
   const datadir       =   joinpath("data", "dam");
-  const nu            =   0.2;
-  const constit_rel_f =   init_constit_srt_const(nu);
+  const nuv           =   0.2;
+  const constit_rel_f =   init_constit_srt_const(nuv);
   const F             =   [0.0; -5.0e-6];
   const forcing_kf    =   init_sukop_gravity_Fk(F);
   const ni            =   60;
@@ -16,7 +16,7 @@ datadir:    {   value: datadir,       expr: true    }
 
 # material properties
 rho_0:      {   value: 1.0,           expr: false   }
-nu:         {   value: nu,            expr: true    }
+nu:         {   value: nuv,           expr: true    }
 
 # lattice parameters
 dx:         {   value: 1.0,           expr: false   }
@@ -55,10 +55,10 @@ fill_y: { value: 0.9, expr: false }
 # callback functions
 callbacks:
   - print_step_callback(100, "dam-break")
-  - plot_mass_contours_callback(200, joinpath(datadir, "mass"))
+  - pycontour_callback(200, mass_acsr; fname=joinpath(datadir, "mass"))
   - write_jld_file_callback(datadir, 5000)
 
 # clean-up, backup, write out
 finally:
-  - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - pycontour_callback(1, mass_acsr; fname=joinpath(datadir, "mass"))
   - write_jld_file_callback(datadir)

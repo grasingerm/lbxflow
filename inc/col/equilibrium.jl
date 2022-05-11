@@ -13,9 +13,10 @@ using LinearAlgebra;
 #! \param j Lattice site y-direction index
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp(lat::LatticeD2Q9, msm::MultiscaleMap, 
-                    u::AbstractVector{Float64}, i::Int, j::Int, k::Int)
-  @inbounds rho = msm.rho[i, j];
+feq_incomp(lat::LatticeD2Q9, msm::MultiscaleMap, u::AbstractVector{Float64}, 
+           i::Int, j::Int, k::Int) = feq_incomp(lat, msm.rho[i, j], u, k);
+function feq_incomp(lat::LatticeD2Q9, rho::Real, 
+                    u::AbstractVector{Float64}, k::Int)
   cssq = 1/3;
   @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
@@ -33,10 +34,13 @@ end
 #! \param j Lattice site y-direction index
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp_HL(lat::LatticeD2Q9, msm::MultiscaleMap, 
+feq_incomp_HL(lat::LatticeD2Q9, msm::MultiscaleMap, 
                        u::AbstractVector{Float64}, rho_0::Real,
-                       i::Int, j::Int, k::Int)
-  @inbounds rho = msm.rho[i, j];
+                       i::Int, j::Int, k::Int) = feq_incomp_HL(lat, msm.rho[i, j],
+                                                               u, rho_0, k);
+function feq_incomp_HL(lat::LatticeD2Q9, rho::Real,
+                       u::AbstractVector{Float64}, rho_0::Real,
+                       k::Int)
   cssq = 1/3;
   @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
@@ -59,9 +63,11 @@ end
 #! \param j Lattice site y-direction index
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp(lat::LatticeD2Q4, msm::MultiscaleMap, 
-                    u::AbstractVector{Float64}, i::Int, j::Int, k::Int)
-  @inbounds rho = msm.rho[i, j];
+feq_incomp(lat::LatticeD2Q4, msm::MultiscaleMap, 
+           u::AbstractVector{Float64}, i::Int, 
+           j::Int, k::Int) = feq_incomp(lat, msm.rho[i, j], u, k);
+function feq_incomp(lat::LatticeD2Q4, rho::Real, 
+                    u::AbstractVector{Float64}, k::Int)
   cssq = 1/2;
   @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
@@ -78,10 +84,11 @@ end
 #! \param j Lattice site y-direction index
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency
-function feq_incomp_HL(lat::LatticeD2Q4, msm::MultiscaleMap,
-                       u::AbstractVector{Float64}, rho_0::AbstractFloat, i::Int, 
-                       j::Int, k::Int)
-  @inbounds rho = msm.rho[i, j];
+feq_incomp_HL(lat::LatticeD2Q4, msm::MultiscaleMap,
+              u::AbstractVector{Float64}, rho_0::AbstractFloat, i::Int, 
+              j::Int, k::Int) = feq_incomp_HL(lat, msm.rho[i, j], u, rho_0, k);
+function feq_incomp_HL(lat::LatticeD2Q4, rho::Real,
+                       u::AbstractVector{Float64}, rho_0::AbstractFloat, k::Int)
   cssq = 1/2;
   @inbounds ckdotu = dot(view(lat.c, :, k), u);
 
@@ -98,10 +105,11 @@ end
 #! \param j Lattice site y-direction index
 #! \param k Lattice velocity vector index
 #! \return Equilibrium frequency distribution that maximizes entropy
-function feq_incomp_max_entropy(lat::LatticeD2Q9, msm::MultiscaleMap,
-                                u::AbstractVector{Float64}, i::Int, j::Int, 
-                                k::Int)
-  @inbounds rho = msm.rho[i, j];
+feq_incomp_max_entropy(lat::LatticeD2Q9, msm::MultiscaleMap,
+                       u::AbstractVector{Float64}, i::Int, j::Int, 
+                       k::Int) = feq_incomp_max_entropy(lat, msm.rho[i, j], u, k);
+function feq_incomp_max_entropy(lat::LatticeD2Q9, rho::Real,
+                                u::AbstractVector{Float64}, k::Int)
   nj  =   length(u);
   prod      =   1.0;
 

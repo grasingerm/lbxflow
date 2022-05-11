@@ -2,18 +2,20 @@ version: 1.0.0
 
 # code to execute before parsing
 preamble: >
+  using DelimitedFiles;
   const id = "lid";
   const datadir = joinpath("data","bingham-lid","bn001");
-  const ni    = 500;
-  const nj    = 500;
+  mkpath(datadir);
+  const ni    = 50;
+  const nj    = 50;
   const U     = 0.01;
   const m     = 1e8;
   const mu    = 0.05;
   const tau_y = 1e-8; 
   const Re  = U * ni / mu;
-  info("Re = $Re");
+  @info("Re = $Re");
   const Bn  = tau_y * ni / (U * mu);
-  info("Bn = $Bn");
+  @info("Bn = $Bn");
   const constit_rel_f =   init_constit_mrt_bingham_implicit(mu, tau_y, m, 1e-12, 10, 1e-4);
 
 # data
@@ -37,11 +39,11 @@ col_f:      MRT(constit_rel_f)
 
 # boundaries
 sbounds:
-  value: "[1 ni 1 nj;]'"
+  value: "transpose([1 ni 1 nj;])"
   expr: true
 
 cbounds:
-  value: "[1 ni 1 nj;]'"
+  value: "transpose([1 ni 1 nj;])"
   expr: true
 
 # boundary conditions
@@ -53,7 +55,7 @@ bcs:
 
 # callback functions
 callbacks:
-  - print_step_callback(500, id)
+  - print_step_callback(100, id)
   - write_jld_file_callback(datadir, 5000)
 
 # clean-up, backup, write out
@@ -62,9 +64,9 @@ finally:
   - pystream_callback(1, streamlines_acsr; showfig=false, fname=joinpath(datadir, "sl.png"), grid=true)
   - >
     (sim::Sim, k::Real) -> begin
-      const ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
-      const xs = linspace(0, 1.0, ni);
-      const ys = linspace(0, 1.0, nj);
+      ni, nj = size(sim.msm.u, 2), size(sim.msm.u, 3);
+      xs = range(0, 1.0; length=ni);
+      ys = range(0, 1.0; length=nj);
       writedlm(joinpath(datadir, "u.dsv"), transpose(reshape(sim.msm.u[1,:,:], (ni, nj))), ",");
       writedlm(joinpath(datadir, "v.dsv"), transpose(reshape(sim.msm.u[2,:,:], (ni, nj))), ",");
       writedlm(joinpath(datadir, "u_midcav.dsv"), [vec(sim.msm.u[1,convert(Int, round(ni/2)),:]) ys], ",");

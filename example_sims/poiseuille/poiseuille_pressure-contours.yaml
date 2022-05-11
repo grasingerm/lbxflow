@@ -3,6 +3,7 @@ version: 1.0.0
 # code to execute before parsing
 preamble: >
   @init_plot_env(); 
+  using DelimitedFiles;
   const pgrad = -1e-3;
   const F = [-pgrad; 0.0];
   const constit_rel_f = init_constit_srt_const(1/6);
@@ -31,11 +32,11 @@ col_f:    BGK_F(constit_rel_f, forcing_kf);
 
 # boundaries
 sbounds:
-  value: "[1 ni 1 nj;]'"
+  value: "transpose([1 ni 1 nj;])"
   expr: true
 
 cbounds:
-  value: "[1 ni 1 nj;]'"
+  value: "transpose([1 ni 1 nj;])"
   expr: true
 
 # boundary conditions
@@ -46,7 +47,7 @@ bcs:
 
 # callback functions
 callbacks:
-  - pycontour_callback(25, pressure_ascr; showfig=true, filled=true)
+  - pycontour_callback(25, pressure_acsr; showfig=true, filled=true)
   - print_step_callback(25, "ex1")
   - write_jld_file_callback(datadir, 500)
 

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #! Check to see if a pair of indices fall inside a bounds
-function inbounds(i::Int, j::Int, sbounds::Matrix{Int64})
+function inbounds(i::Int, j::Int, sbounds::AbstractMatrix{Int64})
   nbounds = size(sbounds, 2);
   for n=1:nbounds
     if !inbounds(i, j, sbounds[:, n]); return false; end
@@ -72,7 +72,7 @@ struct Tracker
   end
 
   function Tracker(msm::MultiscaleMap,
-                   state::Matrix{State})
+                   state::AbstractMatrix{State})
 
     ni, nj        = size(state);
     lst           = Set{Tuple{Int64, Int64}}();
@@ -99,14 +99,12 @@ struct Tracker
   end
 end
 
-macro _safe_calc_eps(mass, rho)
-  return quote
-    if $mass != 0.0 && $rho != 0.0
-      $mass / $rho;
+function _safe_calc_eps(mass, rho)
+  return if mass != 0.0 && rho != 0.0
+      mass / rho;
     else
       0.0;
     end
-  end
 end
 
 #! Free surface flow simulation object

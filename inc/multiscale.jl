@@ -190,8 +190,8 @@ end
 function flow_ϕ(u::Matrix{Float64}, v::Matrix{Float64})
   ni, nj  =   size(u, 2), size(u, 3);
 
-  cx  =   _cumsimp(sub(u, :, 1));
-  cy  =   _cumsimp(sub(v, 1, :));
+  cx  =   _cumsimp(view(u, :, 1));
+  cy  =   _cumsimp(view(v, 1, :));
   ϕ   =   _cumsimp(v')';
   for j=1:nj
     ϕ[j, :] += cx';
@@ -212,15 +212,15 @@ flow_potential = flow_ϕ;
 function flow_ψ(u::Matrix{Float64}, v::Matrix{Float64})
   ni, nj  =   size(u, 2), size(u, 3);
 
-  cx  =   _cumsimp(sub(v, :, 1));
-  cy  =   _cumsimp(sub(u, 1, :));
+  cx  =   _cumsimp(view(v, :, 1));
+  cy  =   _cumsimp(view(u, 1, :));
   ψ   =   -_cumsimp(u')';
   for j=1:nj
-    ψ[j, :] += cx';
+    ψ[j, :] += cx;
   end
   ψ   =   (ψ + _cumsimp(v)) / 2;
   for i=1:ni
-    ψ[:, i] -= cy' / 2;
+    ψ[:, i] -= cy / 2;
   end
 
   return ψ
@@ -276,14 +276,14 @@ function _cumsimp(y)
   num = 1:lv-2;
 
   # Interpolate values of Y to all midpoints
-  f[num+1, :] = c1*y[num, :] + c2*y[num+1, :] + c3*y[num+2, :];
-  f[num+2, :] = f[num+2, :] + c3*y[num, :] + c2*y[num+1, :] + c1*y[num+2, :];
+  f[num .+ 1, :] = c1*y[num, :] + c2*y[num .+ 1, :] + c3*y[num .+ 2, :];
+  f[num .+ 2, :] = f[num .+ 2, :] + c3*y[num, :] + c2*y[num .+ 1, :] + c1*y[num .+ 2, :];
   f[2, :]     = f[2, :]*2; 
   f[lv, :]    = f[lv, :]*2;
 
   # Now Simpson (1,4,1) rule
   f[2:lv, :]  = 2*f[2:lv, :] + y[1:lv-1, :] + y[2:lv, :];
-  f           = cumsum(f) / 6;
+  f           = cumsum(f; dims=1) / 6;
 
   if is_transpose
     f = f'; 

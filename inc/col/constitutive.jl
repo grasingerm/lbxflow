@@ -125,7 +125,7 @@ function init_constit_srt_bingham_implicit(mu_p::AbstractFloat,
       end
 
       if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
+        #warn("Solution for constitutive equation did not converge");
         #@show i, j;
         break;
       end
@@ -296,7 +296,7 @@ function init_constit_srt_hb_implicit(k::AbstractFloat, n::Number,
       end
 
       if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
+        #warn("Solution for constitutive equation did not converge");
         #@show i, j;
         break;
       end
@@ -384,7 +384,7 @@ function init_constit_srt_power_law_implicit(k::AbstractFloat, n::Number,
       end
 
       if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
+        #warn("Solution for constitutive equation did not converge");
         #@show i, j;
         break;
       end
@@ -568,7 +568,7 @@ function init_constit_mrt_bingham_implicit(mu_p::AbstractFloat,
       end
 
       if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
+        #warn("Solution for constitutive equation did not converge");
         #@show i, j;
         break;
       end
@@ -669,7 +669,7 @@ function init_constit_mrt_hb_implicit(k::AbstractFloat, n::Number,
       end
 
       if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
+        #warn("Solution for constitutive equation did not converge");
         #@show i, j;
         break;
       end
@@ -762,7 +762,7 @@ function init_constit_mrt_power_law_implicit(k::AbstractFloat, n::Number,
       end
 
       if iters > max_iters
-        #@warn("Solution for constitutive equation did not converge");
+        #warn("Solution for constitutive equation did not converge");
         #@show i, j;
         break;
       end

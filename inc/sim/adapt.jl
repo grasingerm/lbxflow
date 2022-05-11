@@ -23,13 +23,13 @@ function _adapt_time_step!(sim::AdaptiveTimeStepSim, isim::AbstractSim,
                     # Decrease time step
     Δt_n  =   if      u_mag_max > (1/6 / sim.ξ) && sim.decr
                       val = Δt_o * sim.ξ * sim.relax + Δt_o * (1 - sim.relax);
-                      info("Decreasing time step size $(Δt_o) => $(val)");
+                      @info("Decreasing time step size $(Δt_o) => $(val)");
                       val; 
                     # Increase time step
                     elseif  (u_mag_max < (sim.ξ / 6) && sim.incr &&
                              maximum(isim.msm.omega) < 1.95)
                       val = Δt_o / sim.ξ * sim.relax + Δt_o * (1 - sim.relax);
-                      info("Increasing time step size $(Δt_o) => $(val)");
+                      @info("Increasing time step size $(Δt_o) => $(val)");
                       val;
                     else
                       error("This shouldn't have happened, fam");
@@ -42,8 +42,8 @@ function _adapt_time_step!(sim::AdaptiveTimeStepSim, isim::AbstractSim,
     for j=1:nj, i=1:ni # rescale mass, fluid fraction, and particle distributions
       s_ω           =   st * msm.omega[i, j] / ω_n[i, j];
       for k=1:nk
-        feq_o    =   col_f!.feq_f(lat, ρ_n[i, j], sub(u_n, :, i, j), k);
-        feq_n    =   col_f!.feq_f(lat, msm.rho[i, j], sub(msm.u, :, i, j), k);
+        feq_o    =   col_f!.feq_f(lat, ρ_n[i, j], view(u_n, :, i, j), k);
+        feq_n    =   col_f!.feq_f(lat, msm.rho[i, j], view(msm.u, :, i, j), k);
         s_f      =   feq_n / feq_o; 
         lat.f[k, i, j] =   s_f * (feq_o + s_ω * (lat.f[k, i, j] - feq_o));
       end
@@ -74,13 +74,13 @@ function _adapt_time_step!(sim::AdaptiveTimeStepSim, isim::FreeSurfSim,
                     # Decrease time step
     Δt_n  =   if      u_mag_max > (1/6 / sim.ξ) && sim.decr
                       val = Δt_o * sim.ξ * sim.relax + Δt_o * (1 - sim.relax);
-                      info("Decreasing time step size $(Δt_o) => $(val)");
+                      @info("Decreasing time step size $(Δt_o) => $(val)");
                       val; 
                     # Increase time step
                     elseif  (u_mag_max < (sim.ξ / 6) && sim.incr &&
                              maximum(isim.msm.omega) < 1.95)
                       val = Δt_o / sim.ξ * sim.relax + Δt_o * (1 - sim.relax);
-                      info("Increasing time step size $(Δt_o) => $(val)");
+                      @info("Increasing time step size $(Δt_o) => $(val)");
                       val;
                     else
                       error("This shouldn't have happened, fam");
@@ -96,8 +96,8 @@ function _adapt_time_step!(sim::AdaptiveTimeStepSim, isim::FreeSurfSim,
       @inbounds sim.isim.tracker.eps[i, j] = sim.isim.tracker.M[i, j] / ρ_n[i, j];
       s_ω           =   st * msm.omega[i, j] / ω_n[i, j];
       for k=1:nk
-        feq_o    =   col_f!.feq_f(lat, ρ_n[i, j], sub(u_n, :, i, j), k);
-        feq_n    =   col_f!.feq_f(lat, msm.rho[i, j], sub(msm.u, :, i, j), k);
+        feq_o    =   col_f!.feq_f(lat, ρ_n[i, j], view(u_n, :, i, j), k);
+        feq_n    =   col_f!.feq_f(lat, msm.rho[i, j], view(msm.u, :, i, j), k);
         s_f      =   feq_n / feq_o; 
         lat.f[k, i, j] =   s_f * (feq_o + s_ω * (lat.f[k, i, j] - feq_o));
       end

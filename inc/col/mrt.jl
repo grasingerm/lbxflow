@@ -12,8 +12,8 @@ struct MRT <: ColFunction
 
   function MRT(constit_relation_f::LBXFunction; feq_f::LBXFunction=feq_incomp,
                S::LBXFunction=S_fallah)
-    M   = @DEFAULT_MRT_M;
-    iM  = @DEFAULT_MRT_IM;
+    M   = DEFAULT_MRT_M;
+    iM  = DEFAULT_MRT_IM;
     return new(feq_f, constit_relation_f, M, iM, S);
   end
 end
@@ -30,8 +30,8 @@ struct MRT_F <: ColFunction
   function MRT_F(constit_relation_f::LBXFunction,
                  forcing_f::Force; 
                  feq_f::LBXFunction=feq_incomp, S::LBXFunction=S_fallah)
-    M   = @DEFAULT_MRT_M;
-    iM  = @DEFAULT_MRT_IM;
+    M   = DEFAULT_MRT_M;
+    iM  = DEFAULT_MRT_IM;
     return new(feq_f, constit_relation_f, forcing_f, M, iM, S);
   end
 end
@@ -40,7 +40,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::MRT)(sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::MRT)(sim::AbstractSim, bounds::AbstractMatrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -52,8 +52,8 @@ function (col_f::MRT)(sim::AbstractSim, bounds::Matrix{Int64})
 
       @inbounds rhoij =   msm.rho[i, j];
       @inbounds uij   =   view(msm.u, :, i, j);
-      feq             =   Vector{Float64}(lat.n);
-      fneq            =   Vector{Float64}(lat.n);
+      feq             =   zeros(lat.n);
+      fneq            =   zeros(lat.n);
 
       for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -77,7 +77,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::MRT_F)(sim::AbstractSim, bounds::Matrix{Int64})
+function (col_f::MRT_F)(sim::AbstractSim, bounds::AbstractMatrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -89,8 +89,8 @@ function (col_f::MRT_F)(sim::AbstractSim, bounds::Matrix{Int64})
 
       @inbounds rhoij =   msm.rho[i, j];
       @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
-      feq             =   Vector{Float64}(lat.n);
-      fneq            =   Vector{Float64}(lat.n);
+      feq             =   zeros(lat.n);
+      fneq            =   zeros(lat.n);
 
       for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -116,7 +116,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::MRT)(sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::MRT)(sim::FreeSurfSim, bounds::AbstractMatrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -130,8 +130,8 @@ function (col_f::MRT)(sim::FreeSurfSim, bounds::Matrix{Int64})
 
         @inbounds rhoij =   msm.rho[i, j];
         @inbounds uij   =   view(msm.u, :, i, j);
-        feq             =   Vector{Float64}(lat.n);
-        fneq            =   Vector{Float64}(lat.n);
+        feq             =   zeros(lat.n);
+        fneq            =   zeros(lat.n);
 
         for k = 1:lat.n 
           @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -157,7 +157,7 @@ end
 #!
 #! \param   sim     Simulation
 #! \param   bounds  Each column of the matrix defines a box region
-function (col_f::MRT_F)(sim::FreeSurfSim, bounds::Matrix{Int64})
+function (col_f::MRT_F)(sim::FreeSurfSim, bounds::AbstractMatrix{Int64})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -171,8 +171,8 @@ function (col_f::MRT_F)(sim::FreeSurfSim, bounds::Matrix{Int64})
 
         @inbounds rhoij =   msm.rho[i, j];
         @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
-        feq             =   Vector{Float64}(lat.n);
-        fneq            =   Vector{Float64}(lat.n);
+        feq             =   zeros(lat.n);
+        fneq            =   zeros(lat.n);
 
         for k = 1:lat.n 
           @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -200,7 +200,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function (col_f::MRT)(sim::AbstractSim, active_cells::Matrix{Bool})
+function (col_f::MRT)(sim::AbstractSim, active_cells::AbstractMatrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -211,8 +211,8 @@ function (col_f::MRT)(sim::AbstractSim, active_cells::Matrix{Bool})
 
       @inbounds rhoij =   msm.rho[i, j];
       @inbounds uij   =   view(msm.u, :, i, j);
-      feq             =   Vector{Float64}(lat.n);
-      fneq            =   Vector{Float64}(lat.n);
+      feq             =   zeros(lat.n);
+      fneq            =   zeros(lat.n);
 
       for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -236,7 +236,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function (col_f::MRT_F)(sim::AbstractSim, active_cells::Matrix{Bool})
+function (col_f::MRT_F)(sim::AbstractSim, active_cells::AbstractMatrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -247,8 +247,8 @@ function (col_f::MRT_F)(sim::AbstractSim, active_cells::Matrix{Bool})
 
       @inbounds rhoij =   msm.rho[i, j];
       @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
-      feq             =   Vector{Float64}(lat.n);
-      fneq            =   Vector{Float64}(lat.n);
+      feq             =   zeros(lat.n);
+      fneq            =   zeros(lat.n);
 
       for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -274,7 +274,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function (col_f::MRT)(sim::FreeSurfSim, active_cells::Matrix{Bool})
+function (col_f::MRT)(sim::FreeSurfSim, active_cells::AbstractMatrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -285,8 +285,8 @@ function (col_f::MRT)(sim::FreeSurfSim, active_cells::Matrix{Bool})
 
       @inbounds rhoij =   msm.rho[i, j];
       @inbounds uij   =   view(msm.u, :, i, j);
-      feq             =   Vector{Float64}(lat.n);
-      fneq            =   Vector{Float64}(lat.n);
+      feq             =   zeros(lat.n);
+      fneq            =   zeros(lat.n);
 
       for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
@@ -311,7 +311,7 @@ end
 #!
 #! \param   sim           Simulation
 #! \param   active_cells  Active flags for domain
-function (col_f::MRT_F)(sim::FreeSurfSim, active_cells::Matrix{Bool})
+function (col_f::MRT_F)(sim::FreeSurfSim, active_cells::AbstractMatrix{Bool})
   lat           =   sim.lat;
   msm           =   sim.msm;
   ni, nj  =   size(msm.rho);
@@ -322,8 +322,8 @@ function (col_f::MRT_F)(sim::FreeSurfSim, active_cells::Matrix{Bool})
 
       @inbounds rhoij =   msm.rho[i, j];
       @inbounds uij   =   col_f.forcing_f[1](sim, i, j);
-      feq             =   Vector{Float64}(lat.n);
-      fneq            =   Vector{Float64}(lat.n);
+      feq             =   zeros(lat.n);
+      fneq            =   zeros(lat.n);
 
       for k = 1:lat.n 
         @inbounds feq[k]          =   col_f.feq_f(lat, msm, uij, i, j, k);
