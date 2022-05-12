@@ -50,7 +50,7 @@ fill_y: { value: 0.25, expr: false }
 # callback functions
 callbacks:
   - print_step_callback(50, "free-surf")
-  - plot_mass_contours_callback(250, joinpath(datadir, "mass"), [(8, 32, 1/ni, 8/ni)]; levs=[-0.5; 0.0; 0.5; 1.0; 1.5; 2.0])
+  - pycontour_callback(200, mass_acsr; fname=joinpath(datadir, "mass"), rects=[(8, 32, 1/ni, 8/ni), levels=[-0.25; 0.0; 0.25; 0.5; 0.75; 1.0])
   - write_jld_file_callback(datadir, 5000)
 
 # clean-up, backup, write out
@@ -75,5 +75,5 @@ finally:
       end
       print_with_color(:green, "TEST PASSED\n");
     end
-  - plot_mass_contours_callback(1, joinpath(datadir, "mass"))
+  - pycontour_callback(1, mass_acsr; fname=joinpath(datadir, "mass"), rects=[(8, 32, 1/ni, 8/ni), levels=[-0.25; 0.0; 0.25; 0.5; 0.75; 1.0])
   - write_jld_file_callback(datadir)

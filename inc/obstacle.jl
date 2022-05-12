@@ -14,7 +14,7 @@ function _add_obstacle_bounce_back!(active_cells::Matrix{Bool},
                                     bcs!::Vector{LBXFunction},
                                     i_min::Int, i_max::Int, j_min::Int, 
                                     j_max::Int)
-  active_cells[i_min+1:i_max-1, j_min+1:j_max-1] = false;
+  active_cells[i_min+1:i_max-1, j_min+1:j_max-1] .= false;
   push!(bcs!, sim -> north_bounce_back!(sim.lat, i_min, i_max, j_min));
   push!(bcs!, sim -> south_bounce_back!(sim.lat, i_min, i_max, j_max));
   push!(bcs!, sim -> east_bounce_back!(sim.lat, i_min, j_min, j_max));

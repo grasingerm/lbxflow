@@ -175,7 +175,7 @@ end
 #! \param     rcolor              Rectangle color
 #! \return                        Anonymous callback function for visualization
 function pycontour_callback(stepout::Real, accessor::LBXFunction; 
-                            showfig::Bool=true, filled=false, colorbar=false, 
+                            showfig::Bool=true, filled=true, colorbar=false, 
                             levels=false, fname::AbstractString="",
                             title::AbstractString="", xlabel::AbstractString="", 
                             ylabel::AbstractString="", xlim=false, ylim=false, 
