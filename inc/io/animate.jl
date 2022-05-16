@@ -193,30 +193,18 @@ function pycontour_callback(stepout::Real, accessor::LBXFunction;
       mat = accessor(sim);
 
       PyPlot.clf();
-      if filled
-       if colorbar
-         if levels != false
-             cs = PyPlot.contourf(mat, levels=levels);
-             PyPlot.colorbar(cs);
-         else
-             cs = PyPlot.contourf(mat);
-             PyPlot.colorbar(cs);
-         end
-       else
-         cs = PyPlot.contourf(mat)
-       end
-     else
-       if colorbar
-         if levels != false
-             cs = PyPlot.contour(mat, levels=levels);
-             PyPlot.colorbar(cs);
-         else
-             cs = PyPlot.contour(mat);
-             PyPlot.colorbar(cs);
-         end
-       else
-         cs = PyPlot.contour(mat)
-       end
+      cs = if filled && levels != false;
+        PyPlot.contourf(mat, levels=levels);
+      elseif !filled && levels != false
+        PyPlot.contour(mat, levels=levels);
+      elseif filled
+        PyPlot.contourf(mat);
+      else
+        PyPlot.contour(mat)
+     end
+    
+     if colorbar
+       PyPlot.colorbar(cs);
      end
       
       if title != ""

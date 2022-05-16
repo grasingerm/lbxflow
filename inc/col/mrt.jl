@@ -332,14 +332,14 @@ function (col_f::MRT_F)(sim::FreeSurfSim, active_cells::AbstractMatrix{Bool})
 
       mu    =   col_f.constit_relation_f(sim, fneq, col_f.S, col_f.M, 
                                                col_f.iM, i, j);
-      omega =   omega(mu, lat.cssq, lat.dt);
+      omegav=   omega(mu, lat.cssq, lat.dt);
       Sij   =   col_f.S(mu, rhoij, lat.cssq, lat.dt);
-      F     =   map(k -> col_f.forcing_f[2](sim, omega, k, i, j), 1:lat.n);
+      F     =   map(k -> col_f.forcing_f[2](sim, omegav, k, i, j), 1:lat.n);
 
       @inbounds lat.f[:,i,j]  -= col_f.iM * Sij * col_f.M * fneq - F;
 
       # update collision frequency matrix
-      @inbounds msm.omega[i,j] = omega;
+      @inbounds msm.omega[i,j] = omegav;
 
     end
   end

@@ -1,0 +1,111 @@
+version: 1.0.0
+
+preamble: >
+  @init_plot_env();
+  const datadir       =   joinpath("data", "tow_n-075");
+  const nuv           =   0.2;
+  const n             =   0.75;
+  const constit_rel_f =   init_constit_srt_power_law_implicit(nuv, n, 1e-12, 15, 1e-6);
+  const F             =   [2.0e-6; -0.0e-6];
+  const forcing_kf    =   init_sukop_Fk(F);
+  const ni            =   128;
+  const nj            =   128;
+  const nsteps        =   40000;
+  const obssize       =   10;
+  const gapsize       =   5;
+  const obs1          =   Int[ni/2 - obssize/2; ni/2 + obssize/2; nj/2 - obssize/2; nj/2 + obssize/2];
+  const oset          =   obssize+gapsize;
+  const obs2          =   obs1 + Int[oset; oset; 0; 0];
+  const obs3          =   obs1 + Int[oset; oset; -oset; -oset];
+  const obs4          =   obs1 + Int[0; 0; -oset; -oset];
+  const obs5          =   obs1 + Int[-oset; -oset; -oset; -oset];
+  const obs6          =   obs1 + Int[-oset; -oset; 0; 0];
+  const obs7          =   obs1 + Int[-oset; -oset; oset; oset];
+  const obs8          =   obs1 + Int[0; 0; oset; oset];
+  const obs9          =   obs1 + Int[oset; oset; oset; oset];
+  const rects         =   map(x -> [x[3]; x[4]; x[1]/ni; x[2]/ni], Vector[obs1, obs2, obs3, obs4, obs5, obs6, obs7, obs8, obs9]);
+  const levels        =   [-0.5; 0.0; 0.5; 1.0; 1.5; 2.0; 2.5];
+
+# data directory
+datadir:    {   value: datadir,       expr: true    }
+
+# material properties
+rho_0:      {   value: 1.0,           expr: false   }
+nu:         {   value: nuv,           expr: true    }
+
+# lattice parameters
+dx:         {   value: 1.0,           expr: false   }
+dt:         {   value: 1.0,           expr: false   }
+ni:         {   value:  ni,           expr: true    }
+nj:         {   value:  nj,           expr: true    }
+
+# simulation parameters
+simtype:    free_surface
+col_f:      BGK_F(constit_rel_f, forcing_kf);
+nsteps:     {   value: nsteps,        expr: true   }
+
+# obstacles
+obstacles:
+  - type:   bounce_back
+    coords: obs1 
+  - type:   bounce_back
+    coords: obs2 
+  - type:   bounce_back
+    coords: obs3 
+  - type:   bounce_back
+    coords: obs4 
+  - type:   bounce_back
+    coords: obs5 
+  - type:   bounce_back
+    coords: obs6 
+  - type:   bounce_back
+    coords: obs7 
+  - type:   bounce_back
+    coords: obs8 
+  - type:   bounce_back
+    coords: obs9 
+
+# boundary conditions
+bcs:
+  - north_bounce_back!
+  - east_bounce_back!
+  - south_bounce_back!
+  - (sim) -> east_pressure!(sim, 1.0);
+  - (sim) -> mass_inlet!(sim, 1, 1:nj, 1.0)
+
+# free surface conditions
+rho_g: 1.0
+
+fill_x: { value: 0.1, expr: false }
+fill_y: { value: 1.0, expr: false }
+
+# callback functions
+callbacks:
+  - print_step_callback(100, "tow")
+  - pycontour_callback(200, mass_acsr; fname=joinpath(datadir, "mass"), rects=rects, levels=levels, colorbar=true)
+  - write_jld_file_callback(datadir, 500)
+
+# clean-up, backup, write out
+finally:
+  - >
+    (sim::FreeSurfSim, k::Int) -> begin
+      @assert(k == nsteps, "There was an error that ended the simulation early");
+      for m in sim.tracker.M
+        @assert(-100 < m < 100, "Mass was numerically unstable");
+      end
+      for u in sim.msm.u
+        @assert(-100 < u < 100, "Velocity was numerically unstable");
+      end
+      for ρ in sim.msm.rho
+        @assert(-100 < ρ < 100, "ρ was numerically unstable");
+      end
+      for f in sim.lat.f
+        @assert(-100 < f < 100, "f was numerically unstable");
+      end
+      for ϵ in sim.tracker.eps
+        @assert(-10 < ϵ < 10, "ϵ was numerically unstable");
+      end
+      print_with_color(:green, "TEST PASSED\n");
+    end
+  - pycontour_callback(1, mass_acsr; fname=joinpath(datadir, "mass"), rects=rects, levels=levels, colorbar=true)
+  - write_jld_file_callback(datadir)
