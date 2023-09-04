@@ -1,4 +1,6 @@
 # lbxflow
+[![DOI](https://zenodo.org/badge/32600251.svg)](https://zenodo.org/badge/latestdoi/32600251)
+
 Modelling two-dimensional complex flow using the lattice Boltzmann method
 
 ## lattice Boltzmann method
