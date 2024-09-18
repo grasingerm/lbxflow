@@ -3,8 +3,8 @@ Pkg.update();
 
 for pkgname in (
   "ArgParse",
-  "PyCall",
-  "PyPlot",
+  "PythonCall",
+  "PythonPlot",
   "YAML",
   "HDF5",
   "JLD",
